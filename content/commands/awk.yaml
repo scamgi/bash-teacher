@@ -1,0 +1,25 @@
+id: awk
+name: awk
+category: text
+summary: Pattern-directed scanning and processing by field.
+purpose: >
+  Splits each line into fields and runs a small program on it. Reach for awk
+  when you need a field that cut cannot address, arithmetic, or a running total.
+synopsis: awk [-F SEP] 'PATTERN { ACTION }' [FILE]...
+flags:
+  - flag: "-F SEP"
+    gloss: Split fields on SEP instead of whitespace.
+  - flag: "-v NAME=VAL"
+    gloss: Set a variable before the program runs.
+examples:
+  - cmd: awk '{print $2}' access.log
+    caption: Print the second whitespace-separated field of every line.
+  - cmd: "awk -F: '$3 >= 1000 {print $1}' /etc/passwd"
+    caption: Only regular users — filter on a field, then print another.
+  - cmd: awk '{sum += $1} END {print sum}' numbers.txt
+    caption: A running total, printed once at the end.
+plays_well_with: [sort, uniq, grep, cut, tail]
+gotchas:
+  - "$0 is the whole line and $1 is the first field; awk fields are one-based, unlike almost everything else."
+  - awk collapses runs of whitespace when splitting, which is exactly the behaviour cut lacks.
+see_also: [cut, sed]

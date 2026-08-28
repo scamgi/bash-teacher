@@ -1,0 +1,22 @@
+id: head
+name: head
+category: inspection
+summary: Print the first lines of input.
+purpose: >
+  Takes the top of a stream. At the end of a sorted pipeline it becomes "top N",
+  which is the single most common way to finish a counting pipeline.
+synopsis: head [-n COUNT] [FILE]...
+flags:
+  - flag: "-n N"
+    gloss: Print the first N lines (default 10).
+  - flag: "-c N"
+    gloss: Print the first N bytes instead of lines.
+examples:
+  - cmd: head -5 access.log
+    caption: Peek at the first five lines to learn a file's shape.
+  - cmd: sort -rn counts.txt | head -3
+    caption: The top three — sort descending, then take the head.
+plays_well_with: [sort, tail, cat, uniq]
+gotchas:
+  - "`head -5` and `head -n 5` are the same, but only the second form is portable to every implementation."
+see_also: [tail, sort]

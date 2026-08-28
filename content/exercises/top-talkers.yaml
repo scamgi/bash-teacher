@@ -1,0 +1,23 @@
+id: top-talkers
+track: text-processing
+level: 3
+title: Top talkers in a log
+prompt: >
+  Each line of access.log begins with the client IP address, separated from the
+  rest by a single space. Print the 5 IP addresses that made the most requests,
+  most frequent first, formatted the way `uniq -c` formats them — the count,
+  then the address.
+fixture: weblogs
+expected_stdout_file: expected/top-talkers.txt
+match: exact
+teaches: [cut, sort, uniq, head]
+must_use: []
+forbid: []
+reference_solution: cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -5
+solution_notes: >
+  The sort | uniq -c | sort -rn sandwich is the most reusable idiom in shell text
+  processing. Learn it as one unit: sort so duplicates are adjacent, count them,
+  then sort by the count.
+hints:
+  - You need to count how many times each address appears. Which command counts adjacent duplicates, and what has to be true of its input first?
+  - "_____ -d' ' -f1 access.log | sort | _____ -c | sort -__ | head -5"

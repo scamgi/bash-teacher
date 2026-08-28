@@ -1,0 +1,33 @@
+id: ls
+name: ls
+category: navigation
+summary: List directory contents.
+purpose: >
+  Answers "what is here?". Its real value is in the flags: sorted by time, with
+  sizes, or one-per-line so the output can be piped somewhere else.
+synopsis: ls [OPTION]... [FILE]...
+flags:
+  - flag: "-l"
+    gloss: Long format — permissions, owner, size, and modification time.
+  - flag: "-a"
+    gloss: Include entries starting with a dot.
+  - flag: "-h"
+    gloss: With -l, print sizes as 1.2K rather than 1234.
+  - flag: "-t"
+    gloss: Sort by modification time, newest first.
+  - flag: "-r"
+    gloss: Reverse the sort order.
+  - flag: "-1"
+    gloss: One entry per line — the form to pipe into other commands.
+examples:
+  - cmd: ls -lh
+    caption: The everyday listing — long format with human-readable sizes.
+  - cmd: ls -lt | head
+    caption: What changed most recently in this directory.
+  - cmd: ls -1 | wc -l
+    caption: Count the entries; -1 guarantees one name per line.
+plays_well_with: [wc, head, grep, sort]
+gotchas:
+  - Parsing `ls -l` output in a pipeline is fragile — filenames can contain spaces. Reach for `find` when it matters.
+  - Bare `ls` columnises when writing to a terminal but prints one name per line when piped, which is why scripts see different output than you do.
+see_also: [find, wc]

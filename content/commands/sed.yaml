@@ -1,0 +1,29 @@
+id: sed
+name: sed
+category: text
+summary: Edit a stream of text with a script.
+purpose: >
+  A line editor that runs without a human. In everyday use it does one thing:
+  substitution, with s/old/new/.
+synopsis: sed [OPTION]... SCRIPT [FILE]...
+flags:
+  - flag: "-n"
+    gloss: Suppress automatic printing, so only explicit p commands print.
+  - flag: "-e SCRIPT"
+    gloss: Add another script expression.
+  - flag: "-E"
+    gloss: Use extended regular expressions.
+  - flag: "-i"
+    gloss: Edit the file in place rather than writing to stdout.
+examples:
+  - cmd: sed 's/localhost/example.com/g' config.txt
+    caption: Replace every occurrence on every line — the trailing g means global.
+  - cmd: sed -n '10,20p' app.log
+    caption: Print only lines 10 through 20.
+  - cmd: sed '/^#/d' config.txt
+    caption: Delete the comment lines.
+plays_well_with: [grep, awk, sort, tr]
+gotchas:
+  - Without the trailing g, s/// replaces only the first match on each line.
+  - "-i behaves differently on GNU and BSD: GNU takes no argument, BSD requires a backup suffix such as `-i ''`."
+see_also: [awk, tr, grep]

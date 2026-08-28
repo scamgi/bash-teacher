@@ -1,0 +1,22 @@
+id: status-tally
+track: text-processing
+level: 4
+title: Tally the status codes
+prompt: >
+  The HTTP status code is the ninth whitespace-separated field of each line in
+  access.log. Print a tally of the status codes, most frequent first, in
+  `uniq -c` format.
+fixture: weblogs
+expected_stdout_file: expected/status-tally.txt
+match: exact
+teaches: [awk, sort, uniq]
+must_use: [awk]
+forbid: [cut]
+reference_solution: awk '{print $9}' access.log | sort | uniq -c | sort -rn
+solution_notes: >
+  cut cannot address this field, because the timestamp contains spaces and cut
+  will not collapse runs of them. awk splits on whitespace runs and numbers the
+  fields for you, which is exactly the gap it exists to fill.
+hints:
+  - The field you want is separated by spaces, but cut is forbidden here for a reason — try the tool that splits on whitespace and numbers fields.
+  - "awk '{print $_}' access.log | sort | uniq -c | sort -rn"

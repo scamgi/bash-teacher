@@ -1,0 +1,22 @@
+id: csv-teams
+track: text-processing
+level: 3
+title: Distinct teams in a CSV
+prompt: >
+  data.csv has a header row and four comma-separated columns: id, name, team,
+  score. Print each distinct team exactly once, in alphabetical order, and do
+  not include the header.
+fixture: csvdata
+expected_stdout_file: expected/csv-teams.txt
+match: exact
+teaches: [tail, cut, sort]
+must_use: []
+forbid: []
+reference_solution: tail -n +2 data.csv | cut -d, -f3 | sort -u
+solution_notes: >
+  `tail -n +2` is the idiom for skipping a header: the plus sign means "start at
+  line 2" rather than "the last 2 lines". After that, cut takes the column and
+  sort -u both orders and deduplicates in one pass.
+hints:
+  - Skipping the header is a job for tail, but not the form of tail you use most often.
+  - "tail -n +_ data.csv | cut -d, -f_ | sort -_"

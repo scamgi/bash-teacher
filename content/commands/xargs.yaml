@@ -1,0 +1,29 @@
+id: xargs
+name: xargs
+category: streams
+summary: Build and run command lines from standard input.
+purpose: >
+  Bridges the gap between commands that write names to stdout and commands that
+  want names as arguments. It is how a pipeline turns into an action.
+synopsis: xargs [OPTION]... [COMMAND [ARG]...]
+flags:
+  - flag: "-n N"
+    gloss: Use at most N arguments per command line.
+  - flag: "-I STR"
+    gloss: Replace STR in the command with each input item, one at a time.
+  - flag: "-0"
+    gloss: Expect NUL-separated input, as produced by find -print0.
+  - flag: "-P N"
+    gloss: Run up to N commands in parallel.
+  - flag: "-r"
+    gloss: Do not run the command at all when the input is empty.
+examples:
+  - cmd: find . -name '*.log' -print0 | xargs -0 wc -l
+    caption: Count the lines of every log file, safe against spaces in names.
+  - cmd: cat urls.txt | xargs -I{} echo "fetching {}"
+    caption: Run one command per input line, substituting each line for {}.
+plays_well_with: [find, grep, ls, sort]
+gotchas:
+  - Without -r, GNU xargs still runs the command once with no arguments when the input is empty, which can be destructive.
+  - "-I implies one item per command line, so it undoes the batching that makes xargs fast."
+see_also: [find, tee]

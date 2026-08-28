@@ -6,7 +6,8 @@ into pipelines. Three learning surfaces — a **Dictionary**, **Pipeline Exercis
 
 - **Status:** draft v0.1
 - **Binary name:** `bt`
-- **Stack:** Go 1.22+ with Bubble Tea / Lipgloss / Bubbles
+- **Stack:** Go 1.22+ with Bubble Tea **v2** / Lipgloss v2 / Bubbles v2
+  (`charm.land/bubbletea/v2`, `charm.land/lipgloss/v2`, `charm.land/bubbles/v2`)
 - **Distribution:** single static binary, content embedded via `go:embed`
 
 ---
@@ -152,8 +153,9 @@ internal/shellparse/      pipeline tokenizer/AST used for safety checks and hint
 content/                  the library itself (YAML + fixtures), embedded
 ```
 
-- **One Bubble Tea program**, one root model, a `screen` enum switching between
-  sub-models. Sub-models are independent `tea.Model`s so each is unit-testable headlessly
+- **One Bubble Tea v2 program**, one root model, a `screen` enum switching between
+  sub-models. In v2 the alternate screen is a property of the returned `tea.View`
+  rather than a program option, and key input arrives as `tea.KeyPressMsg`. Sub-models are independent `tea.Model`s so each is unit-testable headlessly
   by feeding `tea.KeyMsg`s and asserting on `View()`.
 - **Execution is async**: `Ctrl-R` dispatches a `tea.Cmd` that runs the sandbox and
   returns a `runResultMsg`. The UI never blocks; a spinner shows after 150 ms.
@@ -401,7 +403,7 @@ rebuilt.
 
 | Milestone | Contents | Exit criterion |
 | --- | --- | --- |
-| **M1 — Skeleton** | Bubble Tea shell, Home, screen routing, theme, content loader + linter | `bt` runs, navigates, loads content |
+| **M1 — Skeleton** ✅ | Bubble Tea v2 shell, Home, screen routing, theme, content loader + linter | `bt` runs, navigates, loads content |
 | **M2 — Dictionary** | Full dictionary UI, fuzzy search, 80 command entries | Every command entry passes lint and renders |
 | **M3 — Runner** | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |

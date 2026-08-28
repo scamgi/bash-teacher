@@ -1,0 +1,33 @@
+id: sort
+name: sort
+category: text
+summary: Sort lines of text.
+purpose: >
+  Puts lines in order so that duplicates become adjacent — which is what makes
+  uniq work — and so that "top N" questions become a head away.
+synopsis: sort [OPTION]... [FILE]...
+flags:
+  - flag: "-n"
+    gloss: Compare as numbers, so 9 sorts before 10.
+  - flag: "-r"
+    gloss: Reverse the result.
+  - flag: "-k N"
+    gloss: Sort by field N rather than the whole line.
+  - flag: "-t CHAR"
+    gloss: Use CHAR as the field separator.
+  - flag: "-u"
+    gloss: Drop duplicate lines after sorting.
+  - flag: "-h"
+    gloss: Compare human-readable sizes, so 2K sorts before 1M.
+examples:
+  - cmd: sort -rn counts.txt | head -5
+    caption: The canonical "top five" tail of a counting pipeline.
+  - cmd: "sort -t: -k3 -n /etc/passwd"
+    caption: Sort users by numeric UID, the third colon-separated field.
+  - cmd: sort names.txt | uniq -d
+    caption: Sort first so that duplicates land next to each other for uniq.
+plays_well_with: [uniq, head, cut, awk, wc]
+gotchas:
+  - Plain sort is lexicographic, so "10" comes before "9". Reach for -n whenever the field is a number.
+  - "`sort -u` removes duplicates but cannot count them; when you want counts, use `sort | uniq -c` instead."
+see_also: [uniq, cut]

@@ -1,0 +1,24 @@
+id: tail
+name: tail
+category: inspection
+summary: Print the last lines of input.
+purpose: >
+  The mirror of head. With -f it becomes a live view of a growing file, which is
+  how most log watching is done.
+synopsis: tail [-n COUNT] [-f] [FILE]...
+flags:
+  - flag: "-n N"
+    gloss: Print the last N lines (default 10).
+  - flag: "-n +N"
+    gloss: Start at line N — the idiom for skipping a header row.
+  - flag: "-f"
+    gloss: Follow the file, printing new lines as they are appended.
+examples:
+  - cmd: tail -20 error.log
+    caption: The most recent twenty lines, where the interesting failure usually is.
+  - cmd: tail -n +2 data.csv | cut -d, -f2
+    caption: Skip the CSV header, then take the second column.
+plays_well_with: [head, grep, cut, awk]
+gotchas:
+  - "`-n 5` means the last five lines; `-n +5` means from line five onward. The plus sign changes everything."
+see_also: [head, cat]

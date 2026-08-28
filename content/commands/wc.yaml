@@ -1,0 +1,27 @@
+id: wc
+name: wc
+category: inspection
+summary: Count lines, words, and bytes.
+purpose: >
+  Turns a stream into a number. At the end of a pipeline `wc -l` answers
+  "how many?" for whatever the pipeline just selected.
+synopsis: wc [-l] [-w] [-c] [FILE]...
+flags:
+  - flag: "-l"
+    gloss: Count lines.
+  - flag: "-w"
+    gloss: Count words.
+  - flag: "-c"
+    gloss: Count bytes.
+  - flag: "-m"
+    gloss: Count characters, which differs from bytes for non-ASCII text.
+examples:
+  - cmd: wc -l access.log
+    caption: How many lines the file has.
+  - cmd: grep ERROR app.log | wc -l
+    caption: How many error lines — count what the filter kept.
+plays_well_with: [grep, ls, find, sort]
+gotchas:
+  - "`grep -c` counts matching lines by itself; piping grep into `wc -l` does the same work with an extra process."
+  - Given a filename, wc prints the name alongside the number. Pipe into it instead when you want the bare count.
+see_also: [grep, uniq]

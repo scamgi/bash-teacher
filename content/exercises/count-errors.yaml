@@ -1,0 +1,20 @@
+id: count-errors
+track: inspection
+level: 2
+title: How many errors?
+prompt: >
+  app.log has one log record per line, each tagged with a level such as INFO or
+  ERROR. Print the number of ERROR lines, and nothing else.
+fixture: weblogs
+expected_stdout_file: expected/count-errors.txt
+match: trimmed
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -c ERROR app.log
+solution_notes: >
+  `grep -c` counts matching lines on its own. Piping grep into `wc -l` gives the
+  same answer but starts a second process to do work grep already did.
+hints:
+  - grep can count its own matches without any help from another command.
+  - "grep -_ ERROR app.log"

@@ -1,0 +1,37 @@
+id: grep
+name: grep
+category: search
+summary: Print the lines that match a pattern.
+purpose: >
+  The filter of the shell. Nearly every pipeline that narrows a stream down to
+  the interesting part starts with grep.
+synopsis: grep [OPTION]... PATTERN [FILE]...
+flags:
+  - flag: "-i"
+    gloss: Match case-insensitively.
+  - flag: "-v"
+    gloss: Invert — print the lines that do not match.
+  - flag: "-n"
+    gloss: Prefix each match with its line number.
+  - flag: "-r"
+    gloss: Search a directory tree recursively.
+  - flag: "-c"
+    gloss: Print only the count of matching lines.
+  - flag: "-o"
+    gloss: Print only the matching part, not the whole line.
+  - flag: "-E"
+    gloss: Use extended regular expressions, so + ? | ( ) need no backslashes.
+examples:
+  - cmd: grep -n TODO src/main.go
+    caption: Find the leftover TODOs with their line numbers.
+  - cmd: grep -v '^$' notes.txt
+    caption: Drop blank lines — the anchored empty pattern matches exactly those.
+  - cmd: grep -rn "func main" .
+    caption: Search a whole tree, showing file and line for each hit.
+  - cmd: grep -oE '[0-9]+' log.txt | sort -n | tail -1
+    caption: Extract just the numbers, then find the largest.
+plays_well_with: [sort, uniq, wc, cut, awk, find]
+gotchas:
+  - Always quote the pattern. An unquoted `*` or `?` is expanded by the shell before grep ever sees it.
+  - "`grep -o` prints one match per line even when several appear on the same line, which is usually what a counting pipeline wants."
+see_also: [sed, awk, find]

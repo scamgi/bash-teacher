@@ -1,0 +1,27 @@
+id: cat
+name: cat
+category: inspection
+summary: Concatenate files and print them on stdout.
+purpose: >
+  The simplest way to get a file's bytes onto a pipeline. Its name is short for
+  concatenate, which is what it does when you give it more than one file.
+synopsis: cat [OPTION]... [FILE]...
+flags:
+  - flag: "-n"
+    gloss: Number every output line.
+  - flag: "-b"
+    gloss: Number only the non-blank lines.
+  - flag: "-A"
+    gloss: Show tabs, line endings, and other non-printing characters.
+examples:
+  - cmd: cat notes.txt
+    caption: Dump a short file to the screen.
+  - cmd: cat part1.txt part2.txt > whole.txt
+    caption: Join two files into one — the concatenating that gives cat its name.
+  - cmd: cat -n script.sh | sed -n '10,20p'
+    caption: Number the lines, then look at a numbered window of them.
+plays_well_with: [head, tail, grep, wc]
+gotchas:
+  - "`cat file | grep x` works but spawns a process for nothing: `grep x file` is the same result with one less command. This is the classic \"useless use of cat\"."
+  - cat happily prints binary files and will scramble your terminal. Use `file` first if unsure.
+see_also: [head, tail, wc]

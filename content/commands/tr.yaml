@@ -1,0 +1,27 @@
+id: tr
+name: tr
+category: text
+summary: Translate or delete characters.
+purpose: >
+  Works character by character rather than line by line. Its most common job in
+  a pipeline is turning separators into newlines so the rest of the pipeline can
+  work one item per line.
+synopsis: tr [OPTION]... SET1 [SET2]
+flags:
+  - flag: "-d"
+    gloss: Delete every character in SET1.
+  - flag: "-s"
+    gloss: Squeeze repeated characters into one.
+  - flag: "-c"
+    gloss: Use the complement of SET1.
+examples:
+  - cmd: tr ' ' '\n' < prose.txt | sort | uniq -c
+    caption: Split prose into one word per line, then count words.
+  - cmd: tr -d '\r' < dos.txt > unix.txt
+    caption: Strip the carriage returns from a file with Windows line endings.
+  - cmd: tr -s ' ' < spaced.txt
+    caption: Collapse runs of spaces into single spaces.
+plays_well_with: [sort, uniq, cut, grep]
+gotchas:
+  - tr reads only from stdin — it takes no filename argument, which is why the examples use a redirect.
+see_also: [sed, cut]

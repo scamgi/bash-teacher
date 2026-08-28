@@ -1,0 +1,26 @@
+id: cut
+name: cut
+category: text
+summary: Select columns from each line.
+purpose: >
+  Pulls a field out of structured text. When the separator is a single
+  character, cut is faster to type and to read than awk.
+synopsis: cut -d DELIM -f LIST [FILE]...
+flags:
+  - flag: "-d CHAR"
+    gloss: Use CHAR as the field delimiter (default is tab).
+  - flag: "-f LIST"
+    gloss: Select these fields, e.g. 1, 2-4, or 1,3.
+  - flag: "-c LIST"
+    gloss: Select by character position instead of by field.
+  - flag: "--complement"
+    gloss: Keep everything except the selected fields.
+examples:
+  - cmd: "cut -d: -f1 /etc/passwd"
+    caption: Every username — the first colon-separated field.
+  - cmd: cut -d' ' -f1 access.log | sort | uniq -c
+    caption: Take the client IP from each request, then count them.
+plays_well_with: [sort, uniq, grep, awk, tail]
+gotchas:
+  - cut's delimiter is exactly one character and repeated delimiters are not collapsed, so it handles single spaces but not aligned columns. Use awk for whitespace-separated fields.
+see_also: [awk, tr]

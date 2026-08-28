@@ -1,0 +1,88 @@
+- id: card-flag-grep-invert
+  type: flag
+  front: "grep: print the lines that do NOT match."
+  back: "-v"
+  commands: [grep]
+
+- id: card-flag-grep-count
+  type: flag
+  front: "grep: print only the count of matching lines."
+  back: "-c"
+  commands: [grep]
+
+- id: card-flag-grep-recursive
+  type: flag
+  front: "grep: search a directory tree, showing line numbers."
+  back: "-rn"
+  accepts:
+    - "-nr"
+    - "-r -n"
+  commands: [grep]
+
+- id: card-flag-sort-numeric-desc
+  type: flag
+  front: "sort: largest number first."
+  back: "-rn"
+  accepts:
+    - "-nr"
+    - "-r -n"
+  commands: [sort]
+
+- id: card-flag-uniq-count
+  type: flag
+  front: "uniq: prefix each line with how many times it occurred."
+  back: "-c"
+  commands: [uniq]
+
+- id: card-flag-cut-delim-field
+  type: flag
+  front: "cut: take field 3, comma-separated."
+  back: "-d, -f3"
+  commands: [cut]
+
+- id: card-flag-wc-lines
+  type: flag
+  front: "wc: count lines only."
+  back: "-l"
+  commands: [wc]
+
+- id: card-flag-ls-time
+  type: flag
+  front: "ls: long listing, newest first, human-readable sizes."
+  back: "-lth"
+  accepts:
+    - "-ltH"
+    - "-l -t -h"
+  commands: [ls]
+
+- id: card-flag-find-name-type
+  type: flag
+  front: "find: regular files whose name ends in .log."
+  back: "-name '*.log' -type f"
+  accepts:
+    - "-type f -name '*.log'"
+  commands: [find]
+
+- id: card-flag-xargs-null
+  type: flag
+  front: "xargs: read NUL-separated input from find -print0."
+  back: "-0"
+  commands: [xargs]
+
+- id: card-flag-tail-follow
+  type: flag
+  front: "tail: keep printing new lines as they are appended."
+  back: "-f"
+  commands: [tail]
+
+- id: card-flag-tee-append
+  type: flag
+  front: "tee: append to the file rather than truncating it."
+  back: "-a"
+  commands: [tee]
+
+- id: card-flag-curl-quiet
+  type: flag
+  front: "curl: no progress meter, but still report errors."
+  back: "-sS"
+  commands: [curl]

@@ -1,0 +1,29 @@
+id: curl
+name: curl
+category: network
+summary: Transfer data from or to a server.
+purpose: >
+  The standard way to fetch a URL from the shell. It is documented here because
+  its output is so often piped into the text tools, but bash-teacher never
+  executes it: exercises run offline, in a sandbox with no network.
+synopsis: curl [OPTION]... URL
+flags:
+  - flag: "-s"
+    gloss: Silent — no progress meter, which is what you want in a pipeline.
+  - flag: "-S"
+    gloss: With -s, still show errors.
+  - flag: "-L"
+    gloss: Follow redirects.
+  - flag: "-o FILE"
+    gloss: Write to FILE instead of stdout.
+  - flag: "-H HEADER"
+    gloss: Add a request header.
+examples:
+  - cmd: curl -sS https://example.com/api | grep -o '"id":[0-9]*'
+    caption: Fetch quietly, then pull the ids out of the response.
+  - cmd: curl -sL -o page.html https://example.com
+    caption: Follow redirects and save the final page to a file.
+plays_well_with: [grep, sed, tee]
+gotchas:
+  - Without -s, the progress meter goes to stderr and clutters an otherwise clean pipeline.
+see_also: [tee, grep]

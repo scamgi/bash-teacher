@@ -1,0 +1,74 @@
+- id: card-count-frequency
+  type: recall
+  front: Given one value per line in values.txt, print a frequency table, most common first.
+  back: sort values.txt | uniq -c | sort -rn
+  accepts:
+    - "sort values.txt | uniq -c | sort -nr"
+  commands: [sort, uniq]
+
+- id: card-drop-blank-lines
+  type: recall
+  front: Remove the blank lines from notes.txt.
+  back: grep -v '^$' notes.txt
+  accepts:
+    - "grep . notes.txt"
+    - "sed '/^$/d' notes.txt"
+  commands: [grep, sed]
+
+- id: card-skip-header
+  type: recall
+  front: Print data.csv from the second line onward, skipping the header.
+  back: tail -n +2 data.csv
+  commands: [tail]
+
+- id: card-second-field
+  type: recall
+  front: Print the second whitespace-separated field of every line in access.log.
+  back: awk '{print $2}' access.log
+  commands: [awk]
+
+- id: card-first-colon-field
+  type: recall
+  front: Print the first colon-separated field of every line in /etc/passwd.
+  back: "cut -d: -f1 /etc/passwd"
+  commands: [cut]
+
+- id: card-global-substitute
+  type: recall
+  front: Replace every occurrence of "old" with "new" in config.txt, printing the result.
+  back: sed 's/old/new/g' config.txt
+  commands: [sed]
+
+- id: card-words-per-line
+  type: recall
+  front: Turn the spaces in prose.txt into newlines, one word per line.
+  back: tr ' ' '\n' < prose.txt
+  commands: [tr]
+
+- id: card-read-sort-uid
+  type: identify
+  front: "sort -t: -k3 -n /etc/passwd"
+  back: Sort the password file numerically by the third colon-separated field, the UID.
+  commands: [sort]
+
+- id: card-read-find-exec
+  type: identify
+  front: find . -name '*.go' -exec grep -l panic {} +
+  back: >
+    Find every Go file below the current directory and list the ones that
+    mention panic, batching many filenames into each grep call.
+  commands: [find, grep]
+
+- id: card-read-tee-count
+  type: identify
+  front: grep ERROR app.log | tee errors.txt | wc -l
+  back: >
+    Keep the ERROR lines, save them to errors.txt, and print how many there
+    were — the same pass does both.
+  commands: [grep, tee, wc]
+
+- id: card-cat-concat
+  type: recall
+  front: Join part1.txt and part2.txt into a single file, whole.txt.
+  back: cat part1.txt part2.txt > whole.txt
+  commands: [cat]

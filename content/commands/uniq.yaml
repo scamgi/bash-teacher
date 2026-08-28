@@ -1,0 +1,27 @@
+id: uniq
+name: uniq
+category: text
+summary: Report or filter out repeated adjacent lines.
+purpose: >
+  Collapses runs of identical lines, optionally counting them. It is the
+  counting half of the sort/uniq -c/sort -rn idiom.
+synopsis: uniq [OPTION]... [INPUT [OUTPUT]]
+flags:
+  - flag: "-c"
+    gloss: Prefix each line with the number of times it occurred.
+  - flag: "-d"
+    gloss: Print only the lines that were duplicated.
+  - flag: "-u"
+    gloss: Print only the lines that appeared exactly once.
+  - flag: "-i"
+    gloss: Compare case-insensitively.
+examples:
+  - cmd: sort words.txt | uniq -c | sort -rn
+    caption: A frequency table, most common first.
+  - cmd: sort ids.txt | uniq -d
+    caption: Only the ids that appear more than once.
+plays_well_with: [sort, head, cut, wc]
+gotchas:
+  - uniq only sees adjacent lines, so unsorted input silently gives wrong counts. Sort first, always.
+  - "`uniq -c` pads the count with leading spaces; a following `sort -rn` handles that fine, but `cut -f1` will not."
+see_also: [sort, wc]

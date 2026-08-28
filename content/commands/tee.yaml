@@ -1,0 +1,20 @@
+id: tee
+name: tee
+category: streams
+summary: Copy standard input to a file and to standard output.
+purpose: >
+  Splits a stream in two, so you can save an intermediate result without
+  breaking the pipeline that consumes it.
+synopsis: tee [-a] FILE...
+flags:
+  - flag: "-a"
+    gloss: Append to the files instead of overwriting them.
+examples:
+  - cmd: grep ERROR app.log | tee errors.txt | wc -l
+    caption: Save the matching lines and count them in the same pass.
+  - cmd: make 2>&1 | tee -a build.log
+    caption: Watch the build while appending everything to a log.
+plays_well_with: [grep, wc, sort, xargs]
+gotchas:
+  - tee writes the file as the pipeline runs, so the file is incomplete until the pipeline finishes.
+see_also: [xargs, cat]

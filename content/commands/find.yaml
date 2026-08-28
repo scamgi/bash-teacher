@@ -1,0 +1,33 @@
+id: find
+name: find
+category: search
+summary: Walk a directory tree and act on what matches.
+purpose: >
+  Selects files by name, age, size, or type — and then, with -exec, does
+  something to each one. It is the safe way to feed filenames into a pipeline.
+synopsis: find [PATH]... [EXPRESSION]
+flags:
+  - flag: "-name PAT"
+    gloss: Match the filename against a glob pattern.
+  - flag: "-type f"
+    gloss: Only regular files (d for directories).
+  - flag: "-mtime N"
+    gloss: Modified N days ago; -N means within the last N days.
+  - flag: "-size N"
+    gloss: Match by size, e.g. +10M for larger than ten megabytes.
+  - flag: "-exec CMD {} +"
+    gloss: Run CMD on the matches, batching as many per call as possible.
+  - flag: "-print0"
+    gloss: Separate results with NUL, so filenames with spaces survive a pipe.
+examples:
+  - cmd: find . -name '*.log' -type f
+    caption: Every log file below the current directory.
+  - cmd: find . -name '*.tmp' -mtime +7 -delete
+    caption: Remove temporary files older than a week.
+  - cmd: find . -name '*.go' -exec grep -l panic {} +
+    caption: Which Go files mention panic — one grep for many files.
+plays_well_with: [grep, xargs, wc, sort]
+gotchas:
+  - Quote the -name pattern, or the shell expands it against the current directory first.
+  - Piping bare filenames breaks on spaces; pair `-print0` with `xargs -0` when names are untrusted.
+see_also: [grep, xargs, ls]

@@ -1,0 +1,21 @@
+id: first-lines
+track: inspection
+level: 1
+title: Peek at a log
+prompt: >
+  You have just been handed access.log and have no idea what is in it.
+  Print its first 3 lines.
+fixture: weblogs
+expected_stdout_file: expected/first-lines.txt
+match: exact
+teaches: [head]
+must_use: []
+forbid: []
+reference_solution: head -3 access.log
+solution_notes: >
+  Looking at the first few lines before doing anything else is the habit that
+  saves you from writing a pipeline against a file shaped differently than you
+  assumed.
+hints:
+  - There is a command whose entire job is printing the top of a file.
+  - "head -_ access.log"
