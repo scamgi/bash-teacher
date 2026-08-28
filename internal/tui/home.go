@@ -102,19 +102,22 @@ func sandboxNotice(a *App) string {
 
 // summary shows today's review load beside what the loaded library contains.
 //
-// The load is live but not yet durable: the scheduler holds it in memory, so
-// the streak is however many days this process has been running — which is
-// one. SPEC §8 puts it in SQLite in M6, and the line says as much rather than
-// showing a number that would quietly be a lie.
+// The load is durable: the scheduler is restored from the progress store at
+// startup, so the streak is a real count of days. When there is no store the
+// streak is qualified as this session's rather than shown as a number that
+// would quietly be a lie.
 func (h *homeScreen) summary(a *App, width int) string {
 	t := a.Theme
 	p := a.SRS.Params()
 	due, unseen := a.DueCards(), a.UnseenCards()
 	newRoom := min(unseen, max(0, p.NewPerDay-a.SRS.NewToday(a.Now())))
 
-	streak := fmt.Sprintf("%s (this session)", plural(a.SRS.Streak(a.Now()), "day", "days"))
-	if a.SRS.Streak(a.Now()) == 0 {
+	streak := plural(a.SRS.Streak(a.Now()), "day", "days")
+	switch {
+	case a.SRS.Streak(a.Now()) == 0:
 		streak = "not started today"
+	case !a.Persisting():
+		streak += " (this session)"
 	}
 
 	today := strings.Join([]string{
@@ -124,7 +127,7 @@ func (h *homeScreen) summary(a *App, width int) string {
 		row(t, 12, "New cards", fmt.Sprintf("%d of %d unseen", newRoom, unseen)),
 		row(t, 12, "Reviewed", fmt.Sprintf("%d", a.SRS.ReviewsToday(a.Now()))),
 		row(t, 12, "Streak", streak),
-		row(t, 12, "Passed", fmt.Sprintf("%d this session", a.PassedExercises())),
+		row(t, 12, "Passed", passedLine(a)),
 	}, "\n")
 
 	library := strings.Join([]string{
@@ -148,4 +151,28 @@ func (h *homeScreen) summary(a *App, width int) string {
 // values line up down a panel.
 func row(t *theme.Theme, width int, label, value string) string {
 	return t.Dim.Render(pad(label, width)) + t.Body.Render(value)
+}
+
+// passedLine reports the exercise count, qualified as this session's when
+// nothing is being saved.
+func passedLine(a *App) string {
+	n := a.PassedExercises()
+	if a.Persisting() {
+		return fmt.Sprintf("%d of %d exercises", n, len(a.Lib.Exercises))
+	}
+	return fmt.Sprintf("%d this session", n)
+}
+
+// persistenceNote is the footnote the summary screens carry about whether any
+// of this is being remembered. It names the failure when there was one: a
+// learner whose history stopped being written should hear it from the app
+// rather than discover it on the next launch.
+func persistenceNote(a *App) string {
+	if err := a.StoreError(); err != nil {
+		return "Not saving progress: " + err.Error()
+	}
+	if a.Store == nil {
+		return "This session only — no progress store is attached."
+	}
+	return "Saved to " + a.Store.Path()
 }

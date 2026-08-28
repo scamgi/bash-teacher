@@ -125,7 +125,7 @@ func TestHintsAppearOneAtATime(t *testing.T) {
 	if v := view(a); !strings.Contains(v, "hint 2") {
 		t.Fatalf("a second ^H should reveal the next hint:\n%s", v)
 	}
-	if got := practiceOf(a).prog.state(ex.ID).hints; got != 2 {
+	if got := practiceOf(a).prog.state(ex.ID).Hints; got != 2 {
 		t.Errorf("hints used should be recorded, got %d", got)
 	}
 
@@ -285,7 +285,7 @@ func TestTrackUnlocking(t *testing.T) {
 	}
 	need := (len(first.Exercises)*4 + 4) / 5 // ceil(80%)
 	for i := 0; i < need; i++ {
-		p.prog.state(first.Exercises[i].ID).passed = true
+		p.prog.state(first.Exercises[i].ID).FirstPassed = a.Now()
 	}
 	if !p.prog.Unlocked(a.Lib, second.Name) {
 		t.Errorf("passing %d of %d should unlock the next track", need, len(first.Exercises))

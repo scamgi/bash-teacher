@@ -11,12 +11,15 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
 	embedded "bash-teacher/content"
 	lib "bash-teacher/internal/content"
 	"bash-teacher/internal/runner"
+	"bash-teacher/internal/srs"
+	"bash-teacher/internal/store"
 	"bash-teacher/internal/theme"
 	"bash-teacher/internal/tui"
 )
@@ -42,6 +45,8 @@ flags:
                         (also: dark, light, none, auto — default auto)
   --no-exec             never run a subprocess; exercises fall back to
                         matching the reference solution
+  --no-store            do not read or write the progress database; the
+                        session is remembered only while it runs
   --version             print the version and exit
 `
 
@@ -58,6 +63,7 @@ func run(args []string) error {
 	fl.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 	themeFlag := fl.String("theme", "auto", "colour scheme: "+strings.Join(theme.Modes(), ", "))
 	noExec := fl.Bool("no-exec", false, "never execute learner input")
+	noStore := fl.Bool("no-store", false, "do not read or write the progress database")
 	showVersion := fl.Bool("version", false, "print the version and exit")
 	if err := fl.Parse(args); err != nil {
 		return err
@@ -91,29 +97,52 @@ func run(args []string) error {
 	th := theme.Resolve(mode)
 	run := runner.New(library, runner.WithNoExec(*noExec))
 
+	// The database is opened only for the commands that read or write
+	// progress, so `bt dict` stays a print-and-exit with no file to create.
+	var db *store.Store
+	switch cmd {
+	case "", "practice", "review", "stats", "doctor":
+		if !*noStore {
+			db, err = store.Open(progressPath())
+			if err != nil {
+				return err
+			}
+			defer func() { _ = db.Close() }()
+		}
+	}
+
 	switch cmd {
 	case "":
-		return launch(library, th, run, tui.ScreenHome)
+		return launch(library, th, run, tui.ScreenHome, storeOption(db)...)
 	case "practice":
 		opts, err := practiceOptions(library, rest)
 		if err != nil {
 			return err
 		}
-		return launch(library, th, run, tui.ScreenPractice, opts...)
+		return launch(library, th, run, tui.ScreenPractice, append(opts, storeOption(db)...)...)
 	case "review":
-		return launch(library, th, run, tui.ScreenFlashcards)
+		return launch(library, th, run, tui.ScreenFlashcards, storeOption(db)...)
 	case "dict":
 		return dictCmd(library, th, rest)
 	case "stats":
-		return statsCmd(library)
+		return statsCmd(library, db)
 	case "doctor":
-		return doctorCmd(library, th, run)
+		return doctorCmd(library, th, run, db)
 	case "help", "-h", "--help":
 		fmt.Print(usage)
 		return nil
 	default:
 		return fmt.Errorf("unknown command %q; run `bt help`", cmd)
 	}
+}
+
+// storeOption wraps the database as a model option, or as nothing at all when
+// there is none, so every caller can splat it without a conditional.
+func storeOption(db *store.Store) []tui.Option {
+	if db == nil {
+		return nil
+	}
+	return []tui.Option{tui.WithStore(db)}
 }
 
 func launch(library *lib.Library, th *theme.Theme, run *runner.Runner, start tui.Screen, opts ...tui.Option) error {
@@ -302,23 +331,83 @@ func dictCmd(library *lib.Library, th *theme.Theme, args []string) error {
 	return nil
 }
 
-func statsCmd(library *lib.Library) error {
+// statsCmd prints the library's shape, and what the progress database holds
+// against it. Without a store it is the library alone: a summary that invented
+// a streak would be worse than one that admits it has nothing to report.
+func statsCmd(library *lib.Library, db *store.Store) error {
 	fmt.Printf("commands   %d\n", len(library.Commands))
 	fmt.Printf("exercises  %d in %d tracks\n", len(library.Exercises), len(library.Tracks))
 	fmt.Printf("cards      %d\n", len(library.Cards))
-	for _, t := range library.Tracks {
-		fmt.Printf("  %-18s %d\n", t.Name, len(t.Exercises))
+
+	passed := map[string]bool{}
+	if db != nil {
+		rows, err := db.LoadExercises()
+		if err != nil {
+			return err
+		}
+		for _, e := range rows {
+			if e.Passed() {
+				passed[e.ID] = true
+			}
+		}
 	}
+	for _, t := range library.Tracks {
+		if db == nil {
+			fmt.Printf("  %-18s %d\n", t.Name, len(t.Exercises))
+			continue
+		}
+		n := 0
+		for _, e := range t.Exercises {
+			if passed[e.ID] {
+				n++
+			}
+		}
+		fmt.Printf("  %-18s %d of %d passed\n", t.Name, n, len(t.Exercises))
+	}
+	if db == nil {
+		return nil
+	}
+	return reviewStats(library, db)
+}
+
+// reviewStats replays the stored schedule through a scheduler of its own. The
+// package is content-free and addresses cards by id, so the numbers the TUI
+// shows can be computed here without a TUI.
+func reviewStats(library *lib.Library, db *store.Store) error {
+	states, err := db.LoadCards()
+	if err != nil {
+		return err
+	}
+	log, err := db.LoadReviews()
+	if err != nil {
+		return err
+	}
+	sched := srs.New(srs.Defaults())
+	sched.Restore(states, log)
+
+	ids := make([]string, 0, len(library.Cards))
+	for _, c := range library.Cards {
+		ids = append(ids, c.ID)
+	}
+	now := time.Now()
+	fmt.Printf("due now    %d\n", sched.DueCount(ids, now))
+	fmt.Printf("introduced %d of %d\n", len(ids)-sched.UnseenCount(ids), len(ids))
+	if recalled, answered := sched.Accuracy(); answered > 0 {
+		fmt.Printf("recalled   %d%% of %d answers\n", 100*recalled/answered, answered)
+	}
+	fmt.Printf("streak     %d days\n", sched.Streak(now))
+	fmt.Printf("progress   %s\n", db.Path())
 	return nil
 }
 
-func doctorCmd(library *lib.Library, th *theme.Theme, run *runner.Runner) error {
+func doctorCmd(library *lib.Library, th *theme.Theme, run *runner.Runner, db *store.Store) error {
 	fmt.Printf("version        %s\n", version)
 	fmt.Printf("theme          %s\n", th.Mode)
 	fmt.Printf("palette        catppuccin\n")
 	fmt.Printf("content        %d commands, %d exercises, %d cards (embedded)\n",
 		len(library.Commands), len(library.Exercises), len(library.Cards))
 	fmt.Printf("data dir       %s\n", dataDir())
+	fmt.Printf("progress       %s\n", progressReport(db))
 
 	sb := run.Sandbox()
 	fmt.Printf("sandbox        %s — %s\n", sb.Name(), sb.Describe())
@@ -354,8 +443,39 @@ func shellReport() string {
 	return "BSD coreutils"
 }
 
-// dataDir reports where the progress store will live once it exists, following
-// the XDG base directory spec.
+// progressPath is the progress database, which lives in the data directory.
+func progressPath() string { return filepath.Join(dataDir(), "progress.db") }
+
+// progressReport describes the progress database for `bt doctor`: where it is,
+// what schema it is on, and how much it holds.
+func progressReport(db *store.Store) string {
+	if db == nil {
+		return "disabled by --no-store"
+	}
+	cards, err := db.LoadCards()
+	if err != nil {
+		return db.Path() + " — unreadable: " + err.Error()
+	}
+	reviews, err := db.LoadReviews()
+	if err != nil {
+		return db.Path() + " — unreadable: " + err.Error()
+	}
+	exercises, err := db.LoadExercises()
+	if err != nil {
+		return db.Path() + " — unreadable: " + err.Error()
+	}
+	passed := 0
+	for _, e := range exercises {
+		if e.Passed() {
+			passed++
+		}
+	}
+	return fmt.Sprintf("%s (schema %d) — %d cards, %d reviews, %d exercises passed",
+		db.Path(), store.SchemaVersion, len(cards), len(reviews), passed)
+}
+
+// dataDir reports where the progress store lives, following the XDG base
+// directory spec.
 func dataDir() string {
 	if d := os.Getenv("XDG_DATA_HOME"); d != "" {
 		return d + "/bash-teacher"

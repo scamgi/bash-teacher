@@ -296,9 +296,7 @@ func (f *flashcardsScreen) rate(a *App, r srs.Rating) tea.Cmd {
 	if c == nil {
 		return nil
 	}
-	if a.SRS != nil {
-		a.SRS.Grade(c.ID, r, f.elapsed, a.Now())
-	}
+	a.GradeCard(c.ID, r, f.elapsed)
 	f.answered++
 	if r == srs.Again {
 		f.lapses++

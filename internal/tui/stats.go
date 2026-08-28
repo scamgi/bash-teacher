@@ -101,9 +101,10 @@ const forecastDays = 14
 // the deck has been introduced, how well it is being recalled, and the shape
 // of the next fortnight.
 //
-// The figures are this session's. Nothing survives the process until the store
-// lands in M6, which the panel says rather than implying a history it does not
-// have.
+// The figures come from the scheduler, which is loaded from the progress store
+// at startup, so they span every session. A run with no store — `--no-store`,
+// or one whose database could not be written — says so rather than implying a
+// history it does not have.
 func (s *statsScreen) reviewQueue(a *App) []string {
 	t := a.Theme
 	ids := cardIDs(s.lib.Cards)
@@ -126,7 +127,7 @@ func (s *statsScreen) reviewQueue(a *App) []string {
 	out = append(out, "", t.Faint.Render("due over the next fortnight"))
 	out = append(out, s.forecastLines(a, ids, now)...)
 
-	out = append(out, "", t.Faint.Render("This session only — the progress store lands in M6."))
+	out = append(out, "", t.Faint.Render(persistenceNote(a)))
 	return out
 }
 

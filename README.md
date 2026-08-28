@@ -33,9 +33,14 @@ See [SPEC.md](SPEC.md) for the full design.
   match modes. `bt doctor` reports which backend you get; `--no-exec` turns
   execution off entirely.
 
-Still to come: FSRS-lite scheduling and the flashcard queue (M5), the progress
-store, stats and packaging (M6). Progress is tracked for the session but not yet
-saved, so track unlocking is shown rather than enforced.
+- A progress store: SQLite (cgo-free) at `$XDG_DATA_HOME/bash-teacher/progress.db`,
+  loaded at startup and written through as you work, so your schedule, your review
+  history and every exercise you have solved are waiting the next time you open it.
+  `--no-store` runs without one; `bt doctor` says where it is and what it holds.
+
+Still to come (M6): the historical half of Stats and the per-command mastery grid,
+a config file, `bt export` / `bt import`, light-theme detection, and packaging.
+Track unlocking is shown rather than enforced.
 
 ### Practice keys
 

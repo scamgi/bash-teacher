@@ -11,6 +11,7 @@ import (
 	"bash-teacher/internal/content"
 	"bash-teacher/internal/runner"
 	"bash-teacher/internal/srs"
+	"bash-teacher/internal/store"
 	"bash-teacher/internal/theme"
 
 	"charm.land/bubbles/v2/help"
@@ -131,6 +132,11 @@ type exerciseCounter interface{ PassedCount() int }
 // commandSelector is implemented by the Dictionary screen.
 type commandSelector interface{ SelectCommand(id string) bool }
 
+// progressRestorer is implemented by the Practice screen, so that the store
+// can hand it what it remembers without the root model knowing how the screen
+// keeps it.
+type progressRestorer interface{ RestoreProgress(rows []store.Exercise) }
+
 // App is the root model.
 type App struct {
 	Lib   *content.Library
@@ -143,13 +149,23 @@ type App struct {
 	// screens read it: Home reports the day's load, Stats draws the forecast,
 	// and Practice credits the cards an exercise teaches.
 	//
-	// Nothing in it survives the process yet; SPEC §8 puts it in SQLite and
-	// that arrives with M6.
+	// It is loaded from and written through to Store, so a session picks up
+	// where the last one stopped.
 	SRS *srs.Scheduler
+	// Store is the progress database. It may be nil — `--no-store`, and
+	// tests that have nothing to remember — in which case everything works
+	// exactly as before and the session's progress dies with the process.
+	// Screens ask Persisting rather than checking it themselves.
+	Store *store.Store
 	// Grader normalizes typed flashcard answers against what the dictionary
 	// documents.
 	Grader  *answer.Grader
 	Version string
+
+	// storeErr is the first write that failed. One is enough: a database
+	// that cannot be written to will not start working again mid-session,
+	// and the learner needs to be told once rather than on every keystroke.
+	storeErr error
 
 	// clock is time.Now, indirected so tests can place a session on a known
 	// day rather than on whatever day they happen to run.
@@ -184,6 +200,59 @@ func WithTrack(name string) Option {
 
 // trackOpener is implemented by the Practice screen.
 type trackOpener interface{ OpenTrack(name string) bool }
+
+// WithStore attaches the progress database and loads what it holds into the
+// scheduler and the practice screen.
+//
+// It is an option rather than a parameter because a store is optional: the
+// TUI is fully usable without one, and every test that does not care about
+// persistence should not have to open a database to say so.
+func WithStore(db *store.Store) Option {
+	return func(a *App) {
+		a.Store = db
+		a.hydrate()
+	}
+}
+
+// hydrate restores a session from the store. A failure here is recorded and
+// then ignored: an unreadable database should cost the learner their history,
+// not their app.
+func (a *App) hydrate() {
+	if a.Store == nil {
+		return
+	}
+	states, err := a.Store.LoadCards()
+	a.record(err)
+	log, err := a.Store.LoadReviews()
+	a.record(err)
+	if a.storeErr == nil && a.SRS != nil {
+		a.SRS.Restore(states, log)
+	}
+
+	rows, err := a.Store.LoadExercises()
+	a.record(err)
+	if a.storeErr == nil {
+		if p, ok := a.screens[ScreenPractice].(progressRestorer); ok {
+			p.RestoreProgress(rows)
+		}
+	}
+}
+
+// record keeps the first store failure. Persisting then reports false for the
+// rest of the session, so the screens that would otherwise show a streak or a
+// history say plainly that nothing is being saved.
+func (a *App) record(err error) {
+	if err != nil && a.storeErr == nil {
+		a.storeErr = err
+	}
+}
+
+// Persisting reports whether progress is being saved. Screens ask this before
+// describing anything as durable.
+func (a *App) Persisting() bool { return a.Store != nil && a.storeErr == nil }
+
+// StoreError returns the failure that stopped progress being saved, if any.
+func (a *App) StoreError() error { return a.storeErr }
 
 // New builds the root model with every screen constructed up front, so that
 // switching screens is free and each keeps its own cursor position.
@@ -244,6 +313,46 @@ func (a *App) Grade(c *content.Card, typed string) answer.Result {
 	return a.Grader.Grade(c, typed)
 }
 
+// GradeCard applies one answer to a card and saves the result. Grading goes
+// through the root model rather than straight to the scheduler so that the
+// state and the log entry are written together, by the one place that knows
+// whether there is a store at all.
+func (a *App) GradeCard(cardID string, r srs.Rating, elapsed time.Duration) {
+	if a.SRS == nil {
+		return
+	}
+	a.persistCard(a.SRS.Grade(cardID, r, elapsed, a.Now()))
+}
+
+// persistCard writes a card's new state and the log entry that produced it.
+// The entry is read back off the scheduler rather than rebuilt here, so what
+// is stored is exactly what was scheduled.
+func (a *App) persistCard(st srs.State) {
+	if a.Store == nil {
+		return
+	}
+	a.record(a.Store.SaveCard(st))
+	if r, ok := a.SRS.LastReview(); ok {
+		a.record(a.Store.AppendReview(r))
+	}
+}
+
+// SaveExercise writes one exercise's summary.
+func (a *App) SaveExercise(e store.Exercise) {
+	if a.Store == nil {
+		return
+	}
+	a.record(a.Store.SaveExercise(e))
+}
+
+// LogAttempt appends one run of a learner's pipeline to the attempt log.
+func (a *App) LogAttempt(at store.Attempt) {
+	if a.Store == nil {
+		return
+	}
+	a.record(a.Store.AppendAttempt(at))
+}
+
 // DueCards reports how many cards in the library are due now.
 func (a *App) DueCards() int {
 	if a.SRS == nil {
@@ -275,7 +384,7 @@ func (a *App) CreditPractice(ex *content.Exercise) int {
 				continue
 			}
 			seen[c.ID] = true
-			a.SRS.Credit(c.ID, now)
+			a.persistCard(a.SRS.Credit(c.ID, now))
 		}
 	}
 	return len(seen)

@@ -125,6 +125,23 @@ func New(p Params) *Scheduler {
 // Params returns the scheduler's parameters.
 func (s *Scheduler) Params() Params { return s.params }
 
+// Restore loads persisted state into a fresh scheduler, replacing whatever it
+// held. It takes the card states and the log rather than replaying the log
+// into them: the log is enough to rebuild the states, but a replay would have
+// to reproduce the parameters every past review was scheduled under, and a
+// learner who lowers their desired retention should not have their history
+// rewritten under the new one.
+//
+// Reviews are expected oldest first, which is the order the store reads them
+// back in and the order every count over the log assumes.
+func (s *Scheduler) Restore(states []State, log []Review) {
+	s.states = make(map[string]*State, len(states))
+	for _, st := range states {
+		s.states[st.CardID] = &st
+	}
+	s.log = append([]Review(nil), log...)
+}
+
 // State returns a card's scheduling record, and whether it has one. A card
 // with no record has never been seen.
 func (s *Scheduler) State(cardID string) (State, bool) {
@@ -138,6 +155,17 @@ func (s *Scheduler) State(cardID string) (State, bool) {
 // Log returns the review log, oldest first. The slice is the scheduler's own;
 // callers read it and do not modify it.
 func (s *Scheduler) Log() []Review { return s.log }
+
+// LastReview returns the most recent log entry, and whether there is one. It
+// is what lets a caller persist the entry Grade or Credit just made without
+// rebuilding it from the arguments it passed, so the log on disk can never
+// describe something other than the log in memory.
+func (s *Scheduler) LastReview() (Review, bool) {
+	if len(s.log) == 0 {
+		return Review{}, false
+	}
+	return s.log[len(s.log)-1], true
+}
 
 // Grade applies one answer to a card and returns its new state.
 //

@@ -12,6 +12,7 @@ import (
 
 	"bash-teacher/internal/content"
 	"bash-teacher/internal/runner"
+	"bash-teacher/internal/store"
 	"bash-teacher/internal/theme"
 )
 
@@ -93,8 +94,12 @@ type practiceScreen struct {
 	fixture      []content.FixtureFile
 	fixtureErr   error
 
-	running   bool
-	runStart  time.Time
+	running  bool
+	runStart time.Time
+	// lastInput is the pipeline the running attempt was started with, kept
+	// so the attempt log records what was typed even when the run comes back
+	// as an error rather than as an outcome.
+	lastInput string
 	frame     int
 	outcome   *runner.Outcome
 	runErr    error
@@ -141,12 +146,16 @@ func (p *practiceScreen) OpenExercise(id string) bool {
 func (p *practiceScreen) PassedCount() int {
 	n := 0
 	for _, st := range p.prog.byExercise {
-		if st.passed {
+		if st.Passed() {
 			n++
 		}
 	}
 	return n
 }
+
+// RestoreProgress loads what the store remembers about every exercise, so the
+// library opens on the learner's own history rather than on a blank slate.
+func (p *practiceScreen) RestoreProgress(rows []store.Exercise) { p.prog.Restore(rows) }
 
 // OpenTrack puts the browser's cursor on the first exercise of a track. It
 // leaves the workspace closed: a learner who asked for a track wants to see
@@ -167,7 +176,7 @@ func (p *practiceScreen) OpenTrack(name string) bool {
 func (p *practiceScreen) open(ex *content.Exercise) {
 	p.mode, p.ex = modeWork, ex
 	st := p.prog.state(ex.ID)
-	p.hints, p.showSolution = st.hints, st.solutionShown
+	p.hints, p.showSolution = st.Hints, st.SolutionShown
 	p.preview = false
 	p.outcome, p.runErr, p.critique, p.outOffset = nil, nil, nil, 0
 	p.running = false
@@ -242,9 +251,9 @@ func (p *practiceScreen) updateWork(a *App, km tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(km, Keys.Run):
 		return p.startRun(a)
 	case key.Matches(km, Keys.Hint):
-		return p.nextHint()
+		return p.nextHint(a)
 	case key.Matches(km, Keys.Solution):
-		return p.revealSolution()
+		return p.revealSolution(a)
 	case key.Matches(km, Keys.NextEx):
 		return p.step(1)
 	case key.Matches(km, Keys.PrevEx):
@@ -304,7 +313,7 @@ func (p *practiceScreen) startRun(a *App) tea.Cmd {
 		return flash("no runner is configured")
 	}
 	p.editor.Accept()
-	p.prog.state(p.ex.ID).attempts++
+	p.lastInput = input
 	p.running, p.runStart, p.frame = true, time.Now(), 0
 	p.outcome, p.runErr, p.critique, p.outOffset = nil, nil, nil, 0
 
@@ -319,21 +328,45 @@ func (p *practiceScreen) startRun(a *App) tea.Cmd {
 
 // finishRun records a result, ignoring one that belongs to an exercise the
 // learner has already left.
+//
+// Every run that comes back is logged, passing or not: the attempt log is the
+// raw record, and a failed attempt is the more interesting half of it. The
+// summary alongside it is what the browser reads, so both are written before
+// anything else is decided.
 func (p *practiceScreen) finishRun(a *App, msg runResultMsg) tea.Cmd {
 	if p.ex == nil || msg.id != p.ex.ID {
 		return nil
 	}
 	p.running = false
 	p.outcome, p.runErr = msg.outcome, msg.err
-	if msg.err != nil || msg.outcome == nil {
-		return nil
-	}
-	if !msg.outcome.Passed {
-		return nil
-	}
+	took := time.Since(p.runStart)
+	passed := msg.err == nil && msg.outcome != nil && msg.outcome.Passed
+
 	st := p.prog.state(p.ex.ID)
-	first := !st.passed
-	st.passed = true
+	first := passed && !st.Passed()
+	st.Attempts++
+	st.Hints, st.SolutionShown = p.hints, p.showSolution
+	if passed {
+		if st.FirstPassed.IsZero() {
+			st.FirstPassed = a.Now()
+		}
+		if st.Best == 0 || took < st.Best {
+			st.Best = took
+		}
+	}
+	a.LogAttempt(store.Attempt{
+		ExerciseID: p.ex.ID,
+		At:         a.Now(),
+		Input:      p.lastInput,
+		Passed:     passed,
+		Hints:      p.hints,
+		Took:       took,
+	})
+	a.SaveExercise(*st)
+
+	if !passed {
+		return nil
+	}
 	p.critique = runner.Critique(msg.outcome.Input, p.ex.ReferenceSolution)
 	if !first {
 		return nil
@@ -350,7 +383,7 @@ func (p *practiceScreen) finishRun(a *App, msg runResultMsg) tea.Cmd {
 
 // nextHint reveals one more hint. Hints cost nothing and are recorded, which
 // is what lets Stats tell a solved exercise from a solved-with-help one.
-func (p *practiceScreen) nextHint() tea.Cmd {
+func (p *practiceScreen) nextHint(a *App) tea.Cmd {
 	if p.ex == nil {
 		return nil
 	}
@@ -358,16 +391,20 @@ func (p *practiceScreen) nextHint() tea.Cmd {
 		return flash("that is the last hint — ^S shows the reference solution")
 	}
 	p.hints++
-	p.prog.state(p.ex.ID).hints = p.hints
+	st := p.prog.state(p.ex.ID)
+	st.Hints = p.hints
+	a.SaveExercise(*st)
 	return nil
 }
 
-func (p *practiceScreen) revealSolution() tea.Cmd {
+func (p *practiceScreen) revealSolution(a *App) tea.Cmd {
 	if p.ex == nil {
 		return nil
 	}
 	p.showSolution = true
-	p.prog.state(p.ex.ID).solutionShown = true
+	st := p.prog.state(p.ex.ID)
+	st.SolutionShown = true
+	a.SaveExercise(*st)
 	return nil
 }
 

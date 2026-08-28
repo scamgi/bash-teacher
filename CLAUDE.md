@@ -9,9 +9,9 @@ sharing one content library: a Dictionary, sandbox-executed Pipeline Exercises, 
 Flashcards. **`SPEC.md` is the design source of truth** — read it before adding a
 feature, and update it when a decision changes. It defines six milestones (M1–M6);
 M1 (skeleton), M2 (dictionary), M3 (runner), M4 (practice) and M5 (flashcards) are
-complete; the progress store is not built yet, so everything the scheduler knows dies
-with the process. Screens carry visible in-app notes saying which milestone fills them
-in.
+complete, and M6 is under way: the progress store is built, so a session now picks up
+where the last one stopped. The rest of M6 — the historical half of Stats, the config
+file, export/import, light-theme detection, packaging — is still open.
 
 ## Commands
 
@@ -40,6 +40,9 @@ The M5 exit criteria are `go test ./internal/srs -v` — the interval ladder is 
 exact numbers, so any change to the model breaks it loudly and on purpose — and
 `go test ./internal/answer -v`, whose last case walks all 250 cards and fails if any
 card's own answer would not be accepted from a learner.
+
+The store's own guard is `go test ./internal/tui -run Restart -v`: it answers a card and
+solves an exercise in one process and asserts both are there in the next.
 
 Dump rendered frames to eyeball layout without a terminal:
 `BT_DUMP=1 go test ./internal/tui -run DumpFrames -v`
@@ -149,6 +152,36 @@ output are reserved before the fixture preview gets what is left.
 Track locking is computed (`internal/tui/progress.go`, 80% per SPEC §2.2) and displayed,
 but not enforced: progress lives in memory until M6, so a hard gate would re-lock the
 library on every launch.
+
+### The progress store (`internal/store`)
+
+SQLite through `modernc.org/sqlite`, which is SQLite translated into Go rather than a
+binding, so `bt` stays cgo-free and a single binary. The database is
+`$XDG_DATA_HOME/bash-teacher/progress.db`; `--no-store` runs without one, which is what
+the TUI tests do.
+
+The store computes nothing. `Grade` and `Credit` return the state the scheduler decided
+on and the app writes that, pairing it with the log entry read back from
+`Scheduler.LastReview` rather than rebuilt from the arguments — so the log on disk cannot
+describe something other than the log in memory. `reviews` and `attempts` are append-only;
+`cards` and `exercises` are upserted summaries that could in principle be rebuilt from
+them.
+
+Migrations are a numbered, forward-only slice, each applied in its own transaction, with
+the version in SQLite's `user_version`. **Never edit a released migration** — add another.
+A file whose `user_version` exceeds this build's is refused with `ErrNewerSchema`.
+
+Wiring: `tui.WithStore` is an option, not a parameter, so a test that does not care about
+persistence does not have to open a database. It hydrates the scheduler
+(`srs.Scheduler.Restore`) and the practice screen (`RestoreProgress`). Writes go through
+`App.persistCard` / `App.SaveExercise` / `App.LogAttempt`, which no-op on a nil store, and
+the first failure is kept in `App.storeErr`: `App.Persisting()` then reports false for the
+rest of the session and Home and Stats say plainly that nothing is being saved, rather
+than showing a streak that would be a lie. An unreadable database costs the learner their
+history, never their app.
+
+`internal/tui/progress.go` holds `store.Exercise` values directly rather than a parallel
+struct, so a save cannot drop a field the screen was relying on.
 
 ### The scheduler (`internal/srs`)
 

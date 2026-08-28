@@ -119,11 +119,12 @@ Behaviour:
   with an explanatory message rather than an output diff.
 - **Progression:** exercises are ordered into tracks; a track unlocks the next when 80%
   of its exercises pass. Free-roam browsing of any unlocked exercise is always allowed.
-  Until the store lands in M6 the lock is **advisory**: the browser shows each track's
-  progress and says which ones are still ahead of the learner, but opens them anyway.
-  Progress that lives only in memory would otherwise shut five of the six tracks at the
-  start of every session, and would break the dictionary's `p` shortcut, which addresses
-  any exercise in the library.
+  The lock is **advisory**: the browser shows each track's progress and says which ones
+  are still ahead of the learner, but opens them anyway. The progress store now backs it
+  with a real history, so the reason is no longer that memory would shut five of the six
+  tracks every launch; it is that the dictionary's `p` shortcut addresses any exercise in
+  the library, and a hard gate would have to refuse it. Enforcement, if it comes, is the
+  browser's decision to make and not the storage's.
 
 Exercise difficulty ladder (five levels): single command → command with flags →
 two-stage pipe → three-or-more-stage pipe with a transform → real-world messy task
@@ -173,8 +174,10 @@ per-command mastery (a heat grid over the dictionary), and current/longest strea
 
 The review half of this is live as of M5 — what is due, how much of the deck has been
 introduced, how much of it is being recalled, and the fortnight's outlook as a
-sparkline — over the session's own scheduler. The historical half, and the mastery
-grid, need the store, and arrive with it in M6.
+sparkline. Since the progress store landed it reads a real history rather than the
+session's own: the scheduler is restored at startup, so the streak counts days and not
+minutes. The retention curve over time and the per-command mastery grid are still to
+come; both are queries over the stored `reviews` log rather than new state.
 
 ---
 
@@ -474,6 +477,11 @@ bt content expected     re-run every reference solution and check the expected
 bt export / bt import   dump/restore progress as JSON
 ```
 
+`--no-store` runs against no database at all: nothing is read at startup and nothing is
+written, and the screens that would otherwise report a streak or a history say plainly
+that this session is not being saved. It is what the TUI tests run under, and the escape
+hatch for a machine whose data directory is not writable.
+
 ---
 
 ## 8. Persistence
@@ -482,21 +490,34 @@ SQLite (`modernc.org/sqlite`, cgo-free) at `$XDG_DATA_HOME/bash-teacher/progress
 
 ```sql
 CREATE TABLE cards       (id TEXT PRIMARY KEY, stability REAL, difficulty REAL,
-                          due INTEGER, reps INTEGER, lapses INTEGER, last_review INTEGER);
+                          due INTEGER, reps INTEGER, lapses INTEGER, last_review INTEGER,
+                          first_seen INTEGER);
 CREATE TABLE reviews     (id INTEGER PRIMARY KEY, card_id TEXT, ts INTEGER,
                           rating INTEGER, elapsed_ms INTEGER, source TEXT);
 CREATE TABLE attempts    (id INTEGER PRIMARY KEY, exercise_id TEXT, ts INTEGER,
                           input TEXT, passed INTEGER, hints_used INTEGER, ms INTEGER);
 CREATE TABLE exercises   (id TEXT PRIMARY KEY, first_passed INTEGER, best_ms INTEGER,
-                          attempts INTEGER);
+                          attempts INTEGER, hints INTEGER, solution_shown INTEGER);
 CREATE TABLE meta        (key TEXT PRIMARY KEY, value TEXT);
 ```
 
-Until the store lands the scheduler holds all of this in memory, so a session's review
-log dies with the process: Home and Stats say as much rather than showing a streak that
-would quietly be a lie. Nothing else changes when it arrives — every scheduling decision
-is a pure function of a card's state and one rating, and the log is append-only, so a
-replay reconstructs the same state.
+Two columns are there that the sketch above did not originally carry, both because a
+screen needs them on the next launch and neither is derivable cheaply: `cards.first_seen`
+is what the daily new-card cap counts against, and `exercises.hints` /
+`solution_shown` restore what the learner had already uncovered, so a hint already spent
+is not hidden again.
+
+Timestamps are Unix seconds, and the zero time is stored as `0` rather than as an epoch
+offset so that "never" reads back as never. The schema version lives in SQLite's
+`user_version` pragma and migrations are numbered and forward-only, each in its own
+transaction; a file written by a newer build is refused with a message rather than opened
+and half-understood.
+
+The store never computes anything. Every scheduling decision is a pure function of a
+card's state and one rating, so what is written is what the scheduler already decided,
+and `reviews` and `attempts` are append-only. That is what makes `cards` and `exercises`
+caches in principle: both could be rebuilt from the two logs, which is also why a schema
+change to either summary is cheap.
 
 Config is TOML at `$XDG_CONFIG_HOME/bash-teacher/config.toml` (theme, daily caps,
 desired retention, session size, timer on/off, editor keybindings). Schema migrations are
@@ -514,7 +535,12 @@ rebuilt.
 | **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** ✅ | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** ✅ | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
-| **M6 — Polish** | Stats, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
+| **M6 — Polish** | Progress store ✅, stats, config file, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
+
+M6 is in progress. The progress store is built (`internal/store`): the scheduler and the
+practice library are restored at startup and written through as the learner works, so
+`bt` now remembers. Still open: the historical half of Stats and the mastery grid, the
+TOML config file, `bt export`/`bt import`, light-theme auto-detection, and packaging.
 
 ---
 
@@ -541,6 +567,11 @@ rebuilt.
   day late and lands about ten points below it. The first tests the model, the second
   bounds what day-granularity costs on top of it and checks the load settles rather than
   snowballing.
+- **Store:** round-trip tests per table, plus a TUI-level test that answers a card and
+  solves an exercise in one process and finds both waiting in the next. The round trip
+  goes through the key flow rather than the store's API, because what has to survive is
+  what the screens actually record. One test forges a `user_version` from the future and
+  asserts the file is refused.
 - **Answer normalization:** table-driven equivalence tests, including the cases that must
   *not* be treated as equivalent (`-rn` vs `-r -n` is fine; `-i` vs `-I` is not).
 
