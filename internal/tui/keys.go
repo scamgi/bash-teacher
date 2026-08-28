@@ -42,6 +42,21 @@ type KeyMap struct {
 	Lookup   key.Binding
 	Reset    key.Binding
 
+	// Flashcard review. The ratings are letters rather than the digits SPEC
+	// §5 numbers them with, because 1-4 are the global screen switches and a
+	// learner mid-session must not be thrown to the dictionary by rating a
+	// card "again".
+	Reveal    key.Binding
+	Submit    key.Binding
+	Rate      key.Binding
+	RateAgain key.Binding
+	RateHard  key.Binding
+	RateGood  key.Binding
+	RateEasy  key.Binding
+	Harder    key.Binding
+	Easier    key.Binding
+	Start     key.Binding
+
 	// Editing motions inside the pipeline editor. CharLeft and CharRight are
 	// separate from Left and Right because those carry vim's h and l, which a
 	// learner typing a pipeline needs as letters.
@@ -104,6 +119,22 @@ var Keys = KeyMap{
 	Lookup: key.NewBinding(key.WithKeys("ctrl+g"), key.WithHelp("^G", "lookup")),
 	Reset:  key.NewBinding(key.WithKeys("ctrl+x"), key.WithHelp("^X", "clear")),
 
+	// Flashcard review.
+	Reveal: key.NewBinding(key.WithKeys("enter", " "), key.WithHelp("enter", "reveal")),
+	Submit: key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "answer")),
+	// Rate is the legend for the four rating keys, which the footer shows as
+	// one entry rather than four.
+	Rate:      key.NewBinding(key.WithKeys("a", "h", "g", "e"), key.WithHelp("a/h/g/e", "again·hard·good·easy")),
+	RateAgain: key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "again")),
+	RateHard:  key.NewBinding(key.WithKeys("h"), key.WithHelp("h", "hard")),
+	RateGood:  key.NewBinding(key.WithKeys("g"), key.WithHelp("g", "good")),
+	RateEasy:  key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "easy")),
+	// SPEC §5 reaches hard and easy with j and k before advancing; they nudge
+	// the rating the answer earned rather than replacing it.
+	Harder: key.NewBinding(key.WithKeys("j", "down"), key.WithHelp("j", "harder")),
+	Easier: key.NewBinding(key.WithKeys("k", "up"), key.WithHelp("k", "easier")),
+	Start:  key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "start reviewing")),
+
 	// Editing motions. ctrl+a/e, ctrl+w and ctrl+u/k are readline's, because
 	// that is what a shell user's fingers already know.
 	CharLeft:  key.NewBinding(key.WithKeys("left"), key.WithHelp("←", "left")),
@@ -142,5 +173,6 @@ func (k *KeyMap) FullHelp() [][]key.Binding {
 		{k.Run, k.Hint, k.Solution, k.NextEx},
 		{k.Preview, k.Lookup, k.Reset, k.Complete},
 		{k.LineStart, k.LineEnd, k.DeleteWord, k.KillToEnd},
+		{k.Reveal, k.Rate, k.Harder, k.Easier},
 	}
 }

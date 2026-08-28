@@ -1,0 +1,100 @@
+# Archives: bundling, compressing, and getting things back out again.
+- id: card-tar-create
+  type: recall
+  front: Bundle the site directory into site.tar.gz, gzipped.
+  back: tar -czf site.tar.gz site
+  commands: [tar]
+
+- id: card-tar-extract-here
+  type: recall
+  front: Extract everything from release.tar.gz into the current directory.
+  back: tar -xzf release.tar.gz
+  commands: [tar]
+
+- id: card-tar-list
+  type: recall
+  front: List what is inside backup.tar.gz without extracting any of it.
+  back: tar -tzf backup.tar.gz
+  commands: [tar]
+
+- id: card-tar-extract-elsewhere
+  type: recall
+  front: Extract release.tar.gz into /opt/app rather than into the current directory.
+  back: tar -xzf release.tar.gz -C /opt/app
+  commands: [tar]
+
+- id: card-tar-verbose-create
+  type: recall
+  front: Archive the logs directory into logs.tar, naming each file as it goes in, without compression.
+  back: tar -cvf logs.tar logs
+  commands: [tar]
+
+- id: card-gzip-keep
+  type: flag
+  front: "gzip: keep the original file as well as the .gz."
+  back: "-k"
+  commands: [gzip]
+
+- id: card-gzip-to-stdout
+  type: recall
+  front: Compress big.log and write the result to standard output so it can be piped.
+  back: gzip -c big.log
+  commands: [gzip]
+
+- id: card-gzip-best
+  type: recall
+  front: Compress archive.tar as hard as gzip can.
+  back: gzip -9 archive.tar
+  commands: [gzip]
+
+- id: card-gunzip-file
+  type: recall
+  front: Decompress dump.sql.gz back to dump.sql.
+  back: gunzip dump.sql.gz
+  accepts:
+    - "gzip -d dump.sql.gz"
+  commands: [gunzip, gzip]
+
+- id: card-gunzip-to-stdout
+  type: recall
+  front: Read a gzipped log without unpacking it to disk, so it can be piped into grep.
+  back: gunzip -c app.log.gz | grep ERROR
+  commands: [gunzip, grep]
+
+- id: card-gzip-test
+  type: recall
+  front: Check that backup.gz is not corrupt, without writing anything out.
+  back: gunzip -t backup.gz
+  commands: [gunzip]
+
+- id: card-zip-tree
+  type: recall
+  front: Zip the whole docs directory, recursively, into docs.zip.
+  back: zip -r docs.zip docs
+  commands: [zip]
+
+- id: card-zip-exclude
+  type: recall
+  front: Zip the src tree but leave out everything under .git.
+  back: zip -r src.zip src -x '.git/*'
+  commands: [zip]
+
+- id: card-unzip-list
+  type: flag
+  front: "unzip: list the contents without extracting them."
+  back: "-l"
+  commands: [unzip]
+
+- id: card-unzip-into
+  type: recall
+  front: Extract release.zip into /tmp/staging.
+  back: unzip -d /tmp/staging release.zip
+  commands: [unzip]
+
+- id: card-read-xz-stream
+  type: identify
+  front: xz -dc dump.sql.xz | head -n 20
+  back: >
+    Decompress to standard output without unpacking the file to disk, and
+    look at the first twenty lines of it — the same trick gunzip -c plays.
+  commands: [xz, head]

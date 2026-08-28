@@ -8,14 +8,17 @@ purpose: >
 synopsis: sort [OPTION]... [FILE]...
 flags:
   - flag: "-n"
+    long: "--numeric-sort"
     gloss: Compare as numbers, so 9 sorts before 10.
   - flag: "-r"
+    long: "--reverse"
     gloss: Reverse the result.
   - flag: "-k N"
     gloss: Sort by field N rather than the whole line.
   - flag: "-t CHAR"
     gloss: Use CHAR as the field separator.
   - flag: "-u"
+    long: "--unique"
     gloss: Drop duplicate lines after sorting.
   - flag: "-h"
     gloss: Compare human-readable sizes, so 2K sorts before 1M.

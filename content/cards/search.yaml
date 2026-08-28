@@ -1,0 +1,185 @@
+# Search & Find: locating text inside files, and files inside trees.
+- id: card-grep-plain
+  type: recall
+  front: Print the lines of app.log that contain the word ERROR.
+  back: grep ERROR app.log
+  commands: [grep]
+
+- id: card-grep-case-insensitive
+  type: flag
+  front: "grep: match regardless of capitalization."
+  back: "-i"
+  accepts:
+    - "--ignore-case"
+  commands: [grep]
+
+- id: card-grep-count-matches
+  type: recall
+  front: Print how many lines of app.log contain ERROR, without printing the lines.
+  back: grep -c ERROR app.log
+  commands: [grep]
+
+- id: card-grep-with-line-numbers
+  type: flag
+  front: "grep: prefix each match with its line number."
+  back: "-n"
+  accepts:
+    - "--line-number"
+  commands: [grep]
+
+- id: card-grep-recursive-tree
+  type: recall
+  front: Search the whole tree below the current directory for TODO, with line numbers.
+  back: grep -rn TODO .
+  accepts:
+    - "grep -nr TODO ."
+    - "grep -r -n TODO ."
+  commands: [grep]
+
+- id: card-grep-only-match
+  type: flag
+  front: "grep: print only the matching text, not the whole line."
+  back: "-o"
+  commands: [grep]
+
+- id: card-grep-extended
+  type: flag
+  front: "grep: use extended regexes, so | and + need no backslash."
+  back: "-E"
+  commands: [grep]
+
+- id: card-grep-start-anchor
+  type: recall
+  front: Print the lines of config.ini that begin with "host".
+  back: grep '^host' config.ini
+  commands: [grep]
+
+- id: card-grep-end-anchor
+  type: recall
+  front: Print the lines of urls.txt that end in .png.
+  back: grep '\.png$' urls.txt
+  commands: [grep]
+
+- id: card-grep-whole-word
+  type: recall
+  front: Find "log" as a whole word in notes.txt, not as part of "login" or "catalog".
+  back: grep -w log notes.txt
+  commands: [grep]
+
+- id: card-grep-empty-lines-count
+  type: recall
+  front: Count the blank lines in notes.txt.
+  back: grep -c '^$' notes.txt
+  commands: [grep]
+
+- id: card-find-by-name
+  type: recall
+  front: Find every file below the current directory whose name ends in .log.
+  back: find . -name '*.log'
+  commands: [find]
+
+- id: card-find-files-only
+  type: recall
+  front: Find regular files — not directories — under /var/log.
+  back: find /var/log -type f
+  commands: [find]
+
+- id: card-find-dirs-only
+  type: recall
+  front: List every directory under the current one.
+  back: find . -type d
+  commands: [find]
+
+- id: card-find-recent
+  type: recall
+  front: Find files under logs/ modified within the last day.
+  back: find logs -mtime -1
+  commands: [find]
+
+- id: card-find-large
+  type: recall
+  front: Find files under /var larger than 100 megabytes.
+  back: find /var -size +100M
+  commands: [find]
+
+- id: card-find-exec-grep
+  type: recall
+  front: Run grep for "panic" on every .go file found below the current directory, batching the calls.
+  back: find . -name '*.go' -exec grep -l panic {} +
+  commands: [find, grep]
+
+- id: card-find-delete-safely
+  type: recall
+  front: Find the .tmp files under build/ and pass them to rm safely, even if names contain spaces.
+  back: find build -name '*.tmp' -print0 | xargs -0 rm
+  commands: [find, xargs, rm]
+
+- id: card-find-case-insensitive
+  type: recall
+  front: Find files whose name ends in .JPG or .jpg, either case.
+  back: find . -iname '*.jpg'
+  commands: [find]
+
+- id: card-find-count
+  type: recall
+  front: Count how many .go files there are below the current directory.
+  back: find . -name '*.go' | wc -l
+  commands: [find, wc]
+
+- id: card-which-command
+  type: recall
+  front: Show which executable the name python3 actually resolves to.
+  back: which python3
+  commands: [which]
+
+- id: card-which-all
+  type: recall
+  front: Show every python3 on the PATH, not just the first one found.
+  back: which -a python3
+  commands: [which]
+
+- id: card-locate-basename
+  type: recall
+  front: Use the prebuilt index to find paths whose base name contains "nginx.conf".
+  back: locate -b nginx.conf
+  commands: [locate]
+
+- id: card-read-grep-invert-count
+  type: identify
+  front: grep -vc '^#' config.ini
+  back: >
+    Count the lines that are not comments — invert the match, then count what
+    is left, rather than printing it.
+  commands: [grep]
+
+- id: card-read-grep-context
+  type: identify
+  front: grep -n -C 2 panic server.log
+  back: >
+    Show each match with the two lines either side of it and their line
+    numbers, which is usually what you want from a stack trace.
+  commands: [grep]
+
+- id: card-read-find-newer
+  type: identify
+  front: find . -type f -newer Makefile
+  back: >
+    Every regular file below here that has been modified more recently than
+    the Makefile — a quick "what have I touched since the build?".
+  commands: [find]
+
+- id: card-read-find-prune
+  type: identify
+  front: find . -name node_modules -prune -o -name '*.js' -print
+  back: >
+    Walk the tree for JavaScript files but refuse to descend into
+    node_modules at all, rather than descending and filtering afterwards.
+  commands: [find]
+
+- id: card-read-grep-files-with-matches
+  type: identify
+  front: grep -rl TODO src/
+  back: >
+    List the names of the files under src that contain TODO, once each,
+    rather than every matching line.
+  commands: [grep]

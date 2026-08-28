@@ -1,0 +1,195 @@
+# Inspection: looking at files without changing them.
+- id: card-first-lines
+  type: recall
+  front: Print the first 20 lines of access.log.
+  back: head -n 20 access.log
+  accepts:
+    - "head -20 access.log"
+  commands: [head]
+
+- id: card-last-lines
+  type: recall
+  front: Print the last 50 lines of app.log.
+  back: tail -n 50 app.log
+  accepts:
+    - "tail -50 app.log"
+  commands: [tail]
+
+- id: card-follow-log
+  type: recall
+  front: Watch app.log and keep printing lines as they are appended.
+  back: tail -f app.log
+  commands: [tail]
+
+- id: card-middle-of-file
+  type: recall
+  front: Print lines 11 to 20 of data.txt using two commands.
+  back: head -n 20 data.txt | tail -n 10
+  commands: [head, tail]
+
+- id: card-count-lines
+  type: recall
+  front: Count the lines in access.log.
+  back: wc -l access.log
+  commands: [wc]
+
+- id: card-count-words
+  type: flag
+  front: "wc: count words only."
+  back: "-w"
+  commands: [wc]
+
+- id: card-count-bytes
+  type: flag
+  front: "wc: count bytes only."
+  back: "-c"
+  commands: [wc]
+
+- id: card-number-lines-cat
+  type: recall
+  front: Print config.ini with every line numbered, blank lines included.
+  back: cat -n config.ini
+  commands: [cat]
+
+- id: card-cat-number-nonblank
+  type: flag
+  front: "cat: number only the non-blank lines."
+  back: "-b"
+  commands: [cat]
+
+- id: card-show-invisibles
+  type: flag
+  front: "cat: show tabs and line endings, so whitespace is visible."
+  back: "-A"
+  commands: [cat]
+
+- id: card-directory-size
+  type: recall
+  front: Print the total size of the logs directory as one human-readable figure.
+  back: du -sh logs
+  commands: [du]
+
+- id: card-child-sizes
+  type: recall
+  front: Show the size of each immediate subdirectory of /var, human-readable.
+  back: du -h -d 1 /var
+  accepts:
+    - "du -d 1 -h /var"
+  commands: [du]
+
+- id: card-free-space
+  type: recall
+  front: Show free space per filesystem in human-readable units.
+  back: df -h
+  commands: [df]
+
+- id: card-free-inodes
+  type: flag
+  front: "df: report inodes rather than blocks."
+  back: "-i"
+  commands: [df]
+
+- id: card-identify-file
+  type: recall
+  front: Work out what kind of file mystery.bin actually is.
+  back: file mystery.bin
+  commands: [file]
+
+- id: card-file-mime
+  type: flag
+  front: "file: print the MIME type rather than the prose description."
+  back: "-i"
+  commands: [file]
+
+- id: card-diff-unified
+  type: recall
+  front: Show the differences between old.conf and new.conf in unified format.
+  back: diff -u old.conf new.conf
+  commands: [diff]
+
+- id: card-diff-quiet
+  type: flag
+  front: "diff: report only whether the files differ."
+  back: "-q"
+  commands: [diff]
+
+- id: card-diff-recursive
+  type: recall
+  front: Compare two directory trees, before and after, reporting every difference.
+  back: diff -ru before after
+  commands: [diff]
+
+- id: card-cmp-quiet
+  type: flag
+  front: "cmp: print nothing; the exit status is the answer."
+  back: "-s"
+  commands: [cmp]
+
+- id: card-hexdump
+  type: recall
+  front: Dump the first 64 bytes of header.bin as hex bytes.
+  back: od -t x1 -N 64 header.bin
+  commands: [od]
+
+- id: card-od-chars
+  type: recall
+  front: Dump data.bin showing printable characters and named escapes.
+  back: od -c data.bin
+  commands: [od]
+
+- id: card-stat-size
+  type: recall
+  front: Print just the byte size of app.log using stat.
+  back: stat -c %s app.log
+  commands: [stat]
+
+- id: card-less-line-numbers
+  type: recall
+  front: Page through server.log with line numbers shown.
+  back: less -N server.log
+  commands: [less]
+
+- id: card-skip-first-line
+  type: recall
+  front: Print data.csv from line 2 onward, skipping the header.
+  back: tail -n +2 data.csv
+  commands: [tail]
+
+- id: card-read-tail-follow-grep
+  type: identify
+  front: tail -f app.log | grep --line-buffered ERROR
+  back: >
+    Follow the log as it grows and show only the ERROR lines; the
+    line-buffered flag stops grep from holding output back in a block while
+    it waits for more.
+  commands: [tail, grep]
+
+- id: card-read-wc-pipeline
+  type: identify
+  front: ls -1 | wc -l
+  back: >
+    Count the entries in the current directory, one per line so the count is
+    of files rather than of however many columns ls chose.
+  commands: [ls, wc]
+
+- id: card-read-du-sort
+  type: identify
+  front: du -sh * | sort -h
+  back: >
+    Total each entry in this directory and order them smallest to largest,
+    with -h teaching sort to read "2K" and "1M" as sizes.
+  commands: [du, sort]
+
+- id: card-read-head-c
+  type: identify
+  front: head -c 512 disk.img
+  back: Print the first 512 bytes rather than the first 512 lines.
+  commands: [head]
+
+- id: card-read-less-follow
+  type: identify
+  front: less +F server.log
+  back: >
+    Open the log and follow it like tail -f, but with the option of pressing
+    ctrl-C to stop and scroll back through what has already gone by.
+  commands: [less]

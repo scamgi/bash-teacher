@@ -1,0 +1,162 @@
+# Process Control: what is running, and how to stop or time it.
+- id: card-ps-everything
+  type: recall
+  front: List every process on the machine in the BSD style, with users and CPU columns.
+  back: ps aux
+  commands: [ps]
+
+- id: card-ps-posix
+  type: recall
+  front: List every process in the POSIX style, showing full command lines.
+  back: ps -ef
+  commands: [ps]
+
+- id: card-ps-memory-hogs
+  type: recall
+  front: List processes ordered by resident memory, biggest first.
+  back: ps aux --sort=-rss
+  commands: [ps]
+
+- id: card-ps-grep-pipeline
+  type: recall
+  front: Find the running nginx processes by filtering a full process listing.
+  back: ps aux | grep nginx
+  commands: [ps, grep]
+
+- id: card-pgrep-by-name
+  type: recall
+  front: Print the process IDs of everything called nginx.
+  back: pgrep nginx
+  commands: [pgrep]
+
+- id: card-pgrep-full-line
+  type: recall
+  front: Find processes whose whole command line mentions "worker.py", not just the program name.
+  back: pgrep -f worker.py
+  commands: [pgrep]
+
+- id: card-pgrep-listing
+  type: recall
+  front: Print the PIDs of the ssh processes along with their names.
+  back: pgrep -l ssh
+  commands: [pgrep]
+
+- id: card-kill-polite
+  type: recall
+  front: Ask process 4821 to shut down cleanly.
+  back: kill 4821
+  accepts:
+    - "kill -15 4821"
+  commands: [kill]
+
+- id: card-kill-force
+  type: recall
+  front: Kill process 4821 outright, giving it no chance to clean up.
+  back: kill -9 4821
+  commands: [kill]
+
+- id: card-kill-hangup
+  type: recall
+  front: Tell process 900 to reload its configuration by sending it a hangup.
+  back: kill -1 900
+  commands: [kill]
+
+- id: card-pkill-by-name
+  type: recall
+  front: Terminate every process called stuck-worker by name rather than by PID.
+  back: pkill stuck-worker
+  commands: [pkill]
+
+- id: card-pkill-full-force
+  type: recall
+  front: Force-kill everything whose full command line matches "old-agent".
+  back: pkill -9 -f old-agent
+  accepts:
+    - "pkill -f -9 old-agent"
+  commands: [pkill]
+
+- id: card-sleep-seconds
+  type: recall
+  front: Wait for ninety seconds.
+  back: sleep 90
+  accepts:
+    - "sleep 1.5m"
+  commands: [sleep]
+
+- id: card-timeout-bound
+  type: recall
+  front: Run a slow script but give up after thirty seconds.
+  back: timeout 30 ./slow.sh
+  commands: [timeout]
+
+- id: card-timeout-kill-after
+  type: recall
+  front: Give a command ten seconds, then five more after a TERM before killing it outright.
+  back: timeout -k 5 10 ./job.sh
+  commands: [timeout]
+
+- id: card-time-a-command
+  type: recall
+  front: Measure how long a build takes.
+  back: time ./build.sh
+  commands: [time]
+
+- id: card-watch-interval
+  type: recall
+  front: Re-run "df -h" every five seconds and show the latest output.
+  back: watch -n 5 df -h
+  commands: [watch, df]
+
+- id: card-watch-highlight
+  type: recall
+  front: Watch a directory listing and highlight what changed between runs.
+  back: watch -d ls -l
+  commands: [watch, ls]
+
+- id: card-top-batch
+  type: recall
+  front: Take three non-interactive snapshots of top, suitable for piping into a file.
+  back: top -b -n 3
+  accepts:
+    - "top -bn 3"
+  commands: [top]
+
+- id: card-read-ps-o
+  type: identify
+  front: ps -o pid,rss,comm -p 4821
+  back: >
+    Show just three chosen columns — PID, resident memory, and command name —
+    for one process, instead of the default set for all of them.
+  commands: [ps]
+
+- id: card-read-pkill-user
+  type: identify
+  front: pkill -u deploy -x node
+  back: >
+    Kill only the processes owned by the deploy user whose name is exactly
+    "node", not everything that merely contains it.
+  commands: [pkill]
+
+- id: card-read-nohup
+  type: identify
+  front: nohup ./sync.sh > sync.log 2>&1
+  back: >
+    Start the script so that it survives the terminal closing, with both its
+    output streams captured in a log rather than in nohup.out.
+  commands: [nohup]
+
+- id: card-read-watch-grep
+  type: identify
+  front: watch -n 2 'pgrep -c nginx'
+  back: >
+    Every two seconds, print how many nginx processes are alive — a poor
+    man's monitor built out of two small commands.
+  commands: [watch, pgrep]
+
+- id: card-read-timeout-status
+  type: identify
+  front: timeout --preserve-status 5 ping example.com
+  back: >
+    Run ping for five seconds and exit with ping's own status rather than
+    timeout's 124, so a caller can tell why it stopped.
+  commands: [timeout]

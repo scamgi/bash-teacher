@@ -275,7 +275,11 @@ func dictCmd(library *lib.Library, th *theme.Theme, args []string) error {
 		fmt.Println()
 		fmt.Println(th.Faint.Render("FLAGS"))
 		for _, f := range c.Flags {
-			fmt.Printf("  %-12s %s\n", f.Flag, f.Gloss)
+			gloss := f.Gloss
+			if f.Long != "" {
+				gloss += "  (long form: " + f.Long + ")"
+			}
+			fmt.Printf("  %-12s %s\n", f.Flag, gloss)
 		}
 	}
 	fmt.Println()

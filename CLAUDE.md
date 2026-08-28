@@ -8,9 +8,10 @@ A Go TUI that teaches Unix commands and pipeline composition, through three surf
 sharing one content library: a Dictionary, sandbox-executed Pipeline Exercises, and
 Flashcards. **`SPEC.md` is the design source of truth** — read it before adding a
 feature, and update it when a decision changes. It defines six milestones (M1–M6);
-M1 (skeleton), M2 (dictionary), M3 (runner) and M4 (practice) are complete; the
-flashcard scheduler and the progress store are not built yet. Screens carry visible
-in-app notes saying which milestone fills them in.
+M1 (skeleton), M2 (dictionary), M3 (runner), M4 (practice) and M5 (flashcards) are
+complete; the progress store is not built yet, so everything the scheduler knows dies
+with the process. Screens carry visible in-app notes saying which milestone fills them
+in.
 
 ## Commands
 
@@ -34,6 +35,11 @@ The M4 exit criterion is `go test ./internal/runner -run Reference -v`, which ru
 120 reference solutions in the sandbox and diffs them against the committed expected
 outputs. After editing an exercise or a fixture, run `make expected` and commit what it
 writes — never hand-edit a file under `content/expected/`.
+
+The M5 exit criteria are `go test ./internal/srs -v` — the interval ladder is pinned to
+exact numbers, so any change to the model breaks it loudly and on purpose — and
+`go test ./internal/answer -v`, whose last case walks all 250 cards and fails if any
+card's own answer would not be accepted from a learner.
 
 Dump rendered frames to eyeball layout without a terminal:
 `BT_DUMP=1 go test ./internal/tui -run DumpFrames -v`
@@ -144,6 +150,60 @@ Track locking is computed (`internal/tui/progress.go`, 80% per SPEC §2.2) and d
 but not enforced: progress lives in memory until M6, so a hard gate would re-lock the
 library on every launch.
 
+### The scheduler (`internal/srs`)
+
+FSRS-lite: the same two-variable model as FSRS — stability and difficulty over the power
+forgetting curve — with a handful of documented constants instead of nineteen fitted
+weights, because there is no corpus to fit weights to without telemetry.
+
+The two curve constants (`decay = -0.5`, `factor = 19/81`) are chosen together so that
+**at the default 0.90 retention the interval equals the stability**. The test
+`TestIntervalEqualsStabilityAtDefaultRetention` pins that identity; it is what makes
+every other number in the package readable, so never change one constant without the
+other.
+
+The package knows nothing about content — cards are addressed by id — so it can be
+simulated over synthetic ids. `Grade` and `Preview` both go through the pure `next`,
+which is why the interval a rating key advertises can never disagree with the interval
+it delivers. `Credit` is the half-strength review SPEC §5 grants for solving an exercise;
+it never pulls a due date forward.
+
+`srs_test.go` holds two simulations, and they assert different things: a punctual learner
+must converge on the target retention (that is the model's own claim), while a once-a-day
+learner lands about ten points lower because every card is answered a few hours to a day
+late. Do not "fix" the second by widening the first.
+
+### Answer normalization (`internal/answer`)
+
+Typed flashcard answers are compared after normalization, not as strings. The grader is
+built from the `Library` because the interesting questions are about commands, not about
+shell syntax: whether `-f3` is a cluster or a flag carrying `3` is a fact about `cut`,
+and the dictionary's flag table already answers it. Adding a `long:` to a dictionary flag
+is therefore what makes `--ignore-case` grade equal to `-i`.
+
+Value-carrying flags are compared by name with their values in order, which keeps
+`cut -f3 -d,` equal to `cut -d, -f3` while leaving `sort -k1 -k2` distinct from
+`sort -k2 -k1`. Verdicts are `Correct`, `Wrong`, and `Unsure`; `Unsure` sends the card to
+self-grading and is returned when either side fails to parse or when the two differ only
+inside quoted text, where a regex has many right spellings. A false negative on a regex
+is worse than a question — do not turn `Unsure` into `Wrong` to tidy up a table.
+
+### Review sessions (`internal/tui/flashcards.go`)
+
+Three phases: `phaseIdle` between sittings, `phaseAsk` with the card face down, and
+`phaseGrade` with the rating keys. `Capturing()` is true only in `phaseAsk` on a typed
+card, so the answer editor owns every printable key there and nothing else on the screen
+does.
+
+Ratings are `a`/`h`/`g`/`e` rather than `1`–`4` because the digits are the global screen
+switches; `j`/`k` nudge the preselected rating and `enter` commits it. Each key is
+labelled with `Scheduler.Preview`, so the cost of "hard" is visible before it is paid.
+
+The scheduler and the grader live on the root `App`, not on this screen, because Home
+reports the day's load, Stats draws the forecast, and Practice credits the cards an
+exercise teaches. `App.Now()` is the clock everything schedules through, so a test can
+place a session on a known day.
+
 ### Theme (`internal/theme`)
 
 Catppuccin, all four flavours. `Palette` names colours by **role** (`Accent`, `Pass`, `Fail`,
@@ -174,6 +234,17 @@ expected stdout.
   commands, exercises and cards, an example plus caption on every command, hints on every
   exercise, and fixtures that exist, are flat, and stay under 256 KB. Every card must name at
   least one command so per-command mastery is computable.
+- **A card's `back` has to survive `shellparse`.** `recall` and `flag` answers are graded
+  by parsing them, so a back containing a subshell, a backtick, a bare `&`, or an
+  unbalanced quote grades as `Unsure` and the learner can never simply be right.
+  `TestEveryTypedCardAcceptsItsOwnAnswer` is the guard. `identify` cards are exempt: they
+  are prose, and never parsed.
+- A **`flag` card's `back` is an argument list with no command in front of it**, and it is
+  expanded against `commands[0]` — so that entry must be the command whose flags they are.
+- Where a card's answer has a genuinely different right spelling, list it under `accepts`
+  rather than loosening the grader. The obsolescent `head -5` for `head -n 5` is the
+  usual case: the grader reads `-5` as an operand on purpose, since only `head` and
+  `tail` spell counts that way.
 - Commands in the `network` category are documented but **never executable**; `Library.Allowlist()`
   excludes them, and a test asserts it. The M3 sandbox depends on this.
 

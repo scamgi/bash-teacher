@@ -1,0 +1,90 @@
+# Permissions: who may read, write, and run what.
+- id: card-chmod-executable
+  type: recall
+  front: Make deploy.sh executable for everyone who can already read it.
+  back: chmod +x deploy.sh
+  commands: [chmod]
+
+- id: card-chmod-owner-write
+  type: recall
+  front: Give the owner write permission on notes.txt without touching anyone else's.
+  back: chmod u+w notes.txt
+  commands: [chmod]
+
+- id: card-chmod-private
+  type: recall
+  front: Take every permission away from group and others on secrets.env.
+  back: chmod go-rwx secrets.env
+  commands: [chmod]
+
+- id: card-chmod-numeric
+  type: recall
+  front: Set script.sh to rwxr-xr-x using the numeric form.
+  back: chmod 755 script.sh
+  commands: [chmod]
+
+- id: card-chmod-key
+  type: recall
+  front: Set an SSH private key to the only permissions ssh will accept.
+  back: chmod 600 id_rsa
+  commands: [chmod]
+
+- id: card-chmod-recursive
+  type: recall
+  front: Set every file under public/ to 644, walking the whole tree.
+  back: chmod -R 644 public
+  commands: [chmod]
+
+- id: card-chown-user-group
+  type: recall
+  front: Give app.log to the user deploy and the group www.
+  back: chown deploy:www app.log
+  commands: [chown]
+
+- id: card-chown-recursive
+  type: recall
+  front: Hand the whole /srv/app tree to the deploy user.
+  back: chown -R deploy /srv/app
+  commands: [chown]
+
+- id: card-whoami
+  type: recall
+  front: Print the username you are currently acting as.
+  back: whoami
+  commands: [whoami]
+
+- id: card-id-groups
+  type: recall
+  front: Print the names of every group the current user belongs to.
+  back: id -Gn
+  accepts:
+    - "id -nG"
+    - "id -G -n"
+  commands: [id]
+
+- id: card-id-uid
+  type: recall
+  front: Print the current user's numeric user ID and nothing else.
+  back: id -u
+  commands: [id]
+
+- id: card-sudo-as-user
+  type: recall
+  front: Run a command as the postgres user rather than as root.
+  back: sudo -u postgres psql
+  commands: [sudo]
+
+- id: card-umask-private
+  type: recall
+  front: Set the default permissions so new files are readable only by their owner.
+  back: umask 077
+  commands: [umask]
+
+- id: card-read-chmod-symbolic-recursive
+  type: identify
+  front: chmod -R g+rX docs
+  back: >
+    Give the group read on every file under docs and execute only on the
+    directories — the capital X is what stops it marking ordinary files
+    runnable.
+  commands: [chmod]

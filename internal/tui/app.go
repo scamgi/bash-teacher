@@ -5,9 +5,12 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"bash-teacher/internal/answer"
 	"bash-teacher/internal/content"
 	"bash-teacher/internal/runner"
+	"bash-teacher/internal/srs"
 	"bash-teacher/internal/theme"
 
 	"charm.land/bubbles/v2/help"
@@ -117,6 +120,10 @@ type exerciseOpener interface{ OpenExercise(id string) bool }
 // cardFilterer is implemented by the Flashcards screen.
 type cardFilterer interface{ ShowCommand(commandID string) bool }
 
+// sessionStarter is implemented by the Flashcards screen, so that `bt review`
+// opens on the day's queue rather than on a menu about it.
+type sessionStarter interface{ Start(a *App) }
+
 // exerciseCounter is implemented by the Practice screen, so that Home can
 // report the session's progress without holding a reference to it.
 type exerciseCounter interface{ PassedCount() int }
@@ -130,8 +137,23 @@ type App struct {
 	Theme *theme.Theme
 	// Runner executes learner input. It may be nil in tests that never run
 	// anything; screens must check before using it.
-	Runner  *runner.Runner
+	Runner *runner.Runner
+	// SRS schedules the flashcard deck and holds the review log. It lives on
+	// the root model rather than on the flashcards screen because three
+	// screens read it: Home reports the day's load, Stats draws the forecast,
+	// and Practice credits the cards an exercise teaches.
+	//
+	// Nothing in it survives the process yet; SPEC §8 puts it in SQLite and
+	// that arrives with M6.
+	SRS *srs.Scheduler
+	// Grader normalizes typed flashcard answers against what the dictionary
+	// documents.
+	Grader  *answer.Grader
 	Version string
+
+	// clock is time.Now, indirected so tests can place a session on a known
+	// day rather than on whatever day they happen to run.
+	clock func() time.Time
 
 	width, height int
 	current       Screen
@@ -179,7 +201,10 @@ func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version stri
 		Lib:     lib,
 		Theme:   th,
 		Runner:  run,
+		SRS:     srs.New(srs.Defaults()),
+		Grader:  answer.New(lib),
 		Version: version,
+		clock:   time.Now,
 		current: start,
 		help:    h,
 		screens: map[Screen]screen{
@@ -193,7 +218,67 @@ func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version stri
 	for _, o := range opts {
 		o(a)
 	}
+	// `bt review` asks for the day's cards, not for a menu about them.
+	if start == ScreenFlashcards {
+		if f, ok := a.screens[ScreenFlashcards].(sessionStarter); ok {
+			f.Start(a)
+		}
+	}
 	return a
+}
+
+// Now is the app's clock. Everything that schedules or reports on scheduling
+// reads the time through it.
+func (a *App) Now() time.Time {
+	if a.clock == nil {
+		return time.Now()
+	}
+	return a.clock()
+}
+
+// Grade compares a typed flashcard answer with what the card expects.
+func (a *App) Grade(c *content.Card, typed string) answer.Result {
+	if a.Grader == nil {
+		return answer.Result{Verdict: answer.Unsure, Reason: "no grader is configured"}
+	}
+	return a.Grader.Grade(c, typed)
+}
+
+// DueCards reports how many cards in the library are due now.
+func (a *App) DueCards() int {
+	if a.SRS == nil {
+		return 0
+	}
+	return a.SRS.DueCount(cardIDs(a.Lib.Cards), a.Now())
+}
+
+// UnseenCards reports how many cards have never been answered.
+func (a *App) UnseenCards() int {
+	if a.SRS == nil {
+		return len(a.Lib.Cards)
+	}
+	return a.SRS.UnseenCount(cardIDs(a.Lib.Cards))
+}
+
+// CreditPractice gives every card an exercise drills the half-strength review
+// SPEC §5 grants for solving it: practice reinforces recall without standing
+// in for it. It reports how many cards were credited, for the footer line.
+func (a *App) CreditPractice(ex *content.Exercise) int {
+	if a.SRS == nil {
+		return 0
+	}
+	now := a.Now()
+	seen := map[string]bool{}
+	for _, id := range ex.Teaches {
+		for _, c := range a.Lib.CardsFor(id) {
+			if seen[c.ID] {
+				continue
+			}
+			seen[c.ID] = true
+			a.SRS.Credit(c.ID, now)
+		}
+	}
+	return len(seen)
 }
 
 // Init implements tea.Model.

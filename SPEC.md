@@ -64,8 +64,10 @@ A searchable, browsable reference for every command in the library.
   examples, related commands, exercises — and `Enter` does the obvious thing with
   the focused one: copy the example, jump to the command, or open the exercise.
   `y` copies the focused example, `p` opens an exercise that teaches this command,
-  `f` narrows the flashcard deck to it, and `backspace` walks back out of a jump.
-  (`f` filters the deck rather than scheduling: the review queue arrives in M5.)
+  `f` opens a review session drilling just that command, and `backspace` walks
+  back out of a jump. A drill started this way ignores due dates — it is a
+  request to practise one command, not to do the day's work — and `esc` returns
+  to the scheduled queue.
 
 Every dictionary entry is also reachable from anywhere with `?` (contextual lookup on
 the command under the cursor in the exercise editor) — except inside the pipeline
@@ -138,13 +140,29 @@ Short recall drills for muscle memory. Three card types:
 | `flag` | "`tar`: extract a gzipped archive verbosely" | `-xzvf` | typed answer, exact match |
 
 - A session is a fixed-size queue (default 20 cards, configurable) built from cards due
-  today plus new cards, capped by a daily new-card limit.
+  today plus new cards, capped by a daily new-card limit. Both caps are counted against
+  what the log already holds for the day, so two sittings cannot together exceed one
+  day's allowance.
 - Typed answers are normalized before comparison: whitespace collapsed, quote style
   (`'`/`"`) equivalent, flag order within a cluster equivalent (`-la` ≡ `-al` ≡ `-l -a`),
   short/long flags equivalent when documented as such in the dictionary. Anything
   ambiguous falls back to self-grading rather than a false negative.
-- Grading is **FSRS-lite** (see §5). A wrong answer re-queues the card later in the same
-  session.
+
+  Whether `-f3` is a cluster of two flags or one flag carrying the value `3` is a
+  question about `cut`, not about shell syntax, so the normalizer is built from the
+  dictionary's flag tables rather than from a list of special cases. Flags that carry
+  values are compared by name, which keeps `cut -f3 -d,` equal to `cut -d, -f3` while
+  leaving `sort -k1 -k2` distinct from `sort -k2 -k1`, where the order of two of the
+  same flag is the whole meaning. Two answers that differ only inside quoted text — one
+  regex or `sed` script against another — are handed to the learner to grade rather than
+  marked wrong, and so is anything the parser cannot read.
+- Grading is **FSRS-lite** (see §5). A wrong answer re-queues the card three places later
+  in the same session, far enough to be recalled rather than echoed.
+- **Rating keys** are letters, not the digits §5 numbers the ratings with: `1`–`4` are the
+  global screen switches, and a learner mid-session must not be thrown to the dictionary
+  by rating a card "again". `a`/`h`/`g`/`e` rate directly; `j` and `k` nudge the rating
+  the answer earned and `enter` commits it. Each key is labelled with the interval it
+  buys, so the choice between hard and good is a visible trade rather than a guess.
 - Timer optional; when enabled, a soft target (default 8 s) nudges toward automaticity
   but never fails a card on time alone.
 
@@ -152,6 +170,11 @@ Short recall drills for muscle memory. Three card types:
 
 Retention curve, cards due over the next 14 days, exercises passed per track,
 per-command mastery (a heat grid over the dictionary), and current/longest streak.
+
+The review half of this is live as of M5 — what is due, how much of the deck has been
+introduced, how much of it is being recalled, and the fortnight's outlook as a
+sparkline — over the session's own scheduler. The historical half, and the mastery
+grid, need the store, and arrive with it in M6.
 
 ---
 
@@ -164,6 +187,7 @@ internal/content/         loader + validator for the YAML content library
 internal/fuzzy/           subsequence matching and ranking for the search box
 internal/runner/          sandboxed execution, fixture materialization, diffing
 internal/srs/             scheduler (FSRS-lite), review log
+internal/answer/          answer normalization and grading for typed flashcards
 internal/store/           SQLite persistence (progress, review log, settings)
 internal/shellparse/      pipeline tokenizer/AST used for safety checks and hints
 internal/theme/           Catppuccin palettes and the shared Lip Gloss styles
@@ -287,10 +311,22 @@ runs.
 
 FSRS-lite: each card carries `stability`, `difficulty`, `due`, `reps`, `lapses`.
 
+It is the same two-variable model as FSRS — stability is how long a memory lasts,
+difficulty is how hard it is to keep — driven by the same power forgetting curve
+`R(t) = (1 + 19/81 · t/S) ^ -0.5`, but with a handful of hand-chosen, documented
+constants instead of nineteen fitted weights. There is no training corpus to fit weights
+to and no way to collect one without telemetry, so a model a reader can predict beats
+one that is merely more precise on somebody else's data. The two curve constants are
+chosen together so that **at 90% retention the next interval is the stability itself**,
+which is what makes a stability of 12 readable as "due in twelve days".
+
 - Ratings: `again` (1), `hard` (2), `good` (3), `easy` (4). Typed-answer cards map a
   correct answer to `good` by default; `hard`/`easy` are still reachable with `j`/`k`
   before advancing, and a wrong answer is `again`.
 - Intervals grow from stability with a configurable `desired_retention` (default 0.90).
+  A learner rated `good` every time walks 3 → 5.1 → 8.7 → 15 → 26 → 44 → 77 days; `easy`
+  roughly doubles that each step, and `hard` plateaus around two and a half days as
+  difficulty rises. Intervals are capped at a year.
 - `again` sets a 10-minute relearning step and increments `lapses`.
 - Daily caps: `new_cards_per_day` (default 15), `max_reviews_per_day` (default 120).
 - Passing an exercise credits every card in its `teaches` list with a half-strength
@@ -456,6 +492,12 @@ CREATE TABLE exercises   (id TEXT PRIMARY KEY, first_passed INTEGER, best_ms INT
 CREATE TABLE meta        (key TEXT PRIMARY KEY, value TEXT);
 ```
 
+Until the store lands the scheduler holds all of this in memory, so a session's review
+log dies with the process: Home and Stats say as much rather than showing a streak that
+would quietly be a lie. Nothing else changes when it arrives — every scheduling decision
+is a pure function of a card's state and one rating, and the log is append-only, so a
+replay reconstructs the same state.
+
 Config is TOML at `$XDG_CONFIG_HOME/bash-teacher/config.toml` (theme, daily caps,
 desired retention, session size, timer on/off, editor keybindings). Schema migrations are
 numbered and forward-only; `attempts` is the raw record from which everything else can be
@@ -471,7 +513,7 @@ rebuilt.
 | **M2 — Dictionary** ✅ | Full dictionary UI, fuzzy search, 80 command entries | Every command entry passes lint and renders |
 | **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** ✅ | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
-| **M5 — Flashcards** | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
+| **M5 — Flashcards** ✅ | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
 | **M6 — Polish** | Stats, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
 
 ---
@@ -492,7 +534,13 @@ rebuilt.
 - **TUI:** golden-file tests over `View()` at 80×24 and 120×40 after scripted key
   sequences; `teatest` for the async run flow.
 - **SRS:** deterministic simulation of a 365-day learner, asserting review load stays
-  within caps and retention converges on the target.
+  within caps and retention converges on the target. It is two simulations, because the
+  two claims are different: a *punctual* learner who answers each card the moment it
+  falls due must hit the target retention, which is what the forgetting curve promises,
+  while a *daily* learner who sits down once a day answers everything a few hours to a
+  day late and lands about ten points below it. The first tests the model, the second
+  bounds what day-granularity costs on top of it and checks the load settles rather than
+  snowballing.
 - **Answer normalization:** table-driven equivalence tests, including the cases that must
   *not* be treated as equivalent (`-rn` vs `-r -n` is fine; `-i` vs `-I` is not).
 

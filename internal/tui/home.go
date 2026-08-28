@@ -100,18 +100,30 @@ func sandboxNotice(a *App) string {
 	return t.Faint.Render("sandbox   ") + t.Dim.Render(a.Runner.Sandbox().Describe())
 }
 
-// summary shows today's load beside what the loaded library contains. The
-// progress figures stay at zero until the store lands in a later milestone;
-// the library figures are live, and are the proof that content loaded.
+// summary shows today's review load beside what the loaded library contains.
+//
+// The load is live but not yet durable: the scheduler holds it in memory, so
+// the streak is however many days this process has been running — which is
+// one. SPEC §8 puts it in SQLite in M6, and the line says as much rather than
+// showing a number that would quietly be a lie.
 func (h *homeScreen) summary(a *App, width int) string {
 	t := a.Theme
+	p := a.SRS.Params()
+	due, unseen := a.DueCards(), a.UnseenCards()
+	newRoom := min(unseen, max(0, p.NewPerDay-a.SRS.NewToday(a.Now())))
+
+	streak := fmt.Sprintf("%s (this session)", plural(a.SRS.Streak(a.Now()), "day", "days"))
+	if a.SRS.Streak(a.Now()) == 0 {
+		streak = "not started today"
+	}
 
 	today := strings.Join([]string{
 		t.PanelTitle.Render("Today"),
 		"",
-		row(t, 12, "Cards due", "—"),
-		row(t, 12, "New cards", "—"),
-		row(t, 12, "Streak", "—"),
+		row(t, 12, "Cards due", fmt.Sprintf("%d", due)),
+		row(t, 12, "New cards", fmt.Sprintf("%d of %d unseen", newRoom, unseen)),
+		row(t, 12, "Reviewed", fmt.Sprintf("%d", a.SRS.ReviewsToday(a.Now()))),
+		row(t, 12, "Streak", streak),
 		row(t, 12, "Passed", fmt.Sprintf("%d this session", a.PassedExercises())),
 	}, "\n")
 

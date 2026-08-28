@@ -196,7 +196,7 @@ func (p *practiceScreen) Update(a *App, msg tea.Msg) (screen, tea.Cmd) {
 		tick := spinnerTick()
 		return p, tick
 	case runResultMsg:
-		cmd := p.finishRun(msg)
+		cmd := p.finishRun(a, msg)
 		return p, cmd
 	case tea.KeyPressMsg:
 		if p.mode == modeBrowse {
@@ -319,7 +319,7 @@ func (p *practiceScreen) startRun(a *App) tea.Cmd {
 
 // finishRun records a result, ignoring one that belongs to an exercise the
 // learner has already left.
-func (p *practiceScreen) finishRun(msg runResultMsg) tea.Cmd {
+func (p *practiceScreen) finishRun(a *App, msg runResultMsg) tea.Cmd {
 	if p.ex == nil || msg.id != p.ex.ID {
 		return nil
 	}
@@ -335,10 +335,17 @@ func (p *practiceScreen) finishRun(msg runResultMsg) tea.Cmd {
 	first := !st.passed
 	st.passed = true
 	p.critique = runner.Critique(msg.outcome.Input, p.ex.ReferenceSolution)
-	if first {
-		return flash("✓ passed — " + p.ex.Title)
+	if !first {
+		return nil
 	}
-	return nil
+	// SPEC §5: solving an exercise reinforces every card it drills, at half
+	// the strength of answering the card itself. Only the first pass counts —
+	// re-running a solved exercise is not new evidence.
+	note := "✓ passed — " + p.ex.Title
+	if n := a.CreditPractice(p.ex); n > 0 {
+		note += fmt.Sprintf(" · credited %s", plural(n, "flashcard", "flashcards"))
+	}
+	return flash(note)
 }
 
 // nextHint reveals one more hint. Hints cost nothing and are recorded, which

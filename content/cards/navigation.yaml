@@ -1,0 +1,182 @@
+# Files & Navigation: moving around, and the file operations that go with it.
+- id: card-list-one-per-line
+  type: recall
+  front: List the current directory one entry per line, ready to pipe into another command.
+  back: ls -1
+  commands: [ls]
+
+- id: card-list-newest-first
+  type: recall
+  front: List the current directory in long form with the newest file first.
+  back: ls -lt
+  commands: [ls]
+
+- id: card-list-hidden
+  type: recall
+  front: List everything in the current directory, dot files included, in long form.
+  back: ls -la
+  accepts:
+    - "ls -al"
+  commands: [ls]
+
+- id: card-list-oldest-first
+  type: recall
+  front: List the current directory with the oldest file first.
+  back: ls -ltr
+  commands: [ls]
+
+- id: card-make-nested-dir
+  type: recall
+  front: Create build/reports/2026, creating any missing parents on the way.
+  back: mkdir -p build/reports/2026
+  commands: [mkdir]
+
+- id: card-touch-file
+  type: recall
+  front: Create an empty file called notes.md, or bump its timestamp if it exists.
+  back: touch notes.md
+  commands: [touch]
+
+- id: card-touch-no-create
+  type: flag
+  front: "touch: update the timestamp, but never create a missing file."
+  back: "-c"
+  commands: [touch]
+
+- id: card-copy-tree
+  type: recall
+  front: Copy the whole src directory to backup, keeping its structure.
+  back: cp -r src backup
+  commands: [cp]
+
+- id: card-copy-preserve
+  type: flag
+  front: "cp: keep mode, ownership and timestamps."
+  back: "-p"
+  commands: [cp]
+
+- id: card-copy-no-clobber
+  type: flag
+  front: "cp: never overwrite a file that already exists."
+  back: "-n"
+  commands: [cp]
+
+- id: card-rename-file
+  type: recall
+  front: Rename draft.txt to final.txt.
+  back: mv draft.txt final.txt
+  commands: [mv]
+
+- id: card-move-ask-first
+  type: recall
+  front: Move report.pdf into archive/, being asked before anything is overwritten.
+  back: mv -i report.pdf archive/
+  commands: [mv]
+
+- id: card-remove-tree
+  type: recall
+  front: Delete the build directory and everything under it, without being asked.
+  back: rm -rf build
+  commands: [rm]
+
+- id: card-remove-dash-file
+  type: recall
+  front: Delete a file whose name begins with a dash, so rm does not read it as options.
+  back: rm -- -weird-name.txt
+  commands: [rm]
+
+- id: card-symlink
+  type: recall
+  front: Make current a symbolic link pointing at releases/v2.
+  back: ln -s releases/v2 current
+  commands: [ln]
+
+- id: card-symlink-replace
+  type: recall
+  front: Repoint the existing current symlink at releases/v3 in one step.
+  back: ln -sfn releases/v3 current
+  commands: [ln]
+
+- id: card-basename
+  type: recall
+  front: Print just the filename part of /var/log/nginx/access.log.
+  back: basename /var/log/nginx/access.log
+  commands: [basename]
+
+- id: card-basename-suffix
+  type: recall
+  front: Print report from /tmp/report.tar.gz, dropping both the directory and the .tar.gz.
+  back: basename /tmp/report.tar.gz .tar.gz
+  commands: [basename]
+
+- id: card-dirname
+  type: recall
+  front: Print the directory part of /var/log/nginx/access.log.
+  back: dirname /var/log/nginx/access.log
+  commands: [dirname]
+
+- id: card-pwd-physical
+  type: flag
+  front: "pwd: print the path with every symlink resolved."
+  back: "-P"
+  commands: [pwd]
+
+- id: card-realpath
+  type: recall
+  front: Turn the relative path ../data/in.csv into a canonical absolute one.
+  back: realpath ../data/in.csv
+  commands: [realpath]
+
+- id: card-cd-back
+  type: recall
+  front: Go back to the directory you were in before the last cd.
+  back: cd -
+  commands: [cd]
+
+- id: card-read-ls-size-sort
+  type: identify
+  front: ls -lhS
+  back: >
+    A long listing with human-readable sizes, largest file first — the quick
+    answer to "what is filling this directory?".
+  commands: [ls]
+
+- id: card-read-mkdir-mode
+  type: identify
+  front: mkdir -m 700 private
+  back: >
+    Create the directory private with permissions rwx------ from the start,
+    rather than creating it and then chmod-ing it.
+  commands: [mkdir]
+
+- id: card-read-cp-archive
+  type: identify
+  front: cp -a site/ backup/
+  back: >
+    Copy the tree preserving everything — recursion, modes, ownership,
+    timestamps, and symlinks kept as symlinks rather than followed.
+  commands: [cp]
+
+- id: card-read-ln-relative
+  type: identify
+  front: ln -sr shared/lib.so app/lib.so
+  back: >
+    Make app/lib.so a symlink whose target is written relative to where the
+    link lives, so the pair survives being moved together.
+  commands: [ln]
+
+- id: card-read-rm-interactive
+  type: identify
+  front: rm -ri old/
+  back: >
+    Delete the old directory recursively, but ask before each file — the
+    cautious form for a tree you have not looked inside.
+  commands: [rm]
+
+- id: card-read-touch-reference
+  type: identify
+  front: touch -r template.txt new.txt
+  back: >
+    Give new.txt exactly the timestamps template.txt has, rather than the
+    current time.
+  commands: [touch]

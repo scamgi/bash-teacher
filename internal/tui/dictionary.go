@@ -505,7 +505,14 @@ func (d *dictionaryScreen) buildDetail(a *App, width int) {
 		}
 		fw = clampInt(fw+2, 6, 18)
 		for _, f := range c.Flags {
-			for i, ln := range strings.Split(wrap(f.Gloss, max(12, w-fw)), "\n") {
+			gloss := f.Gloss
+			if f.Long != "" {
+				// The long spelling earns a mention rather than a column of
+				// its own: it is worth knowing that it exists, and the
+				// flashcard grader treats the two as the same answer.
+				gloss += "  (long form: " + f.Long + ")"
+			}
+			for i, ln := range strings.Split(wrap(gloss, max(12, w-fw)), "\n") {
 				// The flag is styled, so its column is padded from the raw
 				// width rather than with pad(), which would count escapes.
 				label := strings.Repeat(" ", fw)

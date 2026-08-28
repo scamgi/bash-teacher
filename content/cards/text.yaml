@@ -72,3 +72,293 @@
   front: Join part1.txt and part2.txt into a single file, whole.txt.
   back: cat part1.txt part2.txt > whole.txt
   commands: [cat]
+
+- id: card-uniq-only-dupes
+  type: flag
+  front: "uniq: print only the lines that repeat."
+  back: "-d"
+  commands: [uniq]
+
+- id: card-uniq-only-unique
+  type: flag
+  front: "uniq: print only the lines that occur exactly once."
+  back: "-u"
+  commands: [uniq]
+
+- id: card-sort-by-third-field
+  type: recall
+  front: Sort scores.tsv numerically by its third tab-separated field.
+  back: sort -k3 -n scores.tsv
+  accepts:
+    - "sort -n -k3 scores.tsv"
+  commands: [sort]
+
+- id: card-sort-unique
+  type: flag
+  front: "sort: drop duplicates as part of the sort."
+  back: "-u"
+  commands: [sort]
+
+- id: card-sort-sizes
+  type: flag
+  front: "sort: compare human-readable sizes, so 2K precedes 1M."
+  back: "-h"
+  commands: [sort]
+
+- id: card-top-five
+  type: recall
+  front: Given counts.txt with a number first on each line, print the five largest lines.
+  back: sort -rn counts.txt | head -n 5
+  accepts:
+    - "sort -nr counts.txt | head -n 5"
+    - "sort -rn counts.txt | head -5"
+  commands: [sort, head]
+
+- id: card-cut-characters
+  type: recall
+  front: Print characters 1 to 8 of every line in fixed.txt.
+  back: cut -c 1-8 fixed.txt
+  accepts:
+    - "cut -c1-8 fixed.txt"
+  commands: [cut]
+
+- id: card-cut-two-fields
+  type: recall
+  front: Print the first and third comma-separated fields of data.csv.
+  back: cut -d, -f 1,3 data.csv
+  accepts:
+    - "cut -d, -f1,3 data.csv"
+  commands: [cut]
+
+- id: card-awk-last-field
+  type: recall
+  front: Print the last whitespace-separated field of every line in access.log.
+  back: awk '{print $NF}' access.log
+  commands: [awk]
+
+- id: card-awk-two-fields
+  type: recall
+  front: Print the first and fourth fields of every line, separated by a space.
+  back: awk '{print $1, $4}' access.log
+  commands: [awk]
+
+- id: card-awk-field-separator
+  type: recall
+  front: Print the seventh colon-separated field of /etc/passwd using awk.
+  back: "awk -F: '{print $7}' /etc/passwd"
+  accepts:
+    - "awk -F : '{print $7}' /etc/passwd"
+  commands: [awk]
+
+- id: card-awk-filter-numeric
+  type: recall
+  front: Print the lines of sizes.txt whose second field is greater than 100.
+  back: awk '$2 > 100' sizes.txt
+  commands: [awk]
+
+- id: card-awk-sum-column
+  type: recall
+  front: Add up the third field of every line in sales.txt and print the total.
+  back: awk '{s += $3} END {print s}' sales.txt
+  commands: [awk]
+
+- id: card-awk-count-lines
+  type: recall
+  front: Print how many lines awk saw, without using wc.
+  back: awk 'END {print NR}' data.txt
+  commands: [awk]
+
+- id: card-sed-delete-lines
+  type: recall
+  front: Print config.txt with every line containing DEBUG removed.
+  back: sed '/DEBUG/d' config.txt
+  commands: [sed]
+
+- id: card-sed-print-range
+  type: recall
+  front: Print only the lines of report.txt between BEGIN and END, inclusive.
+  back: sed -n '/BEGIN/,/END/p' report.txt
+  commands: [sed]
+
+- id: card-sed-first-only
+  type: recall
+  front: Replace only the first "http" on each line of urls.txt with "https".
+  back: sed 's/http/https/' urls.txt
+  commands: [sed]
+
+- id: card-sed-in-place
+  type: recall
+  front: Rewrite hosts.txt in place, replacing every "dev" with "prod".
+  back: sed -i 's/dev/prod/g' hosts.txt
+  commands: [sed]
+
+- id: card-sed-line-number
+  type: recall
+  front: Print line 42 of big.txt and stop reading.
+  back: sed -n '42p' big.txt
+  commands: [sed]
+
+- id: card-sed-strip-comments
+  type: recall
+  front: Print config.ini without the lines that start with a hash.
+  back: sed '/^#/d' config.ini
+  accepts:
+    - "grep -v '^#' config.ini"
+  commands: [sed, grep]
+
+- id: card-tr-uppercase
+  type: recall
+  front: Turn every lower-case letter of names.txt into upper case.
+  back: tr 'a-z' 'A-Z' < names.txt
+  commands: [tr]
+
+- id: card-tr-delete-digits
+  type: recall
+  front: Strip every digit out of mixed.txt.
+  back: tr -d '0-9' < mixed.txt
+  commands: [tr]
+
+- id: card-tr-squeeze-spaces
+  type: recall
+  front: Collapse runs of spaces in padded.txt down to a single space each.
+  back: tr -s ' ' < padded.txt
+  commands: [tr]
+
+- id: card-tr-strip-carriage
+  type: recall
+  front: Remove the carriage returns from a file that came from Windows.
+  back: tr -d '\r' < dos.txt
+  commands: [tr]
+
+- id: card-reverse-lines
+  type: recall
+  front: Print log.txt with its lines in the opposite order, last line first.
+  back: tac log.txt
+  commands: [tac]
+
+- id: card-reverse-characters
+  type: recall
+  front: Reverse the characters of every line in words.txt.
+  back: rev words.txt
+  commands: [rev]
+
+- id: card-number-lines
+  type: recall
+  front: Number the non-blank lines of chapter.txt.
+  back: nl chapter.txt
+  commands: [nl]
+
+- id: card-nl-all-lines
+  type: recall
+  front: Number every line of chapter.txt, including the blank ones.
+  back: nl -b a chapter.txt
+  commands: [nl]
+
+- id: card-paste-side-by-side
+  type: recall
+  front: Put names.txt and emails.txt side by side, one pair per line, tab separated.
+  back: paste names.txt emails.txt
+  commands: [paste]
+
+- id: card-paste-serial
+  type: recall
+  front: Turn the lines of ids.txt into a single comma-separated line.
+  back: paste -s -d, ids.txt
+  accepts:
+    - "paste -sd, ids.txt"
+  commands: [paste]
+
+- id: card-columns
+  type: recall
+  front: Line up the colon-separated fields of /etc/passwd into readable columns.
+  back: "column -t -s: /etc/passwd"
+  accepts:
+    - "column -s: -t /etc/passwd"
+  commands: [column]
+
+- id: card-join-files
+  type: recall
+  front: Join two sorted files on their first field.
+  back: join users.txt roles.txt
+  commands: [join]
+
+- id: card-comm-both
+  type: recall
+  front: Print only the lines that appear in both sorted files a.txt and b.txt.
+  back: comm -12 a.txt b.txt
+  commands: [comm]
+
+- id: card-comm-only-first
+  type: recall
+  front: Print only the lines unique to the first of two sorted files.
+  back: comm -23 a.txt b.txt
+  commands: [comm]
+
+- id: card-fold-width
+  type: recall
+  front: Wrap prose.txt at 72 columns, breaking at spaces rather than mid-word.
+  back: fold -w 72 -s prose.txt
+  accepts:
+    - "fold -s -w 72 prose.txt"
+  commands: [fold]
+
+- id: card-fmt-width
+  type: recall
+  front: Reflow the paragraphs of readme.txt to 80 columns.
+  back: fmt -w 80 readme.txt
+  commands: [fmt]
+
+- id: card-split-lines
+  type: recall
+  front: Split big.csv into pieces of 1000 lines each.
+  back: split -l 1000 big.csv
+  commands: [split]
+
+- id: card-split-numeric
+  type: recall
+  front: Split data.txt into 1000-line pieces named part00, part01, and so on.
+  back: split -l 1000 -d data.txt part
+  commands: [split]
+
+- id: card-read-awk-conditional-print
+  type: identify
+  front: "awk -F: '$3 >= 1000 {print $1}' /etc/passwd"
+  back: >
+    Split each line on colons and print the username of every account whose
+    UID is 1000 or more — that is, the human accounts rather than the system
+    ones.
+  commands: [awk]
+
+- id: card-read-sed-capture
+  type: identify
+  front: sed -E 's/^([^ ]+) .*/\1/' access.log
+  back: >
+    Keep only the first space-separated field of each line, by matching the
+    whole line and replacing it with the captured group. cut -d' ' -f1 would
+    be the shorter way to say it.
+  commands: [sed]
+
+- id: card-read-uniq-c-sort
+  type: identify
+  front: sort words.txt | uniq -c | sort -rn | head -10
+  back: >
+    The count-and-rank idiom: sort so duplicates are adjacent, count them,
+    order by the count descending, and keep the top ten.
+  commands: [sort, uniq, head]
+
+- id: card-read-tr-words
+  type: identify
+  front: tr -cs 'A-Za-z' '\n' < book.txt
+  back: >
+    Treat everything that is not a letter as a separator and squeeze runs of
+    them into single newlines — a crude but effective one-word-per-line
+    tokenizer.
+  commands: [tr]
+
+- id: card-read-paste-columns
+  type: identify
+  front: cut -f2 data.tsv | paste -sd+ - | bc
+  back: >
+    Pull out the second column, glue the values together with plus signs, and
+    hand the resulting expression to a calculator.
+  commands: [cut, paste]

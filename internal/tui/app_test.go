@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	embedded "bash-teacher/content"
 	"bash-teacher/internal/content"
 	"bash-teacher/internal/runner"
+	"bash-teacher/internal/srs"
 	"bash-teacher/internal/theme"
 )
 
@@ -329,14 +331,19 @@ func TestDictionaryFiltersFlashcards(t *testing.T) {
 	if f.filter != "grep" {
 		t.Fatalf("deck should be filtered to grep, got %q", f.filter)
 	}
-	for _, c := range f.deck {
+	if len(f.queue) == 0 {
+		t.Fatal("a filtered session should open on the command's cards")
+	}
+	for _, c := range f.queue {
 		if !containsString(c.Commands, "grep") {
 			t.Errorf("card %s is not a grep card", c.ID)
 		}
 	}
-	press(a, "backspace")
+	// esc leaves the drill for the scheduled queue rather than the app: a
+	// learner who came here from the dictionary is still mid-session.
+	press(a, "esc")
 	if f.filter != "" {
-		t.Error("backspace should restore the whole deck")
+		t.Error("esc should leave the filtered drill")
 	}
 }
 
@@ -453,19 +460,271 @@ func stripANSI(s string) string {
 	return b.String()
 }
 
-func TestFlashcardsRevealAndAdvance(t *testing.T) {
+// cardsOf reaches into the flashcards sub-model, the way dictOf does for the
+// dictionary.
+func cardsOf(a *App) *flashcardsScreen { return a.screens[ScreenFlashcards].(*flashcardsScreen) }
+
+// firstCardOfType finds a card of a given kind in the real library, so the
+// review tests do not pin themselves to one card's id.
+func firstCardOfType(t *testing.T, a *App, kind content.CardType) *content.Card {
+	t.Helper()
+	for _, c := range a.Lib.Cards {
+		if c.Type == kind {
+			return c
+		}
+	}
+	t.Fatalf("no %s card in the library", kind)
+	return nil
+}
+
+// reviewOne puts the screen into a one-card session, which is how these tests
+// get a known card in front of them without answering their way to it.
+func reviewOne(a *App, c *content.Card) *flashcardsScreen {
+	f := cardsOf(a)
+	a.current = ScreenFlashcards
+	f.filter = ""
+	f.begin([]*content.Card{c})
+	_ = a.View()
+	return f
+}
+
+// TestReviewSessionStartsFromTheScheduler checks that entering the screen
+// offers the day's queue and that starting it takes cards up to the session
+// size rather than the whole deck.
+func TestReviewSessionStartsFromTheScheduler(t *testing.T) {
 	a := newTestApp(t, 100, 30)
 	press(a, "3")
-	first := view(a)
-	if !strings.Contains(first, "enter to reveal") {
-		t.Fatalf("a card should start face down:\n%s", first)
+	if !strings.Contains(view(a), "enter starts a session") {
+		t.Fatalf("the flashcards screen should offer a session:\n%s", view(a))
 	}
 	press(a, "enter")
-	if strings.Contains(view(a), "enter to reveal") {
-		t.Error("enter should reveal the back of the card")
+
+	f := cardsOf(a)
+	size := a.SRS.Params().SessionSize
+	if len(f.queue) == 0 || len(f.queue) > size {
+		t.Fatalf("session holds %d cards, want between 1 and %d", len(f.queue), size)
 	}
-	press(a, "down")
-	if !strings.Contains(view(a), "enter to reveal") {
-		t.Error("advancing should turn the next card face down")
+	if f.phase != phaseAsk {
+		t.Errorf("phase = %v, want the first card to be up", f.phase)
+	}
+}
+
+// TestTypedAnswerIsGradedAndScheduled walks one recall card end to end: type
+// the answer the card wants, see it accepted, rate it, and find the scheduler
+// holding a state for it afterwards.
+func TestTypedAnswerIsGradedAndScheduled(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	c := firstCardOfType(t, a, content.CardRecall)
+	f := reviewOne(a, c)
+
+	typeIn(a, "", c.Back)
+	press(a, "enter")
+
+	if f.phase != phaseGrade {
+		t.Fatalf("enter should submit the answer, phase = %v", f.phase)
+	}
+	if got := view(a); !strings.Contains(got, "✓ correct") {
+		t.Fatalf("the card's own answer should be accepted:\n%s", got)
+	}
+	if f.rating != srs.Good {
+		t.Errorf("a correct answer should preselect good, got %v", f.rating)
+	}
+	if !strings.Contains(view(a), "g good") {
+		t.Error("the rating keys and the interval each one buys should be on screen")
+	}
+
+	press(a, "g")
+	st, ok := a.SRS.State(c.ID)
+	if !ok || !st.Seen() {
+		t.Fatalf("rating a card should schedule it, state = %+v", st)
+	}
+	if st.Due.Before(a.Now()) {
+		t.Errorf("a card rated good should be due in the future, got %v", st.Due)
+	}
+}
+
+// TestNormalizedAnswerIsAccepted is the point of the whole grader: an answer
+// that is right but spelled differently must not be marked wrong.
+func TestNormalizedAnswerIsAccepted(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	c := &content.Card{
+		ID: "test-card", Type: content.CardRecall,
+		Front: "Count the ERROR lines in app.log.", Back: "grep -c ERROR app.log",
+		Commands: []string{"grep"},
+	}
+	reviewOne(a, c)
+	typeIn(a, "", "grep --count ERROR app.log")
+	press(a, "enter")
+	if got := view(a); !strings.Contains(got, "✓ correct") {
+		t.Fatalf("the documented long form should be accepted:\n%s", got)
+	}
+}
+
+// TestWrongAnswerRequeuesTheCard holds SPEC §2.3's rule that a miss comes back
+// inside the same sitting rather than being pushed into the future.
+func TestWrongAnswerRequeuesTheCard(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	c := firstCardOfType(t, a, content.CardRecall)
+	f := reviewOne(a, c)
+
+	typeIn(a, "", "cat nothing.txt")
+	press(a, "enter")
+	if f.rating != srs.Again {
+		t.Errorf("a wrong answer should preselect again, got %v", f.rating)
+	}
+	if got := view(a); !strings.Contains(got, "✗") || !strings.Contains(got, c.Back) {
+		t.Fatalf("a miss should say so and show the expected answer:\n%s", got)
+	}
+
+	press(a, "enter") // accept the preselected rating
+	if len(f.queue) != 2 || f.card() != c {
+		t.Fatalf("a missed card should come back in the same session, queue = %d", len(f.queue))
+	}
+	if st, _ := a.SRS.State(c.ID); st.Lapses != 1 {
+		t.Errorf("lapses = %d, want 1", st.Lapses)
+	}
+}
+
+// TestAnswerEditorOwnsEveryPrintableKey is the Capturing() contract: a learner
+// typing a digit or a q into an answer must not be navigated away.
+func TestAnswerEditorOwnsEveryPrintableKey(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	f := reviewOne(a, firstCardOfType(t, a, content.CardRecall))
+	typeIn(a, "", "cut -d2 -f1 q")
+	if a.current != ScreenFlashcards {
+		t.Fatalf("typing an answer navigated to %v", a.current)
+	}
+	if got := f.editor.Value(); got != "cut -d2 -f1 q" {
+		t.Errorf("editor holds %q, want the whole answer", got)
+	}
+}
+
+// TestIdentifyCardIsSelfGraded checks the card type that has no typed answer:
+// it turns over on a keypress and the learner rates their own reading.
+func TestIdentifyCardIsSelfGraded(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	c := firstCardOfType(t, a, content.CardIdentify)
+	f := reviewOne(a, c)
+
+	if f.Capturing() {
+		t.Error("a self-graded card has no answer box to capture keys")
+	}
+	if !strings.Contains(view(a), "say what this does") {
+		t.Fatalf("an identify card should start face down:\n%s", view(a))
+	}
+	press(a, "enter")
+	if f.phase != phaseGrade {
+		t.Fatalf("enter should turn the card over, phase = %v", f.phase)
+	}
+	if !strings.Contains(stripANSI(view(a)), oneLine(c.Back)[:20]) {
+		t.Errorf("the reading should be on screen:\n%s", view(a))
+	}
+}
+
+// TestPassingAnExerciseCreditsItsCards holds SPEC §5's rule that practice
+// reinforces recall: solving an exercise moves every card it teaches.
+func TestPassingAnExerciseCreditsItsCards(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	var ex *content.Exercise
+	for _, e := range a.Lib.Exercises {
+		for _, id := range e.Teaches {
+			if len(a.Lib.CardsFor(id)) > 0 {
+				ex = e
+				break
+			}
+		}
+		if ex != nil {
+			break
+		}
+	}
+	if ex == nil {
+		t.Skip("no exercise in the library teaches a command that has cards")
+	}
+
+	if n := a.CreditPractice(ex); n == 0 {
+		t.Fatal("CreditPractice credited nothing")
+	}
+	credited := 0
+	for _, id := range ex.Teaches {
+		for _, c := range a.Lib.CardsFor(id) {
+			st, ok := a.SRS.State(c.ID)
+			if ok && st.Reps > 0 {
+				credited++
+			}
+		}
+	}
+	if credited == 0 {
+		t.Fatal("no card was scheduled by the exercise pass")
+	}
+	for _, r := range a.SRS.Log() {
+		if r.Source != srs.SourcePractice {
+			t.Errorf("credit logged as %q, want practice", r.Source)
+		}
+	}
+}
+
+// TestASessionCanBeWorkedToTheEnd walks a whole sitting: answer every card
+// with what it asks for, rate each one, and end on the tally. It is the guard
+// against a session that cannot be finished — a card that never leaves the
+// grading phase, or a queue that never empties.
+func TestASessionCanBeWorkedToTheEnd(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "3")
+	press(a, "enter")
+	f := cardsOf(a)
+	started := len(f.queue)
+	if started == 0 {
+		t.Fatal("the session opened empty")
+	}
+
+	for i := 0; i < started+5 && f.phase != phaseIdle; i++ {
+		c := f.card()
+		if c == nil {
+			break
+		}
+		if !c.SelfGraded() {
+			typeIn(a, "", c.Back)
+		}
+		press(a, "enter")
+		if f.phase != phaseGrade {
+			t.Fatalf("card %s did not reach the rating step", c.ID)
+		}
+		press(a, "g")
+	}
+
+	if f.phase != phaseIdle {
+		t.Fatalf("the session did not finish, %d cards in", f.answered)
+	}
+	if f.answered != started {
+		t.Errorf("answered %d of the %d cards the session held", f.answered, started)
+	}
+	if got := stripANSI(view(a)); !strings.Contains(got, "Answered") {
+		t.Errorf("the tally should be on screen:\n%s", got)
+	}
+
+	// A second sitting on the same day is capped, and says why rather than
+	// throwing away what the first one came to.
+	press(a, "enter")
+	got := stripANSI(view(a))
+	if !strings.Contains(got, "new cards") {
+		t.Errorf("an empty session should explain the daily cap:\n%s", got)
+	}
+	if !strings.Contains(got, "Answered") {
+		t.Error("an empty session should not wipe the tally it is reporting")
+	}
+}
+
+// TestHomeReportsTheDayLoad checks that Home answers the question it exists to
+// answer: what is waiting today.
+func TestHomeReportsTheDayLoad(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	got := stripANSI(view(a))
+	for _, want := range []string{"Cards due", "New cards", "Streak"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("Home does not report %q:\n%s", want, got)
+		}
+	}
+	if !strings.Contains(got, fmt.Sprintf("%d", len(a.Lib.Cards))) {
+		t.Error("Home should say how many cards are waiting to be seen")
 	}
 }

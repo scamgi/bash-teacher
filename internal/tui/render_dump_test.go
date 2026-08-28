@@ -3,6 +3,8 @@ package tui
 import (
 	"os"
 	"testing"
+
+	"bash-teacher/internal/content"
 )
 
 // TestDumpFrames is a development aid: BT_DUMP=1 go test ./internal/tui -run DumpFrames
@@ -50,4 +52,26 @@ func TestDumpFrames(t *testing.T) {
 	list := newTestApp(t, 96, 28)
 	press(list, "2")
 	t.Logf("\n=== Practice (browser) ===\n%s", view(list))
+
+	// A review session: a card asked, and the same card graded.
+	rev := newTestApp(t, 96, 28)
+	press(rev, "3")
+	press(rev, "enter")
+	t.Logf("\n=== Flashcards (asking) ===\n%s", view(rev))
+	card := cardsOf(rev).card()
+	typeIn(rev, "", card.Back)
+	press(rev, "enter")
+	t.Logf("\n=== Flashcards (graded) ===\n%s", view(rev))
+
+	miss := newTestApp(t, 80, 24)
+	press(miss, "3")
+	press(miss, "enter")
+	typeIn(miss, "", "cat nope.txt")
+	press(miss, "enter")
+	t.Logf("\n=== Flashcards (missed, 80x24) ===\n%s", view(miss))
+
+	ident := newTestApp(t, 96, 28)
+	reviewOne(ident, firstCardOfType(t, ident, content.CardIdentify))
+	press(ident, "enter")
+	t.Logf("\n=== Flashcards (self-graded) ===\n%s", view(ident))
 }

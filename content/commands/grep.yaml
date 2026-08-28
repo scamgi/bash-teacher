@@ -8,14 +8,19 @@ purpose: >
 synopsis: grep [OPTION]... PATTERN [FILE]...
 flags:
   - flag: "-i"
+    long: "--ignore-case"
     gloss: Match case-insensitively.
   - flag: "-v"
+    long: "--invert-match"
     gloss: Invert — print the lines that do not match.
   - flag: "-n"
+    long: "--line-number"
     gloss: Prefix each match with its line number.
   - flag: "-r"
+    long: "--recursive"
     gloss: Search a directory tree recursively.
   - flag: "-c"
+    long: "--count"
     gloss: Print only the count of matching lines.
   - flag: "-o"
     gloss: Print only the matching part, not the whole line.

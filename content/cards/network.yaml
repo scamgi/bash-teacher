@@ -1,0 +1,97 @@
+# Networking: documented in the dictionary, never executed by the sandbox.
+# These cards drill the flags you reach for at a real terminal.
+- id: card-curl-follow-save
+  type: recall
+  front: Download a URL to release.tar.gz, following any redirects on the way.
+  back: curl -L -o release.tar.gz https://example.com/release
+  accepts:
+    - "curl -Lo release.tar.gz https://example.com/release"
+  commands: [curl]
+
+- id: card-curl-header
+  type: recall
+  front: Fetch an API endpoint quietly, sending an Authorization header.
+  back: "curl -s -H 'Authorization: Bearer TOKEN' https://api.example.com/v1/me"
+  commands: [curl]
+
+- id: card-curl-quiet-but-loud-on-error
+  type: recall
+  front: Fetch a URL with no progress meter, but still complain if it fails.
+  back: curl -sS https://example.com
+  accepts:
+    - "curl -s -S https://example.com"
+  commands: [curl]
+
+- id: card-wget-output-name
+  type: recall
+  front: Download a URL and save it under the name latest.iso.
+  back: wget -O latest.iso https://example.com/image
+  commands: [wget]
+
+- id: card-wget-resume
+  type: recall
+  front: Resume an interrupted download rather than starting it again.
+  back: wget -c https://example.com/big.iso
+  commands: [wget]
+
+- id: card-wget-quiet
+  type: recall
+  front: Download a file with no output at all unless something goes wrong.
+  back: wget -q https://example.com/data.json
+  commands: [wget]
+
+- id: card-ssh-port-key
+  type: recall
+  front: Open a shell on host.example.com on port 2222 using a specific private key.
+  back: ssh -p 2222 -i ~/.ssh/deploy_key host.example.com
+  commands: [ssh]
+
+- id: card-ssh-tunnel
+  type: recall
+  front: Forward local port 5432 to the database's 5432 through a bastion, without opening a shell.
+  back: "ssh -N -L 5432:db.internal:5432 bastion.example.com"
+  commands: [ssh]
+
+- id: card-scp-recursive
+  type: recall
+  front: Copy the whole build directory to a server's /srv/app over ssh.
+  back: "scp -r build server:/srv/app"
+  commands: [scp]
+
+- id: card-scp-port
+  type: recall
+  front: Copy release.tar.gz to a server listening on port 2222.
+  back: "scp -P 2222 release.tar.gz server:/tmp"
+  commands: [scp]
+
+- id: card-rsync-mirror
+  type: recall
+  front: Mirror site/ onto a server, preserving everything and showing progress.
+  back: "rsync -avz site/ server:/var/www/site/"
+  commands: [rsync]
+
+- id: card-rsync-dry-run
+  type: recall
+  front: Show what an rsync would do — including deletions — without doing any of it.
+  back: rsync -avn --delete src/ dest/
+  commands: [rsync]
+
+- id: card-dig-short
+  type: recall
+  front: Look up the A record for example.com and print just the answer.
+  back: dig +short example.com
+  commands: [dig]
+
+- id: card-dig-mx-server
+  type: recall
+  front: Ask 1.1.1.1 for the MX records of example.com.
+  back: dig @1.1.1.1 example.com MX
+  commands: [dig]
+
+- id: card-read-curl-pipe-jq
+  type: identify
+  front: curl -s https://api.example.com/users | head -c 200
+  back: >
+    Fetch the response quietly and look at only the first two hundred bytes
+    of it — enough to see the shape of the JSON without filling the screen.
+  commands: [curl, head]

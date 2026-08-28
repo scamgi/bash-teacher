@@ -1,0 +1,189 @@
+# Streams & Redirection: where output goes, and how to build command lines
+# out of other commands' output.
+- id: card-redirect-stdout
+  type: recall
+  front: Save the output of ls -l into listing.txt, replacing whatever was there.
+  back: ls -l > listing.txt
+  commands: [ls]
+
+- id: card-redirect-append
+  type: recall
+  front: Add the line "deploy finished" to history.log without truncating the file.
+  back: echo 'deploy finished' >> history.log
+  commands: [echo]
+
+- id: card-discard-errors
+  type: recall
+  front: Run a find over /etc and throw away the permission-denied messages.
+  back: find /etc -name '*.conf' 2>/dev/null
+  commands: [find]
+
+- id: card-merge-streams
+  type: recall
+  front: Send both the output and the errors of a find into results.log.
+  back: find / -name core > results.log 2>&1
+  commands: [find]
+
+- id: card-read-from-file
+  type: recall
+  front: Feed words.txt into tr on standard input rather than naming it as an argument.
+  back: tr 'a-z' 'A-Z' < words.txt
+  commands: [tr]
+
+- id: card-tee-and-count
+  type: recall
+  front: Save the ERROR lines of app.log to errors.txt and print how many there were.
+  back: grep ERROR app.log | tee errors.txt | wc -l
+  commands: [grep, tee, wc]
+
+- id: card-tee-append-flag
+  type: recall
+  front: Add this pipeline's output to audit.log while still passing it on.
+  back: tee -a audit.log
+  commands: [tee]
+
+- id: card-echo-no-newline
+  type: recall
+  front: Print "done" with no trailing newline.
+  back: echo -n done
+  commands: [echo]
+
+- id: card-printf-two-decimals
+  type: recall
+  front: Print the number 3.14159 rounded to two decimal places, with a newline.
+  back: printf '%.2f\n' 3.14159
+  commands: [printf]
+
+- id: card-printf-padded-column
+  type: recall
+  front: Print a name left-aligned in a ten-character column followed by a count.
+  back: printf '%-10s %d\n' alice 42
+  commands: [printf]
+
+- id: card-seq-range
+  type: recall
+  front: Print the numbers 1 to 10, one per line.
+  back: seq 10
+  accepts:
+    - "seq 1 10"
+  commands: [seq]
+
+- id: card-seq-padded
+  type: recall
+  front: Print 1 to 100 with leading zeros so every number is the same width.
+  back: seq -w 100
+  commands: [seq]
+
+- id: card-seq-separator
+  type: recall
+  front: Print 1 to 5 on one line, comma separated.
+  back: seq -s, 5
+  accepts:
+    - "seq -s , 5"
+  commands: [seq]
+
+- id: card-xargs-one-at-a-time
+  type: recall
+  front: Run gzip on each filename arriving on standard input, one call per file.
+  back: xargs -n 1 gzip
+  commands: [xargs]
+
+- id: card-xargs-placeholder
+  type: recall
+  front: For each filename on standard input, run "cp FILE backup/FILE" with the name in two places.
+  back: xargs -I F cp F backup/F
+  commands: [xargs]
+
+- id: card-xargs-null-input
+  type: recall
+  front: Consume NUL-separated filenames from find -print0 and delete them.
+  back: xargs -0 rm
+  commands: [xargs, rm]
+
+- id: card-xargs-no-run-if-empty
+  type: flag
+  front: "xargs: run nothing at all when the input is empty."
+  back: "-r"
+  commands: [xargs, rm]
+
+- id: card-xargs-parallel
+  type: flag
+  front: "xargs: four at a time, one argument per call."
+  back: "-P 4 -n 1"
+  accepts:
+    - "-n 1 -P 4"
+  commands: [xargs]
+
+- id: card-yes-confirm
+  type: recall
+  front: Feed an endless stream of "y" into a command that keeps asking for confirmation.
+  back: yes | rm -i old.txt
+  commands: [yes, rm]
+
+- id: card-mkfifo
+  type: recall
+  front: Create a named pipe called events so two processes can meet at it.
+  back: mkfifo events
+  commands: [mkfifo]
+
+- id: card-dd-count-blocks
+  type: recall
+  front: Write ten one-megabyte blocks of zeros into test.img.
+  back: dd if=/dev/zero of=test.img bs=1M count=10
+  commands: [dd]
+
+- id: card-dd-progress
+  type: recall
+  front: Copy a disk image and have dd report how far it has got.
+  back: dd if=in.img of=out.img status=progress
+  commands: [dd]
+
+- id: card-read-tee-tmp
+  type: identify
+  front: curl -s https://example.com/data | tee raw.json | wc -c
+  back: >
+    Fetch the data quietly, keep a copy on disk, and print its size — the
+    stream is used twice without being fetched twice.
+  commands: [curl, tee, wc]
+
+- id: card-read-xargs-grep
+  type: identify
+  front: find . -name '*.py' -print0 | xargs -0 grep -l TODO
+  back: >
+    Find the Python files, hand their names to grep in batches with NUL
+    separators so spaces in names survive, and list the ones mentioning TODO.
+  commands: [find, xargs, grep]
+
+- id: card-read-stderr-only
+  type: identify
+  front: find /etc -type f 2>&1 >/dev/null | grep -i denied
+  back: >
+    Keep only the error stream and search it for permission problems: stderr
+    is pointed at the current stdout — the pipe — first, and only then is
+    stdout sent to /dev/null, so the order of the two redirections is the
+    whole trick.
+  commands: [grep]
+
+- id: card-read-seq-xargs
+  type: identify
+  front: seq 1 5 | xargs -I N mkdir -p run/N
+  back: >
+    Make five numbered directories, run/1 through run/5, by generating the
+    numbers and substituting each one into a mkdir command line.
+  commands: [seq, xargs, mkdir]
+
+- id: card-read-yes-head
+  type: identify
+  front: yes hello | head -n 3
+  back: >
+    Print "hello" three times: yes would run forever, and head closing the
+    pipe is what stops it.
+  commands: [yes, head]
+
+- id: card-read-printf-loop
+  type: identify
+  front: printf '%s\n' a b c
+  back: >
+    Print a, b and c on separate lines — printf reuses its format string
+    until it runs out of arguments, which is why one %s prints three values.
+  commands: [printf]
