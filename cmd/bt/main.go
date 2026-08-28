@@ -32,7 +32,8 @@ usage:
   bt content lint       validate the content library
 
 flags:
-  --theme MODE          dark, light, none, or auto (default auto)
+  --theme MODE          catppuccin flavour: latte, frappe, macchiato, mocha
+                        (also: dark, light, none, auto — default auto)
   --version             print the version and exit
 `
 
@@ -47,7 +48,7 @@ func run(args []string) error {
 	fl := flag.NewFlagSet("bt", flag.ContinueOnError)
 	fl.SetOutput(os.Stderr)
 	fl.Usage = func() { fmt.Fprint(os.Stderr, usage) }
-	themeFlag := fl.String("theme", "auto", "colour scheme: dark, light, none, auto")
+	themeFlag := fl.String("theme", "auto", "colour scheme: "+strings.Join(theme.Modes(), ", "))
 	showVersion := fl.Bool("version", false, "print the version and exit")
 	if err := fl.Parse(args); err != nil {
 		return err
@@ -73,11 +74,15 @@ func run(args []string) error {
 		return lintCmd()
 	}
 
+	mode, err := theme.ParseMode(*themeFlag)
+	if err != nil {
+		return err
+	}
 	library, err := lib.Load(embedded.FS)
 	if err != nil {
 		return err
 	}
-	th := theme.Resolve(theme.Mode(*themeFlag))
+	th := theme.Resolve(mode)
 
 	switch cmd {
 	case "":
@@ -100,7 +105,7 @@ func run(args []string) error {
 	}
 }
 
-func launch(library *lib.Library, th theme.Theme, start tui.Screen) error {
+func launch(library *lib.Library, th *theme.Theme, start tui.Screen) error {
 	p := tea.NewProgram(tui.New(library, th, version, start))
 	_, err := p.Run()
 	return err
@@ -123,7 +128,7 @@ func lintCmd() error {
 	return nil
 }
 
-func dictCmd(library *lib.Library, th theme.Theme, args []string) error {
+func dictCmd(library *lib.Library, th *theme.Theme, args []string) error {
 	if len(args) == 0 {
 		for _, cat := range lib.Categories {
 			cmds := library.CommandsByCategory(cat)
@@ -185,9 +190,10 @@ func statsCmd(library *lib.Library) error {
 	return nil
 }
 
-func doctorCmd(library *lib.Library, th theme.Theme) error {
+func doctorCmd(library *lib.Library, th *theme.Theme) error {
 	fmt.Printf("version        %s\n", version)
 	fmt.Printf("theme          %s\n", th.Mode)
+	fmt.Printf("palette        catppuccin\n")
 	fmt.Printf("content        %d commands, %d exercises, %d cards (embedded)\n",
 		len(library.Commands), len(library.Exercises), len(library.Cards))
 	fmt.Printf("allowlist      %s\n", strings.Join(library.Allowlist(), " "))

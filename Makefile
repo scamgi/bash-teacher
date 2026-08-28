@@ -2,7 +2,7 @@ BINARY  := bt
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS := -X main.version=$(VERSION)
 
-.PHONY: build run test lint fmt vet check clean
+.PHONY: build run test lint lint-go fmt vet check clean
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o $(BINARY) ./cmd/bt
@@ -17,13 +17,17 @@ test:
 lint:
 	go run ./cmd/bt content lint
 
+# lint-go runs golangci-lint with the config in .golangci.yml.
+lint-go:
+	golangci-lint run
+
 fmt:
 	gofmt -l -w .
 
 vet:
 	go vet ./...
 
-check: vet test lint
+check: vet lint-go test lint
 
 clean:
 	rm -f $(BINARY)

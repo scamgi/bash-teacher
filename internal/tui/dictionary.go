@@ -147,7 +147,7 @@ func (d *dictionaryScreen) Body(a *App, width, height int) string {
 	list := d.listPane(a, listWidth, height-1)
 	detail := d.detailPane(a, width-listWidth-4, height-1)
 
-	head := t.Dim.Render("  " + d.filterLine(a))
+	head := t.Dim.Render("  " + d.filterLine())
 	return head + "\n" + lipgloss.JoinHorizontal(lipgloss.Top,
 		lipgloss.NewStyle().Width(listWidth).Render(list),
 		t.Faint.Render(verticalRule(height-1)),
@@ -155,7 +155,7 @@ func (d *dictionaryScreen) Body(a *App, width, height int) string {
 	)
 }
 
-func (d *dictionaryScreen) filterLine(a *App) string {
+func (d *dictionaryScreen) filterLine() string {
 	switch {
 	case d.filtering:
 		return "search: " + d.filter + "▏"
@@ -194,6 +194,8 @@ func (d *dictionaryScreen) detailPane(a *App, width, height int) string {
 	if d.cursor >= len(d.rows) || d.rows[d.cursor].cmd == nil {
 		return ""
 	}
+	// The pane is clipped rather than scrolled for now; M2 gives it its own
+	// viewport so long entries are fully reachable.
 	c := d.rows[d.cursor].cmd
 	w := width - 2
 
@@ -227,5 +229,5 @@ func (d *dictionaryScreen) detailPane(a *App, width, height int) string {
 	if n := len(d.lib.ExercisesUsing(c.ID)); n > 0 {
 		b.WriteString(" " + t.Faint.Render("SEEN IN ") + t.Body.Render(plural(n, "exercise", "exercises")) + "\n")
 	}
-	return b.String()
+	return clip(b.String(), height)
 }

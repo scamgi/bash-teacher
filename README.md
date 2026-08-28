@@ -10,8 +10,8 @@ See [SPEC.md](SPEC.md) for the full design.
 
 **M1 (skeleton) is done.** The app runs, navigates, and loads its content:
 
-- Bubble Tea v2 shell with screen routing, a dark/light/no-colour theme, a global
-  key map, a help overlay, and a minimum-size fallback.
+- Bubble Tea v2 shell with screen routing, Catppuccin theming across all four
+  flavours, a global key map, a help overlay, and a minimum-size fallback.
 - A validated YAML content library, embedded in the binary, with `bt content lint`
   as the CI gate.
 - Dictionary browsing with fuzzy search and a detail pane; an exercise browser; a
@@ -23,10 +23,14 @@ FSRS-lite scheduling and the progress store (M5).
 ## Build and run
 
 ```sh
-make build   # -> ./bt
+make build     # -> ./bt
 make run
-make check   # vet, tests, content lint
+make lint-go   # golangci-lint, configured in .golangci.yml
+make check     # vet, golangci-lint, tests, content lint
 ```
+
+`make lint-go` needs [golangci-lint](https://golangci-lint.run) 2.x; the config
+uses the v2 schema.
 
 ## CLI
 
@@ -40,8 +44,12 @@ bt doctor           report environment, data paths, content health
 bt content lint     validate the content library
 ```
 
-`--theme dark|light|none|auto` picks a palette; colour is dropped automatically
-when stdout is not a terminal or `NO_COLOR` is set.
+`--theme` picks a [Catppuccin](https://catppuccin.com) flavour: `latte`,
+`frappe`, `macchiato`, or `mocha`. `light` and `dark` are aliases for Latte and
+Mocha, `auto` (the default) detects the terminal background, and `none` disables
+colour. Colour is also dropped automatically when stdout is not a terminal or
+`NO_COLOR` is set. The theme does not paint a page background, so bash-teacher
+sits inside whatever colour scheme your terminal already runs.
 
 ## Authoring content
 

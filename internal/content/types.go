@@ -55,17 +55,17 @@ type Example struct {
 
 // Command is one dictionary entry.
 type Command struct {
-	ID             string   `yaml:"id"`
-	Name           string   `yaml:"name"`
-	Category       Category `yaml:"category"`
-	Summary        string   `yaml:"summary"`
-	Purpose        string   `yaml:"purpose"`
-	Synopsis       string   `yaml:"synopsis"`
-	Flags          []Flag   `yaml:"flags"`
-	Examples       []Example `yaml:"examples"`
-	PlaysWellWith  []string `yaml:"plays_well_with"`
-	Gotchas        []string `yaml:"gotchas"`
-	SeeAlso        []string `yaml:"see_also"`
+	ID            string    `yaml:"id"`
+	Name          string    `yaml:"name"`
+	Category      Category  `yaml:"category"`
+	Summary       string    `yaml:"summary"`
+	Purpose       string    `yaml:"purpose"`
+	Synopsis      string    `yaml:"synopsis"`
+	Flags         []Flag    `yaml:"flags"`
+	Examples      []Example `yaml:"examples"`
+	PlaysWellWith []string  `yaml:"plays_well_with"`
+	Gotchas       []string  `yaml:"gotchas"`
+	SeeAlso       []string  `yaml:"see_also"`
 	// Executable reports whether the runner may ever execute this command.
 	// Network commands are documented but never run. Defaults to true.
 	Executable *bool `yaml:"executable,omitempty"`

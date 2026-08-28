@@ -95,3 +95,16 @@ func plural(n int, one, many string) string {
 	}
 	return fmt.Sprintf("%d %s", n, many)
 }
+
+// clip drops any lines past height, so a pane cannot push the footer off the
+// bottom of the screen.
+func clip(s string, height int) string {
+	if height < 1 {
+		return ""
+	}
+	lines := strings.Split(s, "\n")
+	if len(lines) <= height {
+		return s
+	}
+	return strings.Join(lines[:height], "\n")
+}

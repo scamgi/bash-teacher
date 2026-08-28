@@ -112,6 +112,6 @@ func (h *homeScreen) summary(a *App, width int) string {
 
 // row formats a label/value pair, padding the label to a fixed column so the
 // values line up down a panel.
-func row(t theme.Theme, width int, label, value string) string {
+func row(t *theme.Theme, width int, label, value string) string {
 	return t.Dim.Render(pad(label, width)) + t.Body.Render(value)
 }

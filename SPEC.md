@@ -150,6 +150,7 @@ internal/runner/          sandboxed execution, fixture materialization, diffing
 internal/srs/             scheduler (FSRS-lite), review log
 internal/store/           SQLite persistence (progress, review log, settings)
 internal/shellparse/      pipeline tokenizer/AST used for safety checks and hints
+internal/theme/           Catppuccin palettes and the shared Lip Gloss styles
 content/                  the library itself (YAML + fixtures), embedded
 ```
 
@@ -354,8 +355,14 @@ shows its own key legend in the footer; nothing is hidden behind undiscoverable 
 
 ### 7.2 Visual design
 
-- Lipgloss theme with two palettes (dark default, light) chosen from `COLORFGBG` /
-  `--theme`, plus `--no-color` and automatic degradation when `NO_COLOR` is set.
+- Lip Gloss theme built on the four [Catppuccin](https://catppuccin.com) flavours —
+  Latte for light terminals, Frappé / Macchiato / Mocha for dark — selected with
+  `--theme`, with `light` and `dark` as aliases for Latte and Mocha and `auto`
+  detecting the background from `COLORFGBG` or a terminal query. `--theme none`,
+  a non-terminal stdout, and `NO_COLOR` all degrade to plain text.
+- Colours are named by role (`Accent`, `Pass`, `Fail`, `Warn`, `Dim`, `Faint`)
+  rather than by hue, so a flavour swap can never change what a colour means.
+  The theme paints no page background: the terminal's own shows through.
 - Minimum usable terminal 80×24; layouts reflow above that. Below it, a single-pane
   fallback with a warning.
 - Semantic color only: green pass, red fail, yellow hint-used, dim for chrome. Never

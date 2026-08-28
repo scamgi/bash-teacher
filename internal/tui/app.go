@@ -76,7 +76,7 @@ func Navigate(to Screen) tea.Cmd {
 // App is the root model.
 type App struct {
 	Lib     *content.Library
-	Theme   theme.Theme
+	Theme   *theme.Theme
 	Version string
 
 	width, height int
@@ -89,9 +89,9 @@ type App struct {
 
 // New builds the root model with every screen constructed up front, so that
 // switching screens is free and each keeps its own cursor position.
-func New(lib *content.Library, th theme.Theme, version string, start Screen) *App {
+func New(lib *content.Library, th *theme.Theme, version string, start Screen) *App {
 	h := help.New()
-	h.Styles = help.DefaultStyles(th.Mode != theme.Light)
+	h.Styles = help.DefaultStyles(th.IsDark())
 	h.Styles.ShortKey = th.Key
 	h.Styles.ShortDesc = th.Footer
 	h.Styles.ShortSeparator = th.Faint
@@ -271,9 +271,9 @@ func (a *App) tooSmall() string {
 func (a *App) helpOverlay(width, height int) string {
 	inner := a.help
 	inner.SetWidth(width - 4)
-	content := a.Theme.Title.Render("Keys") + "\n\n" + inner.FullHelpView(Keys.FullHelp()) +
+	panel := a.Theme.Title.Render("Keys") + "\n\n" + inner.FullHelpView(Keys.FullHelp()) +
 		"\n\n" + a.Theme.Faint.Render("press any key to close")
-	box := a.Theme.Panel.Render(content)
+	box := a.Theme.Panel.Render(panel)
 	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, box)
 }
 
