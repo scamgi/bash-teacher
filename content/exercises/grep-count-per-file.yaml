@@ -1,0 +1,21 @@
+id: grep-count-per-file
+track: search-find
+level: 2
+title: How many in each?
+prompt: >
+  Print how many lines of each .go file mention TODO, as one row per file
+  including the files with none.
+fixture: sourcetree
+expected_stdout_file: expected/grep-count-per-file.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -c TODO *.go
+solution_notes: >
+  With several files grep prefixes every line of output with the file name,
+  counts included. That prefix is what makes `grep -c` across files readable
+  and what you have to cut off when you want just the numbers.
+hints:
+  - The counting flag, applied to every Go file at once.
+  - grep -_ TODO *.go

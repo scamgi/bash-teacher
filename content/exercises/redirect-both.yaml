@@ -1,0 +1,22 @@
+id: redirect-both
+track: streams
+level: 4
+title: Everything into one file
+prompt: >
+  Print haiku.txt and a missing file, sending both the output and the error
+  message into out.txt, then print how many lines out.txt ended up with —
+  the number alone.
+fixture: notes
+expected_stdout_file: expected/redirect-both.txt
+match: squeezed
+teaches: [cat, wc]
+must_use: []
+forbid: []
+reference_solution: cat haiku.txt missing.txt > out.txt 2>&1; wc -l < out.txt
+solution_notes: >
+  Order matters: `> out.txt 2>&1` points standard output at the file and
+  then points standard error at where standard output now goes. Written the
+  other way round, standard error would still be pointing at the terminal.
+hints:
+  - Send output to the file first, then send error to wherever output is now going — the order of the two is not interchangeable.
+  - cat haiku.txt missing.txt _ out.txt _>&_; wc -l < out.txt

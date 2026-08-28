@@ -1,0 +1,22 @@
+id: distinct-paths
+track: inspection
+level: 4
+title: How many distinct URLs?
+prompt: >
+  The seventh whitespace-separated field of each line in access.log is the
+  requested path. Print how many distinct paths were requested, and nothing
+  else.
+fixture: weblogs
+expected_stdout_file: expected/distinct-paths.txt
+match: squeezed
+teaches: [awk, sort, wc]
+must_use: []
+forbid: []
+reference_solution: awk '{print $7}' access.log | sort -u | wc -l
+solution_notes: >
+  cut cannot reach the seventh field here: the timestamp contains a space,
+  so the columns are not where a fixed delimiter says they are. awk splits
+  on runs of whitespace and numbers what it finds.
+hints:
+  - The field is not reachable with cut — use the tool that splits on whitespace, then deduplicate and count.
+  - awk '{print $_}' access.log | sort -u | wc -l

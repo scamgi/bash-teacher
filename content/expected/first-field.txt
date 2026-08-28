@@ -1,0 +1,15 @@
+root
+daemon
+ada
+linus
+grace
+ken
+dennis
+barbara
+edsger
+alan
+radia
+margaret
+backup
+sshd
+build

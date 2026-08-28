@@ -96,6 +96,64 @@ var delimiterFlags = map[string]bool{
 	"-F": true, "--output-delimiter": true,
 }
 
+// scriptFlags describes the options of the commands that take a program or a
+// pattern as their first operand. The key is the option, and the value says
+// whether that option supplies the script itself — in which case every operand
+// is a filename and none of them is exempt from the path rules, so
+// `grep -f /etc/passwd data` is still refused. The rest merely take a value,
+// which has to be stepped over so that `grep -A 1 ERROR` does not mistake the
+// 1 for the pattern.
+var scriptFlags = map[string]map[string]bool{
+	"sed": {
+		"-e": true, "--expression": true, "-f": true, "--file": true,
+	},
+	"awk": {
+		"-f": true, "--file": true,
+		"-F": false, "--field-separator": false, "-v": false, "--assign": false,
+	},
+	"grep": {
+		"-e": true, "--regexp": true, "-f": true, "--file": true,
+		"-m": false, "-A": false, "-B": false, "-C": false,
+	},
+}
+
+// patternOperand returns the index into c.Args of the argument that is a
+// program or a search pattern rather than a filename, or -1 when the command
+// has none.
+//
+// sed, awk and grep all take their script as their first operand, and a script
+// looks exactly like an absolute path: the sed range /09:00:04/,/09:00:07/p
+// and the pattern ^/usr/bin both begin with a slash without naming a file.
+// Path rules are applied to every other argument, so `sed 's/a/b/' /etc/passwd`
+// is still refused — this exempts the operand that the command never opens.
+func patternOperand(c *shellparse.Command) int {
+	flags, ok := scriptFlags[c.Name.Value]
+	if !ok {
+		return -1
+	}
+	for i := 0; i < len(c.Args); i++ {
+		a := c.Args[i].Value
+		if a == "--" {
+			if i+1 < len(c.Args) {
+				return i + 1
+			}
+			return -1
+		}
+		if len(a) > 1 && a[0] == '-' {
+			name, _, _ := strings.Cut(a, "=")
+			if suppliesScript, known := flags[name]; known {
+				if suppliesScript {
+					return -1
+				}
+				i++ // step over the option's value
+			}
+			continue
+		}
+		return i
+	}
+	return -1
+}
+
 // setuidRe matches a symbolic chmod mode that sets the setuid or setgid bit.
 var setuidRe = regexp.MustCompile(`[+=][rwxXugo]*s`)
 
@@ -192,7 +250,11 @@ func (p *Policy) checkCommand(c *shellparse.Command) []Violation {
 		vs = append(vs, checkChmod(c)...)
 	}
 
+	script := patternOperand(c)
 	for i, w := range c.Args {
+		if i == script {
+			continue
+		}
 		if w.Value == "/" {
 			// A lone "/" is either the root directory or a field separator,
 			// and the two are told apart by what precedes it: a delimiter

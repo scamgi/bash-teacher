@@ -1,0 +1,10 @@
+ada 91
+linus 88
+grace 95
+ken 77
+dennis 84
+barbara 93
+edsger 89
+alan 72
+radia 96
+margaret 90

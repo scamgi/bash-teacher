@@ -1,0 +1,23 @@
+id: find-grep-report
+track: search-find
+level: 5
+title: A report of the reminders
+prompt: >
+  For every .go file that mentions TODO, print the file path and the number
+  of matching lines in grep's file:count format, sorted, leaving out the
+  files with no matches.
+fixture: sourcetree
+expected_stdout_file: expected/find-grep-report.txt
+match: exact
+teaches: [find, grep, sort]
+must_use: []
+forbid: []
+reference_solution: find . -name '*.go' -exec grep -c TODO {} + | grep -v ':0$' | sort
+solution_notes: >
+  grep -c reports a zero for the files that did not match, so the second
+  grep filters those rows out. Chaining two greps where the second one reads
+  the first one's output is a normal thing to do and often clearer than one
+  clever pattern.
+hints:
+  - Count per file, then throw away the rows whose count is zero, then sort.
+  - find . -name '*.go' -exec grep -_ TODO {} + | grep -_ ':0$' | sort

@@ -1,0 +1,21 @@
+id: strip-comments
+track: inspection
+level: 2
+title: Configuration without the commentary
+prompt: >
+  Print app.conf with its comment lines — the ones that start with a # —
+  removed.
+fixture: configs
+expected_stdout_file: expected/strip-comments.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -v '^#' app.conf
+solution_notes: >
+  grep -v keeps what does not match, which makes grep a filter for removing
+  lines as well as finding them. The ^ anchors the # to the start of the
+  line, so a # in the middle of a value is left alone.
+hints:
+  - grep can be turned inside out to print the lines that do not match.
+  - grep -_ '^#' app.conf

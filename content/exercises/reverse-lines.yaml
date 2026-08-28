@@ -1,0 +1,19 @@
+id: reverse-lines
+track: text-processing
+level: 1
+title: Back to front
+prompt: >
+  Print haiku.txt with the characters of every line reversed.
+fixture: notes
+expected_stdout_file: expected/reverse-lines.txt
+match: exact
+teaches: [rev]
+must_use: []
+forbid: []
+reference_solution: rev haiku.txt
+solution_notes: >
+  rev reverses characters within each line; tac reverses the order of the
+  lines themselves. The names are almost the same and the jobs are not.
+hints:
+  - Three letters, short for reverse.
+  - ___ haiku.txt

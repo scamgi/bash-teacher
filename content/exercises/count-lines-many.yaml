@@ -1,0 +1,21 @@
+id: count-lines-many
+track: inspection
+level: 1
+title: Line counts side by side
+prompt: >
+  Print the line count of each .go file, one per line, with the total at the
+  end.
+fixture: sourcetree
+expected_stdout_file: expected/count-lines-many.txt
+match: squeezed
+teaches: [wc]
+must_use: []
+forbid: []
+reference_solution: wc -l *.go
+solution_notes: >
+  Given several files wc prints a row each and a total at the bottom. That
+  trailing total is a nuisance in a pipeline — remember it is there before
+  you pipe the output into something that counts rows.
+hints:
+  - One command, one flag, and a pattern that matches all four files.
+  - wc -l _.go

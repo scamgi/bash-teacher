@@ -56,6 +56,46 @@ func press(a *App, s string) {
 
 func view(a *App) string { return a.View().Content }
 
+// pressKey feeds a key message built by the caller, for the chords the name
+// table does not cover.
+func pressKey(a *App, km tea.KeyPressMsg) {
+	a.Update(km)
+	_ = a.View()
+}
+
+// runNow presses ^R and drives the run command to completion, which is how a
+// headless test observes the async sandbox flow the event loop would.
+func runNow(t *testing.T, a *App) {
+	t.Helper()
+	_, cmd := a.Update(tea.KeyPressMsg{Code: 'r', Mod: tea.ModCtrl})
+	if cmd == nil {
+		t.Fatal("^R produced no command")
+	}
+	deliver(a, cmd)
+	_ = a.View()
+}
+
+// deliver runs a command and feeds back every message it produces, following
+// batches, until the run result has been applied.
+func deliver(a *App, cmd tea.Cmd) {
+	if cmd == nil {
+		return
+	}
+	msg := cmd()
+	switch m := msg.(type) {
+	case nil:
+	case tea.BatchMsg:
+		for _, c := range m {
+			deliver(a, c)
+		}
+	case spinnerTickMsg:
+		// Ticking here would loop forever; the run result is what matters.
+	default:
+		_, next := a.Update(m)
+		deliver(a, next)
+	}
+}
+
 // pressCmd feeds a key and then runs whatever command it produced, which is how
 // the cross-screen shortcuts take effect in a headless test.
 func pressCmd(a *App, s string) {
@@ -168,9 +208,12 @@ func TestDictionaryShowsAndFiltersCommands(t *testing.T) {
 	}
 }
 
-// typeIn opens an input with the given key, then types a string into it.
+// typeIn opens an input with the given key — or, with an empty key, types into
+// whatever is already capturing — then types a string into it.
 func typeIn(a *App, open, text string) {
-	press(a, open)
+	if open != "" {
+		press(a, open)
+	}
 	for _, r := range text {
 		press(a, string(r))
 	}

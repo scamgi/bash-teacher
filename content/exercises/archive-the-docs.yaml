@@ -1,0 +1,22 @@
+id: archive-the-docs
+track: files-navigation
+level: 4
+title: Ship the documentation
+prompt: >
+  Collect the .md files into a directory called docs, build a
+  gzip-compressed tar archive of it named docs.tgz, then print the names the
+  archive contains, sorted.
+fixture: sourcetree
+expected_stdout_file: expected/archive-the-docs.txt
+match: exact
+teaches: [mkdir, cp, tar, sort]
+must_use: []
+forbid: []
+reference_solution: mkdir docs && cp *.md docs && tar -czf docs.tgz docs && tar -tzf docs.tgz | sort
+solution_notes: >
+  The tar flags are worth learning as words: c create, t list, x extract, z
+  gzip, f file, v verbose. -czf builds one, -tzf shows what is inside
+  without unpacking it.
+hints:
+  - Create the archive with c, z and f; then list it with t, z and f.
+  - mkdir docs && cp *.md docs && tar -___ docs.tgz docs && tar -___ docs.tgz | sort

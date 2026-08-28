@@ -1,0 +1,20 @@
+id: find-by-size
+track: search-find
+level: 3
+title: Only the big ones
+prompt: >
+  Print the path of every file larger than 300 bytes, sorted.
+fixture: sourcetree
+expected_stdout_file: expected/find-by-size.txt
+match: exact
+teaches: [find, sort]
+must_use: []
+forbid: []
+reference_solution: find . -type f -size +300c | sort
+solution_notes: >
+  The c suffix means bytes; with no suffix -size counts 512-byte blocks,
+  which is why `-size +1` matches almost everything. The plus means "more
+  than".
+hints:
+  - find can test size, but you have to say what unit you mean and that you want more than that.
+  - find . -type f -____ +300_ | sort

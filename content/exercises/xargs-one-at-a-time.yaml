@@ -1,0 +1,21 @@
+id: xargs-one-at-a-time
+track: streams
+level: 4
+title: One argument per run
+prompt: >
+  Print the distinct first lines of the .go files, by running head
+  separately for each file.
+fixture: sourcetree
+expected_stdout_file: expected/xargs-one-at-a-time.txt
+match: exact
+teaches: [ls, xargs, head, sort]
+must_use: [xargs]
+forbid: []
+reference_solution: ls *.go | xargs -n1 head -1 | sort -u
+solution_notes: >
+  By default xargs packs as many arguments onto one command as it can, and
+  `head -1 a b c` prints a header before each file. -n1 runs the command
+  once per argument, which changes head's output shape entirely.
+hints:
+  - xargs batches arguments unless you tell it how many to pass at a time.
+  - ls *.go | xargs -__ head -1 | sort -u

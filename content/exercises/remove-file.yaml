@@ -1,0 +1,20 @@
+id: remove-file
+track: files-navigation
+level: 1
+title: Throw something away
+prompt: >
+  Delete data.csv, then print the names of the files that remain.
+fixture: archive
+expected_stdout_file: expected/remove-file.txt
+match: exact
+teaches: [rm, ls]
+must_use: []
+forbid: []
+reference_solution: rm data.csv && ls
+solution_notes: >
+  rm has no undo and no waste basket. The habit that saves you is listing
+  what a pattern matches before deleting it: run ls on the pattern first,
+  then swap ls for rm.
+hints:
+  - Two letters, and there is no undo.
+  - __ data.csv && ls

@@ -1,0 +1,21 @@
+id: dump-bytes
+track: inspection
+level: 3
+title: What are these bytes?
+prompt: >
+  crlf.txt looks ordinary but does not behave. Print the first two lines of
+  a character-by-character dump of it so the invisible bytes show up.
+fixture: messy
+expected_stdout_file: expected/dump-bytes.txt
+match: squeezed
+teaches: [od, head]
+must_use: []
+forbid: []
+reference_solution: od -c crlf.txt | head -2
+solution_notes: >
+  od -c prints each byte as a character or a backslash escape, which is how
+  you catch a carriage return, a non-breaking space, or a missing final
+  newline. The leftmost column is the offset into the file, in octal.
+hints:
+  - There is a command that dumps a file as octal or as characters; ask for the character form.
+  - od -_ crlf.txt | head -2

@@ -1,0 +1,20 @@
+id: numeric-sort
+track: text-processing
+level: 3
+title: Numbers, in order
+prompt: >
+  numbers.txt holds one number per line. Print them in increasing numeric
+  order.
+fixture: numbers
+expected_stdout_file: expected/numeric-sort.txt
+match: exact
+teaches: [sort]
+must_use: []
+forbid: []
+reference_solution: sort -n numbers.txt
+solution_notes: >
+  Without -n sort compares text, so 108 comes before 42 because 1 comes
+  before 4. Any time a sorted list of numbers looks wrong, this is why.
+hints:
+  - Plain sort compares strings, and "10" is less than "9" as a string.
+  - sort -_ numbers.txt

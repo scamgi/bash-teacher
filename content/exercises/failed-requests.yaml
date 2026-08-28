@@ -1,0 +1,22 @@
+id: failed-requests
+track: search-find
+level: 3
+title: Who saw the 500s?
+prompt: >
+  Every line of access.log has its HTTP status as the second-to-last field,
+  surrounded by spaces. Print the distinct client addresses — the first
+  field — that received a 500.
+fixture: weblogs
+expected_stdout_file: expected/failed-requests.txt
+match: exact
+teaches: [grep, cut, sort]
+must_use: []
+forbid: []
+reference_solution: grep -E ' 500 ' access.log | cut -d' ' -f1 | sort -u
+solution_notes: >
+  Filter, extract, deduplicate. Keeping the spaces inside the pattern is
+  what stops it matching a byte count of 500 elsewhere in the line — a
+  reminder that a pattern with no context matches more than you meant.
+hints:
+  - Match the status with the spaces around it, then take the first field and drop the repeats.
+  - grep -E ' ___ ' access.log | cut -d' ' -f1 | sort -_

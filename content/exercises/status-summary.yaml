@@ -1,0 +1,21 @@
+id: status-summary
+track: real-world
+level: 5
+title: The whole picture
+prompt: >
+  From access.log, print one line per HTTP status code — the ninth field —
+  as the code and its count, most frequent first, with ties broken by code.
+fixture: weblogs
+expected_stdout_file: expected/status-summary.txt
+match: exact
+teaches: [awk, sort]
+must_use: []
+forbid: []
+reference_solution: awk '{ c[$9]++ } END { for (s in c) printf "%s %d\n", s, c[s] }' access.log | sort -k2,2rn -k1,1
+solution_notes: >
+  Counting in an awk array replaces the sort-uniq sandwich entirely: one
+  pass, no sorting of the raw data, and the output is already in the shape
+  you want. The only sort left is the one that ranks the summary.
+hints:
+  - Count into an array keyed by the status, print the array in the END block, and rank the result on its second column.
+  - awk '{ c[$_]++ } END { for (s in c) printf "%s %d\n", s, c[s] }' access.log | sort -k_,_rn -k1,1

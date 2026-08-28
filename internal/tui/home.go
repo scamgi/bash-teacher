@@ -112,6 +112,7 @@ func (h *homeScreen) summary(a *App, width int) string {
 		row(t, 12, "Cards due", "—"),
 		row(t, 12, "New cards", "—"),
 		row(t, 12, "Streak", "—"),
+		row(t, 12, "Passed", fmt.Sprintf("%d this session", a.PassedExercises())),
 	}, "\n")
 
 	library := strings.Join([]string{

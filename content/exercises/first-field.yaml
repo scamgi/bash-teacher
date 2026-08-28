@@ -1,0 +1,21 @@
+id: first-field
+track: text-processing
+level: 2
+title: Just the user names
+prompt: >
+  users.txt has one account per line, with colon-separated fields, and the
+  name comes first. Print the name of every account.
+fixture: accounts
+expected_stdout_file: expected/first-field.txt
+match: exact
+teaches: [cut]
+must_use: []
+forbid: []
+reference_solution: "cut -d: -f1 users.txt"
+solution_notes: >
+  cut splits on a single character, which is exactly right for colon- or
+  comma-separated records and exactly wrong for columns lined up with
+  spaces.
+hints:
+  - cut needs to be told the delimiter and which field you want.
+  - "cut -_: -_1 users.txt"

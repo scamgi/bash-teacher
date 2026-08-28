@@ -1,0 +1,23 @@
+id: status-histogram
+track: text-processing
+level: 5
+title: Draw the tally
+prompt: >
+  From access.log, print one line per HTTP status code, most frequent first,
+  made of the code, a space, and one # for every ten requests with that
+  code.
+fixture: weblogs
+expected_stdout_file: expected/status-histogram.txt
+match: exact
+teaches: [awk, sort, uniq]
+must_use: []
+forbid: []
+reference_solution: awk '{print $9}' access.log | sort | uniq -c | sort -rn | awk '{ printf "%s ", $2; for (i = 0; i < $1; i += 10) printf "#"; print "" }'
+solution_notes: >
+  The second awk turns counts into bars: printf writes without a newline,
+  the loop draws the bar, and `print ""` ends the line. Counting and
+  rendering stay separate stages, which is why either can be changed without
+  touching the other.
+hints:
+  - Do the counting first with the usual sandwich, then hand the count and the code to a second awk that draws the bar.
+  - awk '{print $9}' access.log | sort | uniq -c | sort -rn | awk '{ printf "%s ", $_; for (i = 0; i < $_; i += 10) printf "#"; print "" }'

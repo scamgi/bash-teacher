@@ -1,0 +1,20 @@
+id: show-file
+track: files-navigation
+level: 1
+title: Read a whole file
+prompt: >
+  Print the entire contents of report.txt.
+fixture: archive
+expected_stdout_file: expected/show-file.txt
+match: exact
+teaches: [cat]
+must_use: []
+forbid: []
+reference_solution: cat report.txt
+solution_notes: >
+  cat is short for concatenate: with one file it prints it, with several it
+  prints them end to end. Reach for less when a file is long enough that you
+  want to scroll.
+hints:
+  - Three letters, from concatenate.
+  - c__ report.txt

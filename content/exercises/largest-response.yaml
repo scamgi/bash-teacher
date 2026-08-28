@@ -1,0 +1,22 @@
+id: largest-response
+track: real-world
+level: 4
+title: The biggest response
+prompt: >
+  Each line of access.log ends with the response size in bytes, its tenth
+  whitespace-separated field. Print the path and the size of the largest
+  response, in that order.
+fixture: weblogs
+expected_stdout_file: expected/largest-response.txt
+match: exact
+teaches: [sort, head, awk]
+must_use: []
+forbid: []
+reference_solution: sort -k10 -rn access.log | head -1 | awk '{print $7, $10}'
+solution_notes: >
+  sort -k10 sorts the log itself on a field, without extracting anything
+  first — worth remembering when the answer is a whole record rather than a
+  count. Only after the ranking does awk pick the two fields worth printing.
+hints:
+  - Sort the log on its tenth field numerically and descending, keep the first line, then print the two fields you want.
+  - sort -k__ -rn access.log | head -1 | awk '{print $_, $__}'

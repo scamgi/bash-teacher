@@ -1,0 +1,19 @@
+id: count-bytes
+track: inspection
+level: 1
+title: How big is it?
+prompt: >
+  Print how many bytes changelog.txt occupies, along with the file name.
+fixture: notes
+expected_stdout_file: expected/count-bytes.txt
+match: squeezed
+teaches: [wc]
+must_use: []
+forbid: []
+reference_solution: wc -c changelog.txt
+solution_notes: >
+  wc -c is the byte count; wc -m is the character count, and the two differ
+  the moment the file is not pure ASCII.
+hints:
+  - The third of wc's three counting flags.
+  - wc -_ changelog.txt

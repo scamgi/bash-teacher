@@ -18,6 +18,21 @@ type Source fs.FS
 // returned only when validation passes; otherwise the error is a *LintError
 // carrying every problem found, so authors see all of them at once.
 func Load(src Source) (*Library, error) {
+	lib, err := LoadUnlinted(src)
+	if err != nil {
+		return nil, err
+	}
+	if problems := Lint(lib, src); len(problems) > 0 {
+		return nil, &LintError{Problems: problems}
+	}
+	return lib, nil
+}
+
+// LoadUnlinted parses and indexes src without running the linter. It exists
+// for the expected-output generator, which has to run the reference solutions
+// before the files the linter insists on exist. Everything else calls Load:
+// an unlinted library may reference commands and fixtures that are not there.
+func LoadUnlinted(src Source) (*Library, error) {
 	lib := &Library{
 		src:          src,
 		byCommandID:  map[string]*Command{},
@@ -68,10 +83,6 @@ func Load(src Source) (*Library, error) {
 
 	lib.index()
 	lib.buildTracks()
-
-	if problems := Lint(lib, src); len(problems) > 0 {
-		return nil, &LintError{Problems: problems}
-	}
 	return lib, nil
 }
 
@@ -115,20 +126,30 @@ func (l *Library) index() {
 
 // buildTracks groups exercises by track and orders each track by level, then by
 // id, so a learner walks a track in increasing difficulty.
+//
+// The tracks themselves come out in TrackOrder, because that order is what
+// unlocking is defined against; a track the order does not know about is put
+// after the rest rather than dropped, so unreviewed content still shows up.
 func (l *Library) buildTracks() {
 	byName := map[string]*Track{}
-	var order []string
+	var extra []string
 	for _, e := range l.Exercises {
 		t, ok := byName[e.Track]
 		if !ok {
 			t = &Track{Name: e.Track}
 			byName[e.Track] = t
-			order = append(order, e.Track)
+			if !slicesContains(TrackOrder, e.Track) {
+				extra = append(extra, e.Track)
+			}
 		}
 		t.Exercises = append(t.Exercises, e)
 	}
-	sort.Strings(order)
+	sort.Strings(extra)
+	order := append(append([]string{}, TrackOrder...), extra...)
 	for _, name := range order {
+		if _, ok := byName[name]; !ok {
+			continue
+		}
 		t := byName[name]
 		sort.SliceStable(t.Exercises, func(i, j int) bool {
 			if t.Exercises[i].Level != t.Exercises[j].Level {

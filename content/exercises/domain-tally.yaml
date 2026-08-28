@@ -1,0 +1,22 @@
+id: domain-tally
+track: text-processing
+level: 4
+title: Which domain do they use?
+prompt: >
+  Print how many addresses in subscribers.txt belong to each mail domain,
+  most frequent first, in uniq -c format. Case must not matter:
+  Linus@example.com and linus@example.com are the same domain.
+fixture: mailinglist
+expected_stdout_file: expected/domain-tally.txt
+match: squeezed
+teaches: [tr, cut, sort, uniq]
+must_use: []
+forbid: []
+reference_solution: tr A-Z a-z < subscribers.txt | cut -d@ -f2 | sort | uniq -c | sort -rn
+solution_notes: >
+  Normalizing case before comparing is the step people forget, and it has to
+  happen before the sort: uniq compares bytes, so Grace and grace are two
+  different values to it.
+hints:
+  - Fold the case first, then take the part after the @, then the counting sandwich.
+  - tr A-Z a-z < subscribers.txt | cut -d_ -f2 | sort | uniq -c | sort -__

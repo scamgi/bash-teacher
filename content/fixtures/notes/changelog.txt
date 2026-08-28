@@ -1,0 +1,6 @@
+0.4.0 2026-03-01 parser rewrite
+0.3.2 2026-02-11 fix quoting bug
+0.3.1 2026-02-02 fix quoting bug
+0.3.0 2026-01-20 add pipelines
+0.2.0 2025-12-14 add redirection
+0.1.0 2025-11-30 first cut

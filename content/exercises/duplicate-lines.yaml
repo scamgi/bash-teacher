@@ -1,0 +1,21 @@
+id: duplicate-lines
+track: text-processing
+level: 2
+title: Only the repeats
+prompt: >
+  Print the addresses that appear more than once in subscribers.txt, one per
+  line, without repeating them.
+fixture: mailinglist
+expected_stdout_file: expected/duplicate-lines.txt
+match: exact
+teaches: [sort, uniq]
+must_use: []
+forbid: []
+reference_solution: sort subscribers.txt | uniq -d
+solution_notes: >
+  uniq only ever compares a line with the one directly before it, so a sort
+  has to come first. -d keeps only the lines that repeat, -u keeps only the
+  ones that do not.
+hints:
+  - uniq compares neighbours, so put the duplicates next to each other first — then ask for only the repeated ones.
+  - sort subscribers.txt | uniq -_

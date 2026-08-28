@@ -1,0 +1,21 @@
+id: list-by-extension
+track: files-navigation
+level: 2
+title: Two kinds at once
+prompt: >
+  Print the names of the files ending in .log and the files ending in .md,
+  in one sorted listing.
+fixture: sourcetree
+expected_stdout_file: expected/list-by-extension.txt
+match: exact
+teaches: [ls]
+must_use: []
+forbid: []
+reference_solution: ls *.log *.md
+solution_notes: >
+  ls sorts everything it is given as one list, so two patterns produce one
+  alphabetical listing rather than two blocks. In the C locale used here,
+  capital letters sort before lower-case ones.
+hints:
+  - Two patterns, one command — ls will take both.
+  - ls _.log _.md

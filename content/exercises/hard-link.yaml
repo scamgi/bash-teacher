@@ -1,0 +1,21 @@
+id: hard-link
+track: files-navigation
+level: 2
+title: A second name for one file
+prompt: >
+  Give report.txt a second name, copy.txt, without copying its contents,
+  then print the names of the .txt files.
+fixture: archive
+expected_stdout_file: expected/hard-link.txt
+match: exact
+teaches: [ln, ls]
+must_use: []
+forbid: []
+reference_solution: ln report.txt copy.txt && ls *.txt
+solution_notes: >
+  A hard link is a second directory entry pointing at the same data: no
+  bytes are copied and neither name is the "real" one. ln -s makes a
+  symbolic link instead, which is a small file holding a path.
+hints:
+  - Linking, not copying — and without -s it is a hard link.
+  - __ report.txt copy.txt && ls *.txt

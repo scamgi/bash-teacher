@@ -1,0 +1,5 @@
+Shell Pipelines
+UNIX philosophy
+Text Streams
+standard INPUT
+Small Sharp Tools

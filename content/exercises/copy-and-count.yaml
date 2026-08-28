@@ -1,0 +1,21 @@
+id: copy-and-count
+track: files-navigation
+level: 3
+title: Copy and confirm
+prompt: >
+  Create a directory called backup, copy every .go file into it, and print
+  how many files ended up there — the number alone.
+fixture: sourcetree
+expected_stdout_file: expected/copy-and-count.txt
+match: squeezed
+teaches: [mkdir, cp, ls, wc]
+must_use: []
+forbid: []
+reference_solution: mkdir backup && cp *.go backup && ls backup | wc -l
+solution_notes: >
+  Copy-then-count is the cheapest possible verification, and the shape
+  generalizes: do the work, then ask the filesystem what happened rather
+  than trusting that it did.
+hints:
+  - Do the copy, then count what the listing of that directory prints.
+  - mkdir backup && cp *.go backup && ls backup | __ -l

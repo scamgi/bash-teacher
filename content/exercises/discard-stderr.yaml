@@ -1,0 +1,21 @@
+id: discard-stderr
+track: streams
+level: 3
+title: Silence the complaint
+prompt: >
+  Print haiku.txt and a file called missing.txt that does not exist, so that
+  the poem appears and the error message does not.
+fixture: notes
+expected_stdout_file: expected/discard-stderr.txt
+match: exact
+teaches: [cat]
+must_use: []
+forbid: []
+reference_solution: cat haiku.txt missing.txt 2>/dev/null
+solution_notes: >
+  Standard error is descriptor 2, and /dev/null is the sink that discards
+  everything written to it. Sending 2 there hides errors — useful when they
+  are expected, dangerous when they are not.
+hints:
+  - Errors travel on descriptor 2, and there is a device whose job is to swallow whatever is written to it.
+  - cat haiku.txt missing.txt _>/dev/____

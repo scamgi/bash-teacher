@@ -1,0 +1,20 @@
+id: sum-column
+track: text-processing
+level: 3
+title: Add up a column
+prompt: >
+  Print the sum of the scores in scores.txt — the total alone.
+fixture: numbers
+expected_stdout_file: expected/sum-column.txt
+match: exact
+teaches: [awk]
+must_use: [awk]
+forbid: []
+reference_solution: awk '{ s += $2 } END { print s }' scores.txt
+solution_notes: >
+  An awk program is a list of pattern-action pairs. A block with no pattern
+  runs for every line, and the END block runs once after the last one, which
+  is where a running total gets printed.
+hints:
+  - Accumulate the second field line by line, and print the accumulator in the block that runs after the last line.
+  - awk '{ s += $_ } ___ { print s }' scores.txt

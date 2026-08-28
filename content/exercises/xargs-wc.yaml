@@ -1,0 +1,21 @@
+id: xargs-wc
+track: streams
+level: 3
+title: Turn a list into arguments
+prompt: >
+  Print the total line count of the .go files, using a listing of the file
+  names as the input to wc — the total row alone.
+fixture: sourcetree
+expected_stdout_file: expected/xargs-wc.txt
+match: squeezed
+teaches: [ls, xargs, wc, tail]
+must_use: [xargs]
+forbid: []
+reference_solution: ls *.go | xargs wc -l | tail -1
+solution_notes: >
+  wc does not read file names from standard input; it reads file contents
+  from arguments. xargs bridges the two, and that gap is the reason it
+  exists.
+hints:
+  - wc wants arguments, not lines — something has to convert one into the other.
+  - ls *.go | _____ wc -l | tail -1

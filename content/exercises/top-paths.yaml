@@ -1,0 +1,23 @@
+id: top-paths
+track: real-world
+level: 3
+title: The three busiest URLs
+prompt: >
+  The seventh whitespace-separated field of every line in access.log is the
+  requested path. Print the three most requested paths in uniq -c format,
+  most requested first, with paths that tie on count ordered alphabetically.
+fixture: weblogs
+expected_stdout_file: expected/top-paths.txt
+match: squeezed
+teaches: [awk, sort, uniq, head]
+must_use: []
+forbid: []
+reference_solution: awk '{print $7}' access.log | sort | uniq -c | sort -k1,1rn -k2,2 | head -3
+solution_notes: >
+  The counting sandwich again, on a different field. Two paths tie for
+  second place here, so the ranking sort names both keys: the count
+  descending, then the path itself. A plain `sort -rn` would leave the tied
+  pair in whichever order the implementation happened to produce.
+hints:
+  - Take the path field, count it the usual way, and rank on the count and then the path.
+  - awk '{print $_}' access.log | sort | uniq -_ | sort -k1,1__ -k2,2 | head -3

@@ -1,0 +1,21 @@
+id: count-unique-ips
+track: inspection
+level: 3
+title: How many distinct clients?
+prompt: >
+  Each line of access.log starts with a client IP address followed by a
+  space. Print how many distinct addresses appear, and nothing else.
+fixture: weblogs
+expected_stdout_file: expected/count-unique-ips.txt
+match: squeezed
+teaches: [cut, sort, wc]
+must_use: []
+forbid: []
+reference_solution: cut -d' ' -f1 access.log | sort -u | wc -l
+solution_notes: >
+  Extract, deduplicate, count: three stages, each doing one thing. sort -u
+  is sort and uniq in one pass, and it is the deduplicating step that makes
+  the count mean "distinct".
+hints:
+  - Pull out the first field, remove the repeats, then count what is left.
+  - cut -d' ' -f1 access.log | sort -_ | wc -_

@@ -1,0 +1,22 @@
+id: cities-column
+track: text-processing
+level: 3
+title: City and high temperature
+prompt: >
+  temps.csv has a header row and the columns date, city, high, low. Print
+  the city and the high temperature for every reading, keeping the commas
+  and dropping the header.
+fixture: numbers
+expected_stdout_file: expected/cities-column.txt
+match: exact
+teaches: [tail, cut]
+must_use: []
+forbid: []
+reference_solution: tail -n +2 temps.csv | cut -d, -f2,3
+solution_notes: >
+  cut takes a list of fields as well as a single one, and prints them in the
+  file's order joined by the delimiter — asking for -f3,2 does not swap
+  them.
+hints:
+  - Skip the header first, then cut two fields at once.
+  - tail -n +_ temps.csv | cut -d, -f_,_

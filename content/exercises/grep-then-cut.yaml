@@ -1,0 +1,23 @@
+id: grep-then-cut
+track: search-find
+level: 4
+title: Who uses zsh?
+prompt: >
+  users.txt has colon-separated fields, with the login shell last and the
+  account name first. Print the name of every account whose shell is
+  /bin/zsh.
+fixture: accounts
+expected_stdout_file: expected/grep-then-cut.txt
+match: exact
+teaches: [grep, cut]
+must_use: []
+forbid: []
+reference_solution: "grep '/bin/zsh$' users.txt | cut -d: -f1"
+solution_notes: >
+  Anchoring the pattern to the end of the line is what keeps a shell named
+  /bin/zsh from matching an account whose home directory mentions it. Filter
+  then extract, in that order: extracting first would throw away the field
+  you need to filter on.
+hints:
+  - Match the shell at the end of the line first, then cut the field you want out of what survived.
+  - "grep '/bin/zsh_' users.txt | cut -d: -f_"

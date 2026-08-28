@@ -1,0 +1,5 @@
+2026-03-12 09:00:19 INFO  disk usage high
+2026-03-12 09:00:20 ERROR job finished
+2026-03-12 09:00:21 INFO  connection reset
+2026-03-12 09:00:22 INFO  job finished
+2026-03-12 09:00:23 INFO  user login

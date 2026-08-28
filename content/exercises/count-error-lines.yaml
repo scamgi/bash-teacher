@@ -1,0 +1,23 @@
+id: count-error-lines
+track: streams
+level: 3
+title: Count the complaint
+prompt: >
+  cat cannot read a file called missing.txt. Print how many lines of
+  complaint it makes about that, and nothing else — the message itself must
+  not appear.
+fixture: notes
+expected_stdout_file: expected/count-error-lines.txt
+match: squeezed
+teaches: [cat, wc]
+must_use: []
+forbid: []
+reference_solution: cat missing.txt 2>&1 | wc -l
+solution_notes: >
+  A pipe carries standard output only, so an error message goes straight to
+  the terminal past the pipeline. 2>&1 redirects descriptor 2 to wherever
+  descriptor 1 currently points, which puts the message into the pipe where
+  wc can count it.
+hints:
+  - A pipe only carries standard output, so the error has to be redirected onto it first.
+  - cat missing.txt _>&_ | wc -l

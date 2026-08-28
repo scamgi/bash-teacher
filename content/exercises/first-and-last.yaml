@@ -1,0 +1,21 @@
+id: first-and-last
+track: inspection
+level: 2
+title: Both ends at once
+prompt: >
+  Print the first line of access.log and then its last line, as two commands
+  in one line of input.
+fixture: weblogs
+expected_stdout_file: expected/first-and-last.txt
+match: exact
+teaches: [head, tail]
+must_use: []
+forbid: []
+reference_solution: head -1 access.log; tail -1 access.log
+solution_notes: >
+  A semicolon runs the second command whether or not the first one worked;
+  && runs it only on success. Both are worth having: use ; for independent
+  steps and && when the second depends on the first.
+hints:
+  - Two separate commands, joined by the separator that does not care whether the first succeeded.
+  - head -1 access.log _ tail -1 access.log

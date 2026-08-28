@@ -1,0 +1,20 @@
+id: grep-alternation
+track: search-find
+level: 4
+title: Two patterns at once
+prompt: >
+  Print the lines of build.log that record either an ERROR or a WARN.
+fixture: sourcetree
+expected_stdout_file: expected/grep-alternation.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -E 'ERROR|WARN' build.log
+solution_notes: >
+  The alternation bar needs extended regular expressions, which is what -E
+  turns on; in a basic pattern you would have to write \|. Two greps piped
+  together cannot do this — that would be an and, not an or.
+hints:
+  - Alternation needs the extended regex mode.
+  - grep -_ 'ERROR_WARN' build.log

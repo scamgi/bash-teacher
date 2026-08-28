@@ -1,0 +1,21 @@
+id: hidden-files
+track: files-navigation
+level: 2
+title: Nothing hidden
+prompt: >
+  Create an empty file called .keep, then print every entry in the directory
+  including the hidden ones and the two directory entries, in sorted order.
+fixture: archive
+expected_stdout_file: expected/hidden-files.txt
+match: exact
+teaches: [touch, ls, sort]
+must_use: []
+forbid: []
+reference_solution: touch .keep && ls -a | sort
+solution_notes: >
+  A file is hidden purely by convention: its name starts with a dot and ls
+  skips it unless asked with -a. The two entries . and .. are the directory
+  itself and its parent, and they are hidden by the same rule.
+hints:
+  - touch makes an empty file; ls needs a flag before it will admit that dot files exist.
+  - touch .keep && ls -_ | sort

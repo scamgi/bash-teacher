@@ -1,0 +1,23 @@
+id: human-accounts
+track: real-world
+level: 5
+title: The people, not the services
+prompt: >
+  users.txt has the fields name, placeholder, uid, gid, full name, home and
+  shell, separated by colons. Print the full name of every account with a
+  uid of 1000 or more whose shell is /bin/bash, sorted.
+fixture: accounts
+expected_stdout_file: expected/human-accounts.txt
+match: exact
+teaches: [awk, sort]
+must_use: []
+forbid: []
+reference_solution: "awk -F: '$3 >= 1000 && $7 == \"/bin/bash\" { print $5 }' users.txt | sort"
+solution_notes: >
+  Two conditions joined by && inside the pattern, one of them a string
+  comparison in double quotes — awk's own quotes, inside the shell's single
+  quotes. Keeping the two layers of quoting straight is most of the
+  difficulty in awk one-liners.
+hints:
+  - "One awk pattern with two conditions: a numeric test on the uid and a string test on the shell."
+  - "awk -F: '$3 >= 1000 __ $_ == \"/bin/bash\" { print $_ }' users.txt | sort"

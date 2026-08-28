@@ -1,0 +1,23 @@
+id: levels-present
+track: inspection
+level: 3
+title: Which levels appear?
+prompt: >
+  The third whitespace-separated field of each line in app.log is its log
+  level. Print each level that occurs, once each, in alphabetical order. cut
+  is not available: the levels are padded to a fixed width, so the fields
+  are not where a single-character delimiter would put them.
+fixture: weblogs
+expected_stdout_file: expected/levels-present.txt
+match: exact
+teaches: [awk, sort]
+must_use: [awk]
+forbid: [cut]
+reference_solution: awk '{print $3}' app.log | sort -u
+solution_notes: >
+  awk numbers the whitespace-separated fields for you as $1, $2, $3, and
+  collapses runs of spaces on the way. cut cannot do that, which is why awk
+  is the tool for ragged columns.
+hints:
+  - Print the third field of every line, then remove the duplicates.
+  - awk '{print $_}' app.log | sort -_

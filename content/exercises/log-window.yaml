@@ -1,0 +1,23 @@
+id: log-window
+track: inspection
+level: 4
+title: From one event to another
+prompt: >
+  Print the block of build.log that runs from the record timestamped
+  09:00:04 through the record timestamped 09:00:07, inclusive, without
+  counting line numbers by hand.
+fixture: sourcetree
+expected_stdout_file: expected/log-window.txt
+match: exact
+teaches: [sed]
+must_use: []
+forbid: []
+reference_solution: sed -n '/09:00:04/,/09:00:07/p' build.log
+solution_notes: >
+  A sed address can be a pattern as well as a number, and two patterns make
+  a range: start printing at the first match, stop at the next match of the
+  second. This is how you pull one request out of a log without knowing
+  where it starts.
+hints:
+  - sed ranges are not limited to line numbers — a pair of patterns delimits a block too.
+  - sed -n '/09:00:04/,/________/p' build.log

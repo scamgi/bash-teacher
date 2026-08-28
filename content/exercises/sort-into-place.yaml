@@ -1,0 +1,22 @@
+id: sort-into-place
+track: streams
+level: 3
+title: Sort a file in place
+prompt: >
+  Sort scores.txt alphabetically and leave the sorted version in scores.txt
+  itself, then print its first two lines. Redirecting into the file you are
+  reading would empty it, so route the output through a temporary file.
+fixture: numbers
+expected_stdout_file: expected/sort-into-place.txt
+match: exact
+teaches: [sort, mv, head]
+must_use: []
+forbid: []
+reference_solution: sort scores.txt > tmp.txt && mv tmp.txt scores.txt && head -2 scores.txt
+solution_notes: >
+  This is the shape behind sed -i and sort -o: write elsewhere, then move
+  the result into place. The move is atomic, so a reader either sees the old
+  file or the new one and never a half-written mixture.
+hints:
+  - Write the sorted output somewhere else first, then put it where it belongs.
+  - sort scores.txt _ tmp.txt && __ tmp.txt scores.txt && head -2 scores.txt

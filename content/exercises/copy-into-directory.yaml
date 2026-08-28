@@ -1,0 +1,21 @@
+id: copy-into-directory
+track: files-navigation
+level: 2
+title: Collect the text files
+prompt: >
+  Create a directory called backup, copy every .txt file into it, then print
+  the names of the files inside backup.
+fixture: notes
+expected_stdout_file: expected/copy-into-directory.txt
+match: exact
+teaches: [mkdir, cp, ls]
+must_use: []
+forbid: []
+reference_solution: mkdir backup && cp *.txt backup && ls backup
+solution_notes: >
+  When the last argument to cp is a directory, everything before it is
+  copied into that directory. This is why `cp *.txt backup` works with any
+  number of matches.
+hints:
+  - cp takes many sources and one destination, and the destination may be a directory.
+  - mkdir backup && cp _.txt backup && ls backup

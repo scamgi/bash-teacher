@@ -1,0 +1,21 @@
+id: sed-line-range
+track: inspection
+level: 2
+title: A window without head or tail
+prompt: >
+  Print lines 20 through 24 of app.log. head and tail are not available for
+  this one.
+fixture: weblogs
+expected_stdout_file: expected/sed-line-range.txt
+match: exact
+teaches: [sed]
+must_use: [sed]
+forbid: [head, tail]
+reference_solution: sed -n '20,24p' app.log
+solution_notes: >
+  sed -n turns off the automatic printing, so nothing comes out except what
+  an explicit p asks for. `20,24` is an address range, and addresses can be
+  regular expressions as well as numbers.
+hints:
+  - sed can address a range of lines directly, but only if you first stop it printing everything.
+  - sed -_ '20,24_' app.log

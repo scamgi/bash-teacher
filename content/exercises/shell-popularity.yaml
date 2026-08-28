@@ -1,0 +1,22 @@
+id: shell-popularity
+track: real-world
+level: 5
+title: Which shell wins?
+prompt: >
+  users.txt has colon-separated fields with the login shell last. Print each
+  shell and how many accounts use it, most popular first, breaking ties by
+  shell name — the shell first, then the count.
+fixture: accounts
+expected_stdout_file: expected/shell-popularity.txt
+match: squeezed
+teaches: [cut, sort, uniq, awk]
+must_use: []
+forbid: []
+reference_solution: "cut -d: -f7 users.txt | sort | uniq -c | sort -k1,1rn -k2,2 | awk '{print $2, $1}'"
+solution_notes: >
+  Two shells tie here, so `sort -rn` alone would leave their order up to the
+  implementation. -k1,1rn -k2,2 says what the tie-break is, which is the
+  difference between output that happens to be stable and output that is.
+hints:
+  - Count the shells, then sort on the count descending and the name ascending before swapping the columns.
+  - "cut -d: -f7 users.txt | sort | uniq -c | sort -k1,1__ -k_,_ | awk '{print $2, $1}'"

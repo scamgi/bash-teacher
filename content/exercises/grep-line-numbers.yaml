@@ -1,0 +1,20 @@
+id: grep-line-numbers
+track: search-find
+level: 2
+title: Where exactly?
+prompt: >
+  Print every line mentioning FIXME in the .go files, with the file name and
+  the line number in front of it.
+fixture: sourcetree
+expected_stdout_file: expected/grep-line-numbers.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -n FIXME *.go
+solution_notes: >
+  -n is the flag that turns a search into a place you can jump to; most
+  editors will parse file:line:text straight from this output.
+hints:
+  - Ask grep to number what it prints.
+  - grep -_ FIXME *.go

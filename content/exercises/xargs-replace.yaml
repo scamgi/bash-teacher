@@ -1,0 +1,21 @@
+id: xargs-replace
+track: streams
+level: 4
+title: Back up each match
+prompt: >
+  Make a .bak copy of every .log file — build.log becomes build.log.bak —
+  then print the names of the backups.
+fixture: sourcetree
+expected_stdout_file: expected/xargs-replace.txt
+match: exact
+teaches: [ls, xargs, cp]
+must_use: []
+forbid: []
+reference_solution: ls *.log | xargs -I{} cp {} {}.bak && ls *.bak
+solution_notes: >
+  -I gives the argument a name so it can appear more than once, and in any
+  position, in the command being run. Without it xargs can only append
+  arguments at the end, which is no use when you need the value twice.
+hints:
+  - cp needs the name twice, so the argument has to be given a placeholder rather than just appended.
+  - ls *.log | xargs -_{} cp {} {}.bak && ls *.bak

@@ -1,0 +1,22 @@
+id: error-percentage
+track: real-world
+level: 5
+title: What share failed?
+prompt: >
+  Print the percentage of requests in access.log whose status — the ninth
+  field — was 400 or more, to one decimal place, followed immediately by a
+  percent sign.
+fixture: weblogs
+expected_stdout_file: expected/error-percentage.txt
+match: exact
+teaches: [awk]
+must_use: []
+forbid: []
+reference_solution: awk '$9 >= 400 { e++ } END { printf "%.1f%%\n", 100 * e / NR }' access.log
+solution_notes: >
+  NR in an END block is the total number of records read, so a rate needs no
+  second pass over the file. In printf a literal percent sign is written
+  twice, exactly as in C.
+hints:
+  - Count the failures as you go, then divide by the record count in the END block. A percent sign in a printf format has to be doubled.
+  - awk '$9 >= 400 { e++ } END { printf "%.1f__\n", 100 * e / __ }' access.log

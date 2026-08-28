@@ -1,0 +1,10 @@
+# static host table
+127.0.0.1	localhost
+::1	localhost
+10.0.0.4	db.internal
+10.0.0.7	cache.internal
+10.0.0.11	queue.internal
+
+# staging
+10.1.0.4	db.staging
+10.1.0.7	cache.staging

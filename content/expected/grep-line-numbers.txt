@@ -1,0 +1,2 @@
+main.go:13:	// FIXME: this ignores read errors
+util.go:13:// FIXME: unused since the parser rewrite

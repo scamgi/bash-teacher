@@ -1,0 +1,21 @@
+id: redirect-stdout
+track: streams
+level: 2
+title: Send it to a file
+prompt: >
+  Sort numbers.txt numerically into a new file called sorted.txt, then print
+  the first three lines of that file.
+fixture: numbers
+expected_stdout_file: expected/redirect-stdout.txt
+match: exact
+teaches: [sort, head]
+must_use: []
+forbid: []
+reference_solution: sort -n numbers.txt > sorted.txt && head -3 sorted.txt
+solution_notes: >
+  A > redirection replaces the file's contents before the command even
+  starts. That is why `sort file > file` destroys the file: the shell
+  truncates it, and then sort reads nothing.
+hints:
+  - One character sends standard output into a file instead of onto the screen.
+  - sort -n numbers.txt _ sorted.txt && head -3 sorted.txt

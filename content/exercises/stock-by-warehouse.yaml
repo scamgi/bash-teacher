@@ -1,0 +1,22 @@
+id: stock-by-warehouse
+track: text-processing
+level: 4
+title: Total stock per warehouse
+prompt: >
+  stock.tsv is tab-separated with a header and the columns sku, name, qty
+  and warehouse. Print each warehouse code and the total quantity held
+  there, sorted by code.
+fixture: inventory
+expected_stdout_file: expected/stock-by-warehouse.txt
+match: exact
+teaches: [awk, sort]
+must_use: []
+forbid: []
+reference_solution: awk -F'\t' 'NR > 1 { q[$4] += $3 } END { for (w in q) print w, q[w] }' stock.tsv | sort
+solution_notes: >
+  An awk array indexed by a field is a group-by. The catch is that `for (key
+  in array)` walks the keys in an unspecified order, so anything you want
+  reproducible has to be sorted afterwards.
+hints:
+  - Total the quantity into an array indexed by the warehouse, print the array at the end, and remember that its order is not defined.
+  - awk -F'\t' 'NR > 1 { q[$_] += $_ } END { for (w in q) print w, q[w] }' stock.tsv | ____

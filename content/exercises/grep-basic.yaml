@@ -1,0 +1,20 @@
+id: grep-basic
+track: search-find
+level: 1
+title: Find the reminders
+prompt: >
+  Print the lines of main.go that mention TODO.
+fixture: sourcetree
+expected_stdout_file: expected/grep-basic.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep TODO main.go
+solution_notes: >
+  grep takes a pattern and a file and prints the lines that match.
+  Everything else it does — counting, inverting, recursing — is a flag on
+  top of that one idea.
+hints:
+  - Pattern first, file second.
+  - ____ TODO main.go

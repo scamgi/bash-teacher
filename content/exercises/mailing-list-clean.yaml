@@ -1,0 +1,22 @@
+id: mailing-list-clean
+track: real-world
+level: 5
+title: Who should still get mail?
+prompt: >
+  unsubscribed.txt lists the addresses that opted out, sorted. Print the
+  addresses from subscribers.txt that should still receive mail: each one
+  once, in lower case, with the opt-outs removed.
+fixture: mailinglist
+expected_stdout_file: expected/mailing-list-clean.txt
+match: exact
+teaches: [tr, sort, comm]
+must_use: []
+forbid: []
+reference_solution: tr A-Z a-z < subscribers.txt | sort -u | comm -23 - unsubscribed.txt
+solution_notes: >
+  Case folding, deduplicating and subtracting, in that order — and the order
+  is forced: comm needs both sides sorted under the same rules, and folding
+  case after sorting would break that.
+hints:
+  - Fold the case, deduplicate, then subtract the second list with the tool that compares two sorted files.
+  - tr A-Z a-z < subscribers.txt | sort -_ | ____ -__ _ unsubscribed.txt

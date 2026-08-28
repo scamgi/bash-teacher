@@ -1,0 +1,21 @@
+id: copy-then-list
+track: files-navigation
+level: 1
+title: Keep a copy
+prompt: >
+  Make a copy of report.txt called report.bak, then print the names of the
+  files in the directory.
+fixture: archive
+expected_stdout_file: expected/copy-then-list.txt
+match: exact
+teaches: [cp, ls]
+must_use: []
+forbid: []
+reference_solution: cp report.txt report.bak && ls
+solution_notes: >
+  The && between the two commands means "and only if that worked": the
+  listing is skipped when the copy fails, which is what you want in any
+  script that builds on the step before.
+hints:
+  - Copy first, list second — join the two so that the listing only happens if the copy succeeded.
+  - cp report.txt report.bak __ ls

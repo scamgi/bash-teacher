@@ -1,0 +1,20 @@
+id: replace-word
+track: text-processing
+level: 2
+title: Swap a word
+prompt: >
+  Print haiku.txt with every occurrence of the word pond replaced by lake.
+fixture: notes
+expected_stdout_file: expected/replace-word.txt
+match: exact
+teaches: [sed]
+must_use: []
+forbid: []
+reference_solution: sed 's/pond/lake/g' haiku.txt
+solution_notes: >
+  The substitute command reads s/from/to/, and without the trailing g it
+  changes only the first match on each line — which is the single most
+  common sed surprise.
+hints:
+  - Substitution in sed is four characters and three slashes, plus a flag so it applies more than once per line.
+  - sed 's/pond/lake/_' haiku.txt

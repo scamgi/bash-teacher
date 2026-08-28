@@ -1,0 +1,21 @@
+id: find-or-clause
+track: search-find
+level: 4
+title: Either name
+prompt: >
+  Print the path of every file whose name starts with test or ends in .json,
+  sorted.
+fixture: sourcetree
+expected_stdout_file: expected/find-or-clause.txt
+match: exact
+teaches: [find, sort]
+must_use: []
+forbid: []
+reference_solution: find . -type f -name 'test*' -o -name '*.json' | sort
+solution_notes: >
+  find's tests are joined by an implicit and; -o is the or, and it binds
+  more loosely than the and does. That precedence is the classic find trap:
+  -type f applies only to the left-hand side here.
+hints:
+  - find joins tests with an implied and — there is a separate operator for or.
+  - find . -type f -name 'test*' __ -name '*.json' | sort

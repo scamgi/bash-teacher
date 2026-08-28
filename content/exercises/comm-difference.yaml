@@ -1,0 +1,23 @@
+id: comm-difference
+track: search-find
+level: 5
+title: Who never confirmed?
+prompt: >
+  confirmed.txt lists the addresses that confirmed their subscription,
+  sorted. Print the addresses in subscribers.txt that are not in it,
+  treating case as insignificant and listing each once.
+fixture: mailinglist
+expected_stdout_file: expected/comm-difference.txt
+match: exact
+teaches: [tr, sort, comm]
+must_use: []
+forbid: []
+reference_solution: tr A-Z a-z < subscribers.txt | sort -u | comm -23 - confirmed.txt
+solution_notes: >
+  comm compares two sorted files and prints three columns: only in the
+  first, only in the second, in both. -23 suppresses columns two and three,
+  leaving the first. The dash where a file name goes is standard input,
+  which is how a pipeline feeds one side of a two-file command.
+hints:
+  - Normalize and deduplicate one side, then compare the two sorted lists and keep only the column for the left-hand file. A lone dash stands for standard input.
+  - tr A-Z a-z < subscribers.txt | sort -u | ____ -__ _ confirmed.txt

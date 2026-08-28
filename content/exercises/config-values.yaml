@@ -1,0 +1,23 @@
+id: config-values
+track: real-world
+level: 4
+title: Just the settings
+prompt: >
+  app.conf mixes comments, blank lines, [section] headers and key = value
+  settings. Print only the settings, with the spaces around the equals sign
+  removed.
+fixture: configs
+expected_stdout_file: expected/config-values.txt
+match: exact
+teaches: [grep, tr]
+must_use: []
+forbid: []
+reference_solution: grep -v '^#' app.conf | grep -v '^\[' | grep -v '^$' | tr -d ' '
+solution_notes: >
+  Three greps in a row, each removing one kind of line, is clearer than one
+  pattern that removes all three — and it stays clear when a fourth kind of
+  line turns up. The bracket is escaped because an unescaped [ starts a
+  character class.
+hints:
+  - Strip the comments, then the section headers, then the blank lines, then delete the spaces that are left.
+  - grep -v '^#' app.conf | grep -v '^_[' | grep -v '^$' | tr -_ ' '

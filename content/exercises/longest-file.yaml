@@ -1,0 +1,21 @@
+id: longest-file
+track: inspection
+level: 3
+title: The biggest source file
+prompt: >
+  Print the wc -l row for the .go file with the most lines — one row,
+  without the total.
+fixture: sourcetree
+expected_stdout_file: expected/longest-file.txt
+match: squeezed
+teaches: [wc, sort, sed]
+must_use: []
+forbid: []
+reference_solution: wc -l *.go | sort -rn | sed -n '2p'
+solution_notes: >
+  The trailing total is the largest number wc printed, so after a descending
+  numeric sort it lands on line 1 and the real answer lands on line 2.
+  Knowing where the total goes is what makes this a one-liner.
+hints:
+  - Sort the counts from largest down and remember that the total is one of them.
+  - wc -l *.go | sort -__ | sed -n '_p'

@@ -1,0 +1,20 @@
+id: middle-lines
+track: inspection
+level: 2
+title: Lines 11 to 15
+prompt: >
+  Print lines 11 through 15 of access.log — no more, no less.
+fixture: weblogs
+expected_stdout_file: expected/middle-lines.txt
+match: exact
+teaches: [head, tail]
+must_use: []
+forbid: []
+reference_solution: head -15 access.log | tail -5
+solution_notes: >
+  Taking the first fifteen and then the last five of those is the classic
+  way to cut a window out of a stream with nothing but head and tail. sed
+  can do it in one command; this shape is worth knowing because it composes.
+hints:
+  - Take everything up to line 15 first, then keep only the end of that.
+  - head -__ access.log | tail -_

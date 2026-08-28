@@ -1,0 +1,21 @@
+id: rename-file
+track: files-navigation
+level: 1
+title: Rename in place
+prompt: >
+  Rename notes.md to NOTES.md, then print the names of the files ending in
+  .md.
+fixture: archive
+expected_stdout_file: expected/rename-file.txt
+match: exact
+teaches: [mv, ls]
+must_use: []
+forbid: []
+reference_solution: mv notes.md NOTES.md && ls *.md
+solution_notes: >
+  There is no rename command: moving a file to a new name in the same
+  directory is a rename, and mv does both jobs because both are the same
+  operation to the filesystem.
+hints:
+  - Renaming and moving are the same command.
+  - __ notes.md NOTES.md && ls *.md

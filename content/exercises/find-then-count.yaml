@@ -1,0 +1,20 @@
+id: find-then-count
+track: search-find
+level: 3
+title: Count what you found
+prompt: >
+  Print how many .go files this directory holds, and nothing else.
+fixture: sourcetree
+expected_stdout_file: expected/find-then-count.txt
+match: squeezed
+teaches: [find, wc]
+must_use: []
+forbid: []
+reference_solution: find . -name '*.go' | wc -l
+solution_notes: >
+  find prints one path per line, so counting them is a wc away. This breaks
+  on file names containing newlines — which is why find -print0 and xargs -0
+  exist — but nothing here has one.
+hints:
+  - Find them, then count the lines.
+  - find . -name '*.go' | __ -_

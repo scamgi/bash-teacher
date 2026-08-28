@@ -1,0 +1,4 @@
+/bin/bash 5
+/bin/sh 4
+/bin/zsh 3
+/usr/sbin/nologin 3

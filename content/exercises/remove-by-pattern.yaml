@@ -1,0 +1,21 @@
+id: remove-by-pattern
+track: files-navigation
+level: 3
+title: Clear out the logs
+prompt: >
+  Delete every file whose name ends in .log, then print the names of the
+  files that are left.
+fixture: sourcetree
+expected_stdout_file: expected/remove-by-pattern.txt
+match: exact
+teaches: [rm, ls]
+must_use: []
+forbid: []
+reference_solution: rm *.log && ls
+solution_notes: >
+  Run the pattern past ls before you hand it to rm. The shell expands it
+  identically for both commands, so the listing tells you exactly what rm is
+  about to delete.
+hints:
+  - The same pattern you would list with, handed to the command that deletes.
+  - __ *.log && ls

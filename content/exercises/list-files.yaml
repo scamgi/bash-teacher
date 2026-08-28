@@ -1,0 +1,22 @@
+id: list-files
+track: files-navigation
+level: 1
+title: What is in here?
+prompt: >
+  You have just landed in a directory and want to know what it holds. Print
+  the name of every file in it, one per line.
+fixture: sourcetree
+expected_stdout_file: expected/list-files.txt
+match: exact
+teaches: [ls]
+must_use: []
+forbid: []
+reference_solution: ls
+solution_notes: >
+  When ls writes to a pipe or a file rather than a terminal it prints one
+  name per line, sorted. That is why `ls | wc -l` counts what you expect:
+  the columns you see interactively are a courtesy to your eyes, not part of
+  the output.
+hints:
+  - The command is two letters long and needs no arguments at all.
+  - l_

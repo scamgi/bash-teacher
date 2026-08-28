@@ -1,0 +1,23 @@
+id: multi-group-users
+track: real-world
+level: 5
+title: Who is in several groups?
+prompt: >
+  groups.txt has colon-separated fields, and its fourth field is a
+  comma-separated member list that may be empty. Print the names of the
+  users that appear in more than one group, sorted.
+fixture: accounts
+expected_stdout_file: expected/multi-group-users.txt
+match: exact
+teaches: [cut, tr, grep, sort, uniq]
+must_use: []
+forbid: []
+reference_solution: "cut -d: -f4 groups.txt | tr ',' '\\n' | grep -v '^$' | sort | uniq -d"
+solution_notes: >
+  Turning a delimiter into a newline with tr is how a nested list becomes
+  one item per line, which is the shape every other tool here wants. The
+  empty member lists become blank lines, so they have to be filtered out
+  before counting.
+hints:
+  - Get the member field, turn its commas into line breaks, drop the blanks, and ask uniq for the values that repeat.
+  - "cut -d: -f_ groups.txt | __ ',' '\\n' | grep -v '^$' | sort | uniq -_"

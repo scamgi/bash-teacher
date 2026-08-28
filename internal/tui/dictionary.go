@@ -208,6 +208,10 @@ func (d *dictionaryScreen) selectCommand(id string) bool {
 	return false
 }
 
+// SelectCommand opens a command's entry, for a contextual lookup arriving from
+// another screen. It reports false when the word is not a command.
+func (d *dictionaryScreen) SelectCommand(id string) bool { return d.selectCommand(id) }
+
 func (d *dictionaryScreen) Update(a *App, msg tea.Msg) (screen, tea.Cmd) {
 	km, ok := msg.(tea.KeyPressMsg)
 	if !ok {

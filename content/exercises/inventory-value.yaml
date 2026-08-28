@@ -1,0 +1,24 @@
+id: inventory-value
+track: real-world
+level: 5
+title: What is the stock worth?
+prompt: >
+  stock.tsv (sku, name, qty, warehouse, with a header) and prices.tsv (sku,
+  price, no header) are both tab-separated and share the sku column. Print
+  each item's name and the value of its stock — quantity times price — to
+  two decimal places, sorted by name.
+fixture: inventory
+expected_stdout_file: expected/inventory-value.txt
+match: exact
+teaches: [tail, tr, sort, join, awk]
+must_use: []
+forbid: []
+reference_solution: tail -n +2 stock.tsv | tr '\t' ' ' | sort > s.txt; tr '\t' ' ' < prices.tsv | sort > p.txt; join s.txt p.txt | awk '{ printf "%s %.2f\n", $2, $3 * $5 }' | sort
+solution_notes: >
+  join needs both inputs sorted on the join field and agreeing about the
+  separator, which is why both sides are normalized to spaces and sorted
+  first. Preparing the inputs is most of the work; the join itself is one
+  word.
+hints:
+  - join wants two sorted files that agree on their separator, so build those first, then multiply the two columns in awk.
+  - tail -n +2 stock.tsv | tr '\t' ' ' | sort > s.txt; tr '\t' ' ' < prices.tsv | sort > p.txt; ____ s.txt p.txt | awk '{ printf "%s %.2f\n", $2, $3 * $_ }' | sort

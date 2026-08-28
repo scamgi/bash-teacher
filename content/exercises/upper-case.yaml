@@ -1,0 +1,20 @@
+id: upper-case
+track: text-processing
+level: 1
+title: Shout it
+prompt: >
+  Print mixedcase.txt with every letter turned into a capital.
+fixture: messy
+expected_stdout_file: expected/upper-case.txt
+match: exact
+teaches: [tr]
+must_use: []
+forbid: []
+reference_solution: tr a-z A-Z < mixedcase.txt
+solution_notes: >
+  tr only reads standard input — it takes no file argument at all — so the
+  file has to be fed to it with a redirection. The two arguments are sets of
+  characters, matched up position by position.
+hints:
+  - tr will not open a file for you; the shell has to hand it one on standard input.
+  - tr a-z A-Z _ mixedcase.txt

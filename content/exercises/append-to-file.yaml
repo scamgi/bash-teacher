@@ -1,0 +1,21 @@
+id: append-to-file
+track: streams
+level: 2
+title: Add to the end
+prompt: >
+  Add the line "DONE: ship it" to the end of todo.txt without disturbing
+  what is already there, then print the last two lines of the file.
+fixture: notes
+expected_stdout_file: expected/append-to-file.txt
+match: exact
+teaches: [echo, tail]
+must_use: []
+forbid: []
+reference_solution: "echo \"DONE: ship it\" >> todo.txt && tail -2 todo.txt"
+solution_notes: >
+  One > truncates, two >> appends. The difference is one keystroke and a
+  whole file, which is why appending is the safer default when a script
+  writes to a log.
+hints:
+  - The appending redirection is the truncating one, doubled.
+  - "echo \"DONE: ship it\" __ todo.txt && tail -2 todo.txt"

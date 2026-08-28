@@ -1,0 +1,21 @@
+id: basename-of-path
+track: files-navigation
+level: 2
+title: Just the file name
+prompt: >
+  Print the last component of the path docs/design/spec.md — the file name
+  on its own, with no directories in front of it.
+fixture: notes
+expected_stdout_file: expected/basename-of-path.txt
+match: exact
+teaches: [basename]
+must_use: []
+forbid: []
+reference_solution: basename docs/design/spec.md
+solution_notes: >
+  basename and dirname are string tools: they never look at the filesystem,
+  so the path does not have to exist. That makes them safe to use on names
+  you are about to create.
+hints:
+  - There is a command whose whole job is stripping the directory part off a path.
+  - ________ docs/design/spec.md

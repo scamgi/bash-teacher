@@ -1,0 +1,20 @@
+id: grep-context
+track: search-find
+level: 3
+title: The line before
+prompt: >
+  build.log records an error. Print each line mentioning ERROR together with
+  the one line above it.
+fixture: sourcetree
+expected_stdout_file: expected/grep-context.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -B1 ERROR build.log
+solution_notes: >
+  -B is before, -A is after, -C is both. Context flags are what turn a log
+  search from "something failed" into "and here is what it was doing".
+hints:
+  - grep can print context around a match; you want the lines before.
+  - grep -__ ERROR build.log

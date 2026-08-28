@@ -3,11 +3,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -26,12 +28,14 @@ const usage = `bash-teacher — learn Unix commands and how to compose them.
 
 usage:
   bt                    launch the TUI
-  bt practice           launch straight into the exercise browser
+  bt practice [TRACK]   launch straight into the exercise browser
   bt review             launch straight into the flashcards
   bt dict [COMMAND]     print a dictionary entry (or list every entry)
   bt stats              print a library summary
   bt doctor             report environment, data paths, and content health
   bt content lint       validate the content library
+  bt content expected   re-run every reference solution and check the expected
+                        outputs; --write regenerates them
 
 flags:
   --theme MODE          catppuccin flavour: latte, frappe, macchiato, mocha
@@ -73,10 +77,7 @@ func run(args []string) error {
 	// `content lint` must report problems rather than fail to start, so it
 	// loads the library itself instead of going through mustLoad.
 	if cmd == "content" {
-		if len(rest) == 0 || rest[0] != "lint" {
-			return fmt.Errorf("unknown content subcommand; try `bt content lint`")
-		}
-		return lintCmd()
+		return contentCmd(rest)
 	}
 
 	mode, err := theme.ParseMode(*themeFlag)
@@ -94,7 +95,11 @@ func run(args []string) error {
 	case "":
 		return launch(library, th, run, tui.ScreenHome)
 	case "practice":
-		return launch(library, th, run, tui.ScreenPractice)
+		opts, err := practiceOptions(library, rest)
+		if err != nil {
+			return err
+		}
+		return launch(library, th, run, tui.ScreenPractice, opts...)
 	case "review":
 		return launch(library, th, run, tui.ScreenFlashcards)
 	case "dict":
@@ -111,10 +116,53 @@ func run(args []string) error {
 	}
 }
 
-func launch(library *lib.Library, th *theme.Theme, run *runner.Runner, start tui.Screen) error {
-	p := tea.NewProgram(tui.New(library, th, run, version, start))
+func launch(library *lib.Library, th *theme.Theme, run *runner.Runner, start tui.Screen, opts ...tui.Option) error {
+	p := tea.NewProgram(tui.New(library, th, run, version, start, opts...))
 	_, err := p.Run()
 	return err
+}
+
+// practiceOptions turns `bt practice [track]` into a model option, rejecting a
+// track name that does not exist rather than opening the library at the top
+// and leaving the learner to wonder why.
+func practiceOptions(library *lib.Library, args []string) ([]tui.Option, error) {
+	if len(args) == 0 {
+		return nil, nil
+	}
+	name := args[0]
+	if _, ok := library.Track(name); !ok {
+		names := make([]string, 0, len(library.Tracks))
+		for _, t := range library.Tracks {
+			names = append(names, t.Name)
+		}
+		return nil, fmt.Errorf("no track called %q; the tracks are %s", name, strings.Join(names, ", "))
+	}
+	return []tui.Option{tui.WithTrack(name)}, nil
+}
+
+// contentCmd routes the authoring subcommands. They take their own flags, so
+// that `bt content expected --write` reads the way it is documented rather
+// than requiring the flag before the subcommand.
+func contentCmd(args []string) error {
+	sub := ""
+	if len(args) > 0 {
+		sub, args = args[0], args[1:]
+	}
+	fl := flag.NewFlagSet("bt content "+sub, flag.ContinueOnError)
+	fl.SetOutput(os.Stderr)
+	write := fl.Bool("write", false, "rewrite the expected output files instead of checking them")
+	dir := fl.String("dir", "content", "the content tree to work on")
+	if err := fl.Parse(args); err != nil {
+		return err
+	}
+	switch sub {
+	case "lint":
+		return lintCmd()
+	case "expected":
+		return expectedCmd(*dir, *write)
+	default:
+		return errors.New("unknown content subcommand; try `bt content lint` or `bt content expected`")
+	}
 }
 
 func lintCmd() error {
@@ -131,6 +179,70 @@ func lintCmd() error {
 	}
 	fmt.Printf("ok: %d commands, %d exercises, %d cards, %d tracks\n",
 		len(library.Commands), len(library.Exercises), len(library.Cards), len(library.Tracks))
+	return nil
+}
+
+// expectedCmd re-runs every exercise's reference solution and compares what it
+// printed with the committed expected output, rewriting the files with --write.
+//
+// It works on the content tree on disk rather than the embedded copy, since
+// the point is to write files, and it loads without linting because a new
+// exercise has no expected file for the linter to find yet.
+func expectedCmd(dir string, write bool) error {
+	library, err := lib.LoadUnlinted(os.DirFS(dir))
+	if err != nil {
+		return err
+	}
+	run := runner.New(library)
+	if run.NoExec() {
+		return errors.New("cannot generate expected output with execution disabled")
+	}
+
+	stale := 0
+	for _, ex := range library.Exercises {
+		res, err := run.Run(context.Background(), runner.Job{
+			Input: ex.ReferenceSolution, Fixture: ex.Fixture,
+			MustUse: ex.MustUse, Forbid: ex.Forbid,
+		})
+		if err != nil {
+			return fmt.Errorf("%s: %w", ex.ID, err)
+		}
+		if !res.Ran() {
+			return fmt.Errorf("%s: the reference solution was refused:\n%s", ex.ID, res.Refusal())
+		}
+		if res.ExitCode != 0 || res.Stderr != "" {
+			fmt.Printf("warn  %-24s exit %d %s\n", ex.ID, res.ExitCode, strings.TrimSpace(res.Stderr))
+		}
+		if ex.ExpectedStdoutFile == "" {
+			return fmt.Errorf("%s: no expected_stdout_file", ex.ID)
+		}
+
+		path := filepath.Join(dir, filepath.FromSlash(ex.ExpectedStdoutFile))
+		old, readErr := os.ReadFile(path) //#nosec G304 -- the path comes from the content tree being generated
+		switch {
+		case readErr == nil && string(old) == res.Stdout:
+			continue
+		case !write:
+			stale++
+			what := "differs from"
+			if readErr != nil {
+				what = "is missing"
+			}
+			fmt.Printf("stale %-24s %s %s\n", ex.ID, ex.ExpectedStdoutFile, what+" what the reference solution prints")
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+			return err
+		}
+		if err := os.WriteFile(path, []byte(res.Stdout), 0o600); err != nil {
+			return err
+		}
+		fmt.Printf("wrote %-24s %s\n", ex.ID, ex.ExpectedStdoutFile)
+	}
+	if stale > 0 {
+		return fmt.Errorf("%d expected output(s) out of date; re-run with --write", stale)
+	}
+	fmt.Printf("ok: %d expected output(s) match their reference solution\n", len(library.Exercises))
 	return nil
 }
 

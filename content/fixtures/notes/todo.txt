@@ -1,0 +1,12 @@
+TODO: write the parser
+DONE: sketch the grammar
+TODO: handle quoting   
+WAIT: review from ada
+DONE: sketch the grammar
+
+TODO: write the parser
+DONE: pick a fixture format
+TODO: benchmark the loader
+
+WAIT: hardware budget
+DONE: pick a fixture format

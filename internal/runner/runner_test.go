@@ -8,6 +8,7 @@ import (
 
 	embedded "bash-teacher/content"
 	"bash-teacher/internal/content"
+	"bash-teacher/internal/shellparse"
 )
 
 func testLibrary(t *testing.T) *content.Library {
@@ -47,6 +48,42 @@ func TestReferenceSolutionsPass(t *testing.T) {
 			if !out.Passed {
 				t.Errorf("reference solution %q did not produce the expected output\n%s\nstderr: %s",
 					ex.ReferenceSolution, out.Diff, out.Stderr)
+			}
+		})
+	}
+}
+
+// TestTeachesMatchesTheReferenceSolution keeps an exercise's teaches list
+// honest. It is what the dictionary's "seen in" section and, from M5, the
+// half-strength card credit are both computed from, so an exercise that claims
+// to teach a command its own solution never runs would send a learner to the
+// wrong place.
+func TestTeachesMatchesTheReferenceSolution(t *testing.T) {
+	lib := testLibrary(t)
+	for _, ex := range lib.Exercises {
+		t.Run(ex.ID, func(t *testing.T) {
+			script, err := shellparse.Parse(ex.ReferenceSolution)
+			if err != nil {
+				t.Fatalf("reference solution does not parse: %v", err)
+			}
+			// A command counts as used when it is the name of a stage or an
+			// argument of one: `xargs wc -l` and `find -exec grep ... +` both
+			// run a command that the parse tree records as an argument.
+			used := map[string]bool{}
+			for _, c := range script.Commands() {
+				for _, w := range c.Words() {
+					used[w.Value] = true
+				}
+			}
+			for _, id := range ex.Teaches {
+				c, ok := lib.Command(id)
+				if !ok {
+					t.Errorf("teaches unknown command %q", id)
+					continue
+				}
+				if !used[c.Name] {
+					t.Errorf("teaches %q, which the reference solution %q never mentions", c.Name, ex.ReferenceSolution)
+				}
 			}
 		})
 	}

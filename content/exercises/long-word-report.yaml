@@ -1,0 +1,23 @@
+id: long-word-report
+track: real-world
+level: 5
+title: The long words
+prompt: >
+  Print the three commonest words of five letters or more in README.md, most
+  frequent first with ties broken alphabetically, in uniq -c format. Treat
+  any run of letters as a word and ignore case.
+fixture: notes
+expected_stdout_file: expected/long-word-report.txt
+match: squeezed
+teaches: [tr, grep, sort, uniq, head]
+must_use: []
+forbid: []
+reference_solution: tr -cs 'A-Za-z' '\n' < README.md | tr A-Z a-z | grep -E '^.{5,}$' | sort | uniq -c | sort -k1,1rn -k2,2 | head -3
+solution_notes: >
+  The {5,} repetition needs extended regular expressions, and anchoring it
+  at both ends is what makes it a length test rather than a search for any
+  five characters. Filter before counting: counting first and filtering
+  after would work too, but does more work for the same answer.
+hints:
+  - Split into words, fold the case, keep only the long ones with an anchored length pattern, then count and rank with an explicit tie-break.
+  - tr -cs 'A-Za-z' '\n' < README.md | tr A-Z a-z | grep -_ '^.{_,}$' | sort | uniq -c | sort -k1,1rn -k2,2 | head -3

@@ -35,6 +35,13 @@ func TestPolicyAcceptsOrdinaryPipelines(t *testing.T) {
 		`echo hi && printf '%s\n' done`,
 		`wc -l ./sub/f`,
 		`sed 's|a/../b|x|' f`, // resolves to "a/b", never leaves the fixture
+		// The script operand of sed, awk and grep is a program, not a path,
+		// and a program routinely starts with a slash.
+		`sed -n '/09:00:04/,/09:00:07/p' build.log`,
+		`grep '^/usr/bin' shells.txt`,
+		`grep -A 1 /health access.log`,
+		`awk '/^\/api/ { print $1 }' access.log`,
+		`grep -- /health access.log`,
 	}
 	for _, in := range ok {
 		if vs := check(t, p, in); len(vs) > 0 {
@@ -67,6 +74,15 @@ func TestPolicyRefusals(t *testing.T) {
 		{"python3 -c 'print(1)'", KindUnknownCommand, "not one of the commands"},
 		{"bash -c 'ls'", KindUnknownCommand, "not one of the commands"},
 		{"PATH=/tmp ls", KindAssignment, "variable assignments"},
+		// Exempting the script operand must not exempt the files beside it.
+		{"sed 's/a/b/' /etc/passwd", KindForbiddenPath, "absolute path"},
+		{"grep root /etc/passwd", KindForbiddenPath, "absolute path"},
+		{"awk '{print}' /etc/passwd", KindForbiddenPath, "absolute path"},
+		{"grep -f /etc/passwd data.txt", KindForbiddenPath, "absolute path"},
+		{"sed -f /etc/sed.script data.txt", KindForbiddenPath, "absolute path"},
+		{"awk -f /tmp/prog.awk data.txt", KindForbiddenPath, "absolute path"},
+		{"grep -e root /etc/passwd", KindForbiddenPath, "absolute path"},
+		{"sed 's/a/b/' ../../etc/passwd", KindForbiddenPath, "climbs out"},
 	}
 	for _, tc := range tests {
 		vs := check(t, p, tc.in)

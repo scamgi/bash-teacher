@@ -1,0 +1,21 @@
+id: field-swap
+track: text-processing
+level: 3
+title: Swap the columns
+prompt: >
+  Print scores.txt with the score first and the name second, separated by a
+  single space.
+fixture: numbers
+expected_stdout_file: expected/field-swap.txt
+match: exact
+teaches: [awk]
+must_use: [awk]
+forbid: []
+reference_solution: awk '{print $2, $1}' scores.txt
+solution_notes: >
+  The comma between two items in an awk print is what puts the output field
+  separator — a space by default — between them. Without it the fields run
+  together.
+hints:
+  - Print the two fields in the other order, with a comma between them so awk puts a space there.
+  - awk '{print $_, $_}' scores.txt

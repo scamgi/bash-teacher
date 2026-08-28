@@ -1,0 +1,22 @@
+id: max-temp-per-city
+track: text-processing
+level: 5
+title: The warmest day in each city
+prompt: >
+  From temps.csv, print each city and its highest recorded high temperature,
+  one city per line, sorted by city name. Ignore the header row.
+fixture: numbers
+expected_stdout_file: expected/max-temp-per-city.txt
+match: exact
+teaches: [awk, sort]
+must_use: []
+forbid: []
+reference_solution: awk -F, 'NR > 1 && $3 > m[$2] { m[$2] = $3 } END { for (c in m) print c, m[c] }' temps.csv | sort
+solution_notes: >
+  Keeping a running maximum per key is a two-line awk program and a nest of
+  pipes any other way. Note that an unset array entry compares as zero,
+  which is why this works without initializing anything — and why it would
+  break on temperatures below zero.
+hints:
+  - One array holding the best value seen per city, updated only when a line beats it.
+  - awk -F, 'NR > 1 && $3 _ m[$2] { m[$2] = $3 } END { for (c in m) print c, m[c] }' temps.csv | sort

@@ -1,0 +1,19 @@
+id: tail-from-line
+track: inspection
+level: 2
+title: From here to the end
+prompt: >
+  Print access.log from line 115 onward.
+fixture: weblogs
+expected_stdout_file: expected/tail-from-line.txt
+match: exact
+teaches: [tail]
+must_use: []
+forbid: []
+reference_solution: tail -n +115 access.log
+solution_notes: >
+  The plus sign flips tail's meaning from "the last N lines" to "starting at
+  line N". `tail -n +2` is the idiom for skipping a header row.
+hints:
+  - tail counts from the end unless you give the number a sign.
+  - tail -n _115 access.log

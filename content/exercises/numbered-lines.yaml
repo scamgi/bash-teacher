@@ -1,0 +1,19 @@
+id: numbered-lines
+track: inspection
+level: 1
+title: Number the lines
+prompt: >
+  Print haiku.txt with a line number in front of every line.
+fixture: notes
+expected_stdout_file: expected/numbered-lines.txt
+match: squeezed
+teaches: [nl]
+must_use: []
+forbid: []
+reference_solution: nl haiku.txt
+solution_notes: >
+  nl numbers non-blank lines by default; `nl -ba` numbers every line. `grep
+  -n` and `cat -n` also produce numbers, and each pads them differently.
+hints:
+  - Two letters, and it stands for number lines.
+  - __ haiku.txt

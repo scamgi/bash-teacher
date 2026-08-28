@@ -82,6 +82,12 @@ linters:
     presets:
       - comments
       - std-error-handling
+    paths:
+      # The sourcetree fixture is a toy Go service that exercises teach find,
+      # grep and wc against. Go's tooling compiles any directory holding .go
+      # files, so it is a package whether or not anyone wants it to be; it is
+      # content, and the linter has nothing useful to say about it.
+      - content/fixtures/
     rules:
       # Test helpers legitimately ignore errors and repeat literals.
       - path: _test\.go

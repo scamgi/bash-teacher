@@ -1,0 +1,2 @@
+build.log.bak
+test.log.bak

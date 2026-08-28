@@ -1,0 +1,3 @@
+docs/
+docs/DESIGN.md
+docs/README.md

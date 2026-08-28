@@ -1,0 +1,21 @@
+id: append-vs-truncate
+track: streams
+level: 4
+title: Build a file in two steps
+prompt: >
+  Write the first two lines of haiku.txt into out.txt, add the first line of
+  changelog.txt after them, then print out.txt.
+fixture: notes
+expected_stdout_file: expected/append-vs-truncate.txt
+match: exact
+teaches: [head, cat]
+must_use: []
+forbid: []
+reference_solution: head -2 haiku.txt > out.txt && head -1 changelog.txt >> out.txt && cat out.txt
+solution_notes: >
+  The first redirection creates the file, the second adds to it. Getting
+  these the wrong way round is how a report ends up containing only its last
+  section.
+hints:
+  - The first write starts the file; the second must not start it again.
+  - head -2 haiku.txt _ out.txt && head -1 changelog.txt __ out.txt && cat out.txt

@@ -1,0 +1,22 @@
+id: top-successful-clients
+track: real-world
+level: 5
+title: Best-served clients
+prompt: >
+  Print the three clients with the most successful requests in access.log —
+  status exactly 200 — as the address followed by the count, most requests
+  first.
+fixture: weblogs
+expected_stdout_file: expected/top-successful-clients.txt
+match: squeezed
+teaches: [awk, sort, uniq, head]
+must_use: []
+forbid: []
+reference_solution: awk '$9 == 200 { print $1 }' access.log | sort | uniq -c | sort -rn | head -3 | awk '{print $2, $1}'
+solution_notes: >
+  Two awks around a counting sandwich: the first filters and projects, the
+  last one swaps the columns so the answer reads address-then-count instead
+  of uniq's count-then-value.
+hints:
+  - Filter to the successful requests, count and rank the addresses, then swap the two columns at the end.
+  - awk '$9 == ___ { print $1 }' access.log | sort | uniq -c | sort -rn | head -3 | awk '{print $_, $_}'

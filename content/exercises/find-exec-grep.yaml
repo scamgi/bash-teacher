@@ -1,0 +1,22 @@
+id: find-exec-grep
+track: search-find
+level: 4
+title: Search only what you found
+prompt: >
+  Print the name of every .go file that mentions TODO, sorted, by having
+  find run the search itself.
+fixture: sourcetree
+expected_stdout_file: expected/find-exec-grep.txt
+match: exact
+teaches: [find, grep, sort]
+must_use: [find]
+forbid: [xargs]
+reference_solution: find . -name '*.go' -exec grep -l TODO {} + | sort
+solution_notes: >
+  -exec runs a command on what find matched: {} is where the paths go and
+  the + collects them into as few invocations as possible. Terminating with
+  an escaped semicolon instead runs the command once per file, which is
+  correct but slower.
+hints:
+  - "find can run a command on its matches: the braces stand for the file names and the terminator decides whether they arrive one at a time or in a batch."
+  - find . -name '*.go' -____ grep -l TODO {} _ | sort

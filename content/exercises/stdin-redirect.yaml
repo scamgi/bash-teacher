@@ -1,0 +1,21 @@
+id: stdin-redirect
+track: streams
+level: 3
+title: Count without the name
+prompt: >
+  Print the number of lines in app.log with no file name beside it, by
+  giving wc the file on standard input rather than as an argument.
+fixture: weblogs
+expected_stdout_file: expected/stdin-redirect.txt
+match: squeezed
+teaches: [wc]
+must_use: []
+forbid: []
+reference_solution: wc -l < app.log
+solution_notes: >
+  A command that is handed a file name can print it; a command reading
+  standard input has no name to print. That is the whole difference here,
+  and it is the tidiest way to get a bare number out of wc.
+hints:
+  - Redirect the file into wc instead of naming it.
+  - wc -l _ app.log

@@ -1,0 +1,21 @@
+id: find-by-name
+track: search-find
+level: 2
+title: Find files by name
+prompt: >
+  Print the path of every file whose name ends in .log, sorted.
+fixture: sourcetree
+expected_stdout_file: expected/find-by-name.txt
+match: exact
+teaches: [find, sort]
+must_use: []
+forbid: []
+reference_solution: find . -name '*.log' | sort
+solution_notes: >
+  find walks a tree; the dot says where to start. The pattern is quoted so
+  that find, not the shell, is the one that expands it — without the quotes
+  the shell would substitute the matches in the current directory and find
+  would search for those names only.
+hints:
+  - Start the walk at the current directory and match on the name, keeping the pattern away from the shell.
+  - find . -____ '*.log' | sort

@@ -1,0 +1,20 @@
+id: grep-case-insensitive
+track: search-find
+level: 2
+title: Case does not matter
+prompt: >
+  mixedcase.txt is inconsistently capitalized. Print the lines that mention
+  unix, however it happens to be spelled.
+fixture: messy
+expected_stdout_file: expected/grep-case-insensitive.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -i unix mixedcase.txt
+solution_notes: >
+  Case-insensitive matching is one flag, and reaching for it is almost
+  always better than writing [Uu][Nn][Ii][Xx] by hand.
+hints:
+  - One flag turns off case sensitivity.
+  - grep -_ unix mixedcase.txt

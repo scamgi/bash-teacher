@@ -1,0 +1,22 @@
+id: unique-lines
+track: text-processing
+level: 2
+title: One of each
+prompt: >
+  Print each distinct address in subscribers.txt exactly once, in sorted
+  order. uniq is not available for this one — sorting can do the whole job
+  on its own.
+fixture: mailinglist
+expected_stdout_file: expected/unique-lines.txt
+match: exact
+teaches: [sort]
+must_use: []
+forbid: [uniq]
+reference_solution: sort -u subscribers.txt
+solution_notes: >
+  sort -u sorts and deduplicates in one pass. `sort | uniq` gives the same
+  answer through two processes, and is what you need the moment you want
+  uniq's counting or its -d.
+hints:
+  - Sorting has a flag for this; you do not need a second command.
+  - sort -_ subscribers.txt

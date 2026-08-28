@@ -1,0 +1,20 @@
+id: drop-blanks
+track: text-processing
+level: 2
+title: No empty lines
+prompt: >
+  Print todo.txt with the blank lines removed.
+fixture: notes
+expected_stdout_file: expected/drop-blanks.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -v '^$' todo.txt
+solution_notes: >
+  ^$ is a line with a start immediately followed by an end — an empty one.
+  `grep .` gets the same result by keeping any line with at least one
+  character.
+hints:
+  - "Invert a match against the pattern for an empty line: a start anchor next to an end anchor."
+  - grep -v '_$' todo.txt

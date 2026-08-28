@@ -1,0 +1,22 @@
+id: tee-tally
+track: streams
+level: 4
+title: Keep the tally, show the top
+prompt: >
+  From access.log, count how many requests each HTTP status code — the ninth
+  whitespace-separated field — received, save that full tally to tally.txt,
+  and print the three commonest codes in uniq -c format.
+fixture: weblogs
+expected_stdout_file: expected/tee-tally.txt
+match: squeezed
+teaches: [awk, sort, uniq, tee, head]
+must_use: []
+forbid: []
+reference_solution: awk '{print $9}' access.log | sort | uniq -c | tee tally.txt | sort -rn | head -3
+solution_notes: >
+  The tee sits in the middle on purpose: the file gets the complete tally in
+  code order, and the terminal gets the ranked top three. One pass, two
+  audiences.
+hints:
+  - Count first, branch a copy off to the file in the middle of the pipeline, then rank what continues down it.
+  - awk '{print $9}' access.log | sort | uniq -c | ___ tally.txt | sort -__ | head -3

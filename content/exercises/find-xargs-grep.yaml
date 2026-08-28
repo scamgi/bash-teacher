@@ -1,0 +1,21 @@
+id: find-xargs-grep
+track: streams
+level: 5
+title: Gather every reminder
+prompt: >
+  Print the text of every TODO comment in the .go files, with the leading
+  whitespace trimmed off and no file names, sorted.
+fixture: sourcetree
+expected_stdout_file: expected/find-xargs-grep.txt
+match: exact
+teaches: [find, xargs, grep, sed, sort]
+must_use: []
+forbid: []
+reference_solution: find . -name '*.go' | xargs grep -h TODO | sed 's/^[[:space:]]*//' | sort
+solution_notes: >
+  grep -h suppresses the file-name prefix it would otherwise add when
+  searching more than one file, which matters here because xargs may hand it
+  one file or several depending on how many there are.
+hints:
+  - Find the files, search them all through xargs while suppressing the name prefix, trim the indentation, and sort.
+  - find . -name '*.go' | xargs grep -_ TODO | sed 's/^[[:space:]]*//' | sort

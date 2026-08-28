@@ -1,0 +1,2 @@
+./build.log
+./server.go

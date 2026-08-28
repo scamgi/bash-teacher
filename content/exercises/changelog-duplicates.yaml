@@ -1,0 +1,21 @@
+id: changelog-duplicates
+track: real-world
+level: 5
+title: A description used twice
+prompt: >
+  Every line of changelog.txt is a version, a date and a description. Print
+  the descriptions that were used for more than one release, once each.
+fixture: notes
+expected_stdout_file: expected/changelog-duplicates.txt
+match: exact
+teaches: [cut, sort, uniq]
+must_use: []
+forbid: []
+reference_solution: cut -d' ' -f3- changelog.txt | sort | uniq -d
+solution_notes: >
+  The 3- in the field list means "from the third to the end", which is how
+  you keep a trailing free-text field that contains the delimiter without it
+  being cut apart.
+hints:
+  - Cut everything from the third field onwards, then ask which of those lines repeat.
+  - cut -d' ' -f__ changelog.txt | sort | uniq -_

@@ -1,0 +1,9 @@
+berlin,9
+london,11
+milan,14
+berlin,7
+london,12
+milan,16
+berlin,11
+london,10
+milan,18

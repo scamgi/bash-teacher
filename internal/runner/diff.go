@@ -49,6 +49,8 @@ func Compare(expected, actual string, mode content.MatchMode) *Diff {
 		compareUnordered(d, expected, actual)
 	case content.MatchTrimmed:
 		compareLines(d, trimTrailing(splitLines(expected)), trimTrailing(splitLines(actual)))
+	case content.MatchSqueezed:
+		compareLines(d, squeeze(splitLines(expected)), squeeze(splitLines(actual)))
 	default: // content.MatchExact
 		compareLines(d, splitLines(expected), splitLines(actual))
 	}
@@ -64,6 +66,23 @@ func splitLines(s string) []string {
 		return nil
 	}
 	return strings.Split(s, "\n")
+}
+
+// squeeze normalizes each line's whitespace: leading and trailing runs are
+// dropped and internal runs collapse to a single space.
+//
+// This is what makes a counting exercise portable. GNU and BSD coreutils pad
+// their numeric columns to different widths — `uniq -c` writes "     31 x" on
+// one and "  31 x" on the other, and `wc -l` differs the same way — so an
+// exercise whose output ends in a count would otherwise be pinned to whichever
+// coreutils generated its expected file. The alignment is the tool's choice,
+// never the learner's, so nothing is lost by ignoring it.
+func squeeze(lines []string) []string {
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = strings.Join(strings.Fields(l), " ")
+	}
+	return out
 }
 
 func trimTrailing(lines []string) []string {

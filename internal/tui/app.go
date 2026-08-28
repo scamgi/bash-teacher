@@ -84,6 +84,16 @@ func openExercise(id string) tea.Cmd {
 	return func() tea.Msg { return openExerciseMsg{id: id} }
 }
 
+// lookupCommandMsg asks the Dictionary to open one command's entry. It is the
+// contextual lookup from the pipeline editor, so the name it carries is a word
+// the learner typed and may not be a command at all.
+type lookupCommandMsg struct{ name string }
+
+// lookupCommand returns a command that opens a dictionary entry.
+func lookupCommand(name string) tea.Cmd {
+	return func() tea.Msg { return lookupCommandMsg{name: name} }
+}
+
 // showCardsMsg asks Flashcards to show only one command's cards.
 type showCardsMsg struct{ commandID string }
 
@@ -107,6 +117,13 @@ type exerciseOpener interface{ OpenExercise(id string) bool }
 // cardFilterer is implemented by the Flashcards screen.
 type cardFilterer interface{ ShowCommand(commandID string) bool }
 
+// exerciseCounter is implemented by the Practice screen, so that Home can
+// report the session's progress without holding a reference to it.
+type exerciseCounter interface{ PassedCount() int }
+
+// commandSelector is implemented by the Dictionary screen.
+type commandSelector interface{ SelectCommand(id string) bool }
+
 // App is the root model.
 type App struct {
 	Lib   *content.Library
@@ -126,9 +143,29 @@ type App struct {
 	flash string
 }
 
+// Option adjusts the root model as it is built. There is no configuration
+// object: the two or three things the CLI can preselect are better expressed
+// as named functions than as fields nobody else sets.
+type Option func(*App)
+
+// WithTrack opens Practice on a given track, which is what `bt practice
+// <track>` does. An unknown track is ignored; the CLI validates the name
+// before it gets here, so that a typo is an error rather than a silent
+// landing on the wrong screen.
+func WithTrack(name string) Option {
+	return func(a *App) {
+		if p, ok := a.screens[ScreenPractice].(trackOpener); ok {
+			p.OpenTrack(name)
+		}
+	}
+}
+
+// trackOpener is implemented by the Practice screen.
+type trackOpener interface{ OpenTrack(name string) bool }
+
 // New builds the root model with every screen constructed up front, so that
 // switching screens is free and each keeps its own cursor position.
-func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version string, start Screen) *App {
+func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version string, start Screen, opts ...Option) *App {
 	h := help.New()
 	h.Styles = help.DefaultStyles(th.IsDark())
 	h.Styles.ShortKey = th.Key
@@ -153,6 +190,9 @@ func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version stri
 			ScreenStats:      newStats(lib),
 		},
 	}
+	for _, o := range opts {
+		o(a)
+	}
 	return a
 }
 
@@ -173,6 +213,22 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.current = ScreenPractice
 		}
 		return a, nil
+	case lookupCommandMsg:
+		if d, ok := a.screens[ScreenDictionary].(commandSelector); ok && d.SelectCommand(msg.name) {
+			a.current = ScreenDictionary
+			return a, nil
+		}
+		a.flash = msg.name + " is not in the dictionary"
+		return a, nil
+	case runResultMsg:
+		// A run outlives the screen it started on: the learner may be reading
+		// a dictionary entry by the time the sandbox answers, and the result
+		// still belongs to Practice.
+		cmd := a.updateScreen(ScreenPractice, msg)
+		return a, cmd
+	case spinnerTickMsg:
+		cmd := a.updateScreen(ScreenPractice, msg)
+		return a, cmd
 	case showCardsMsg:
 		if f, ok := a.screens[ScreenFlashcards].(cardFilterer); ok && f.ShowCommand(msg.commandID) {
 			a.current = ScreenFlashcards
@@ -190,9 +246,23 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	next, cmd := a.screens[a.current].Update(a, msg)
-	a.screens[a.current] = next
+	cmd := a.updateScreen(a.current, msg)
 	return a, cmd
+}
+
+// PassedExercises reports how many exercises have been solved this session.
+func (a *App) PassedExercises() int {
+	if p, ok := a.screens[ScreenPractice].(exerciseCounter); ok {
+		return p.PassedCount()
+	}
+	return 0
+}
+
+// updateScreen hands a message to one screen and stores whatever it becomes.
+func (a *App) updateScreen(s Screen, msg tea.Msg) tea.Cmd {
+	next, cmd := a.screens[s].Update(a, msg)
+	a.screens[s] = next
+	return cmd
 }
 
 // handleGlobalKey applies the bindings that work everywhere. It defers to the

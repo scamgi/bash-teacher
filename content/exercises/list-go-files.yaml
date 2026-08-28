@@ -1,0 +1,20 @@
+id: list-go-files
+track: files-navigation
+level: 1
+title: Only the Go files
+prompt: >
+  Print the names of the files whose names end in .go, and nothing else.
+fixture: sourcetree
+expected_stdout_file: expected/list-go-files.txt
+match: exact
+teaches: [ls]
+must_use: []
+forbid: []
+reference_solution: ls *.go
+solution_notes: >
+  The star is expanded by the shell, not by ls: by the time ls runs it has
+  already been handed four filenames. That is why a pattern that matches
+  nothing produces an error about the pattern itself.
+hints:
+  - Let the shell do the matching — a pattern with a star stands for any run of characters.
+  - ls _.go

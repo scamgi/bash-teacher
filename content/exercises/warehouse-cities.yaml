@@ -1,0 +1,23 @@
+id: warehouse-cities
+track: real-world
+level: 5
+title: Stock per city
+prompt: >
+  stock.tsv holds a warehouse code in its fourth tab-separated column, and
+  warehouses.tsv maps those codes to city names. Print each city that holds
+  stock and the total quantity in it, sorted by city.
+fixture: inventory
+expected_stdout_file: expected/warehouse-cities.txt
+match: exact
+teaches: [tail, tr, awk, sort, join]
+must_use: []
+forbid: []
+reference_solution: tail -n +2 stock.tsv | tr '\t' ' ' | awk '{ q[$4] += $3 } END { for (w in q) print w, q[w] }' | sort > q.txt; tr '\t' ' ' < warehouses.tsv | sort > w.txt; join w.txt q.txt | awk '{print $2, $3}' | sort
+solution_notes: >
+  Aggregate first, then join: the totals table has one row per warehouse, so
+  the join is small and the code-to-city lookup happens once per warehouse
+  rather than once per item. Oslo holds nothing and disappears, because a
+  plain join keeps only the codes both sides have.
+hints:
+  - Total the quantities per code, then join that small table against the city names.
+  - tail -n +2 stock.tsv | tr '\t' ' ' | awk '{ q[$_] += $_ } END { for (w in q) print w, q[w] }' | sort > q.txt; tr '\t' ' ' < warehouses.tsv | sort > w.txt; ____ w.txt q.txt | awk '{print $2, $3}' | sort

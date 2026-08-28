@@ -1,0 +1,21 @@
+id: shells-in-use
+track: streams
+level: 4
+title: Which shells are in use?
+prompt: >
+  users.txt has colon-separated fields with the login shell last. Write the
+  distinct shells, sorted, into shells.out, then print that file.
+fixture: accounts
+expected_stdout_file: expected/shells-in-use.txt
+match: exact
+teaches: [cut, sort, cat]
+must_use: []
+forbid: []
+reference_solution: "cut -d: -f7 users.txt | sort -u > shells.out && cat shells.out"
+solution_notes: >
+  The redirection belongs to the last command of a pipeline, not to the
+  pipeline as a whole — sort's output is what lands in the file, and nothing
+  earlier in the pipe is affected.
+hints:
+  - Cut the last field, deduplicate it, and point the end of the pipeline at a file.
+  - "cut -d: -f_ users.txt | sort -u _ shells.out && cat shells.out"

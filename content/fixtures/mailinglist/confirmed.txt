@@ -1,0 +1,6 @@
+ada@example.com
+barbara@example.org
+edsger@example.com
+grace@example.org
+margaret@example.com
+radia@example.org

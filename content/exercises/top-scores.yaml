@@ -1,0 +1,21 @@
+id: top-scores
+track: text-processing
+level: 3
+title: The three best scores
+prompt: >
+  scores.txt has a name and a score on each line, separated by a space.
+  Print the three lines with the highest scores, highest first.
+fixture: numbers
+expected_stdout_file: expected/top-scores.txt
+match: exact
+teaches: [sort, head]
+must_use: []
+forbid: []
+reference_solution: sort -k2 -rn scores.txt | head -3
+solution_notes: >
+  -k2 sorts on the second field rather than the whole line, and -rn makes
+  that comparison numeric and descending. Sort by key, then take the top:
+  the pattern behind every leaderboard.
+hints:
+  - Sort on the second field, numerically, largest first — then keep the top of the list.
+  - sort -__ -rn scores.txt | head -_

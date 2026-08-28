@@ -1,0 +1,5 @@
+ leading spaces
+trailing spaces 
+	leading tab
+no padding
+ both sides 

@@ -1,0 +1,21 @@
+id: tee-split
+track: streams
+level: 3
+title: Save it and keep going
+prompt: >
+  Sort numbers.txt numerically, save the whole sorted list to sorted.txt,
+  and print only its last line — all in one pipeline.
+fixture: numbers
+expected_stdout_file: expected/tee-split.txt
+match: exact
+teaches: [sort, tee, tail]
+must_use: []
+forbid: []
+reference_solution: sort -n numbers.txt | tee sorted.txt | tail -1
+solution_notes: >
+  tee is a T-junction in the pipe: it writes what passes through to a file
+  and forwards it unchanged. It is how you keep an intermediate result
+  without breaking a pipeline into two commands.
+hints:
+  - There is a command named after a plumbing fitting that writes to a file and passes the data along.
+  - sort -n numbers.txt | ___ sorted.txt | tail -1

@@ -1,0 +1,21 @@
+id: busiest-client
+track: real-world
+level: 4
+title: Name the busiest client
+prompt: >
+  Print the address of the client that made the most requests in access.log
+  — the address alone, with no count in front of it.
+fixture: weblogs
+expected_stdout_file: expected/busiest-client.txt
+match: exact
+teaches: [cut, sort, uniq, head, awk]
+must_use: []
+forbid: []
+reference_solution: cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -1 | awk '{print $2}'
+solution_notes: >
+  The last stage throws the count away again. It is worth noticing how often
+  a pipeline ends by discarding something it needed in the middle — the
+  count had to exist for the ranking to be possible.
+hints:
+  - Rank the clients as usual, keep the top row, then print only its second field.
+  - cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -_ | awk '{print $_}'

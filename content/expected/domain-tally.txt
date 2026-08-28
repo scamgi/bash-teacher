@@ -1,0 +1,3 @@
+   9 example.com
+   4 example.org
+   2 example.net

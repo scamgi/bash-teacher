@@ -1,0 +1,21 @@
+id: tidy-logs
+track: files-navigation
+level: 3
+title: Tidy the logs away
+prompt: >
+  Create a directory called logs, move every .log file into it, then print
+  the names of the files inside logs.
+fixture: sourcetree
+expected_stdout_file: expected/tidy-logs.txt
+match: exact
+teaches: [mkdir, mv, ls]
+must_use: []
+forbid: []
+reference_solution: mkdir logs && mv *.log logs && ls logs
+solution_notes: >
+  mv takes the same many-sources-one-destination shape as cp. Chaining the
+  three steps with && is what makes the sequence safe: nothing is moved into
+  a directory that was not created.
+hints:
+  - Three steps, joined so that each only runs if the one before it worked.
+  - mkdir logs && __ *.log logs && ls logs

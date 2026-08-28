@@ -1,0 +1,21 @@
+id: grep-recursive
+track: search-find
+level: 3
+title: Search the whole tree
+prompt: >
+  Print every line in this directory's files that mentions TODO, with the
+  file name and line number, sorted.
+fixture: sourcetree
+expected_stdout_file: expected/grep-recursive.txt
+match: exact
+teaches: [grep, sort]
+must_use: []
+forbid: []
+reference_solution: grep -rn TODO . | sort
+solution_notes: >
+  -r walks the tree itself, which saves a find and a pipe. The order it
+  visits files in is the filesystem's, not alphabetical, so anything
+  reproducible has to be sorted afterwards.
+hints:
+  - One grep flag walks directories; another numbers the lines. The order they come out in is not sorted.
+  - grep -__ TODO . | ____

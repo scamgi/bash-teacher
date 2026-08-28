@@ -1,0 +1,19 @@
+id: count-words
+track: inspection
+level: 1
+title: How many words?
+prompt: >
+  Print how many words haiku.txt contains, along with the file name.
+fixture: notes
+expected_stdout_file: expected/count-words.txt
+match: squeezed
+teaches: [wc]
+must_use: []
+forbid: []
+reference_solution: wc -w haiku.txt
+solution_notes: >
+  A word to wc is any run of non-whitespace, which is why prose counts come
+  out close to what a word processor says and code counts do not.
+hints:
+  - Same command as the line count, one letter different.
+  - wc -_ haiku.txt

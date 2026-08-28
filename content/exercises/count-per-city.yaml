@@ -1,0 +1,20 @@
+id: count-per-city
+track: text-processing
+level: 3
+title: Readings per city
+prompt: >
+  Print how many readings temps.csv holds for each city, in the format uniq
+  -c produces, ignoring the header row.
+fixture: numbers
+expected_stdout_file: expected/count-per-city.txt
+match: squeezed
+teaches: [tail, cut, sort, uniq]
+must_use: []
+forbid: []
+reference_solution: tail -n +2 temps.csv | cut -d, -f2 | sort | uniq -c
+solution_notes: >
+  Skip the header, take the column, sort so the repeats are adjacent, count
+  them. Four stages, none of which knows anything about the others.
+hints:
+  - Header, then column, then adjacency, then counting.
+  - tail -n +2 temps.csv | cut -d, -f_ | ____ | uniq -_

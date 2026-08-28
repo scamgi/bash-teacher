@@ -1,0 +1,22 @@
+id: todo-audit
+track: real-world
+level: 5
+title: Every reminder, tidied
+prompt: >
+  Print one line per TODO comment in the .go files, as the file name, a
+  space, and the comment text with its indentation removed — no line
+  numbers, sorted.
+fixture: sourcetree
+expected_stdout_file: expected/todo-audit.txt
+match: exact
+teaches: [grep, sed, sort]
+must_use: []
+forbid: []
+reference_solution: grep -n TODO *.go | sed 's/:[0-9]*:[[:space:]]*/ /' | sort
+solution_notes: >
+  One substitution replaces the colon, the line number, the second colon and
+  the indentation with a single space. Matching the shape of what you want
+  to delete, rather than deleting in three passes, is what sed is for.
+hints:
+  - Search with line numbers, then replace the colon-number-colon-and-indentation with a single space.
+  - grep -_ TODO *.go | sed 's/:[0-9]*:[[:space:]]*/ /' | ____

@@ -100,7 +100,14 @@ func Lint(l *Library, src Source) []Problem {
 		}
 	}
 
-	validMatch := map[MatchMode]bool{MatchExact: true, MatchTrimmed: true, MatchUnordered: true, MatchRegex: true}
+	validMatch := map[MatchMode]bool{
+		MatchExact: true, MatchTrimmed: true, MatchSqueezed: true,
+		MatchUnordered: true, MatchRegex: true,
+	}
+	validTrack := map[string]bool{}
+	for _, t := range TrackOrder {
+		validTrack[t] = true
+	}
 	for _, x := range l.Exercises {
 		where := "exercise " + x.ID
 		checkID(&e, where, x.ID)
@@ -115,6 +122,9 @@ func Lint(l *Library, src Source) []Problem {
 			"fixture":            x.Fixture,
 			"reference_solution": x.ReferenceSolution,
 		})
+		if x.Track != "" && !validTrack[x.Track] {
+			e.addf(where, "unknown track %q; tracks are %s", x.Track, strings.Join(TrackOrder, ", "))
+		}
 		if x.Level < 1 || x.Level > 5 {
 			e.addf(where, "level %d is outside 1..5", x.Level)
 		}

@@ -1,0 +1,21 @@
+id: make-a-directory
+track: files-navigation
+level: 1
+title: Somewhere to put things
+prompt: >
+  Create a directory called build, then print the names of the entries in
+  the current directory.
+fixture: archive
+expected_stdout_file: expected/make-a-directory.txt
+match: exact
+teaches: [mkdir, ls]
+must_use: []
+forbid: []
+reference_solution: mkdir build && ls
+solution_notes: >
+  mkdir -p is the version worth remembering: it creates parent directories
+  as needed and stays quiet when the directory is already there, which makes
+  it safe to run twice.
+hints:
+  - One command makes directories; you already know the one that lists them.
+  - _____ build && ls

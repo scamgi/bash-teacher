@@ -1,0 +1,23 @@
+id: strip-padding
+track: text-processing
+level: 4
+title: Trim the whitespace
+prompt: >
+  padded.txt has lines with stray spaces and tabs at the start, the end, or
+  both. Print it with that leading and trailing whitespace removed and
+  nothing else changed.
+fixture: messy
+expected_stdout_file: expected/strip-padding.txt
+match: exact
+teaches: [sed]
+must_use: [sed]
+forbid: []
+reference_solution: sed 's/^[[:space:]]*//; s/[[:space:]]*$//' padded.txt
+solution_notes: >
+  Two substitutions separated by a semicolon run on each line in order.
+  [[:space:]] is the portable spelling of "space or tab": BSD sed does not
+  understand \t, so a script written with it silently deletes the letter t
+  instead.
+hints:
+  - "Two substitutions in one script: one anchored to the start, one to the end. Spell the whitespace class out portably."
+  - sed 's/^[[:space:]]*//; s/[[:space:]]*_//' padded.txt

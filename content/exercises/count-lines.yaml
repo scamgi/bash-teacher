@@ -1,0 +1,21 @@
+id: count-lines
+track: inspection
+level: 1
+title: How long is this file?
+prompt: >
+  Print how many lines app.log has. The count and the file name are both
+  fine; do not print anything else.
+fixture: weblogs
+expected_stdout_file: expected/count-lines.txt
+match: squeezed
+teaches: [wc]
+must_use: []
+forbid: []
+reference_solution: wc -l app.log
+solution_notes: >
+  wc counts lines with -l, words with -w and bytes with -c. GNU and BSD pad
+  the number to different widths, so exercises compare these outputs with
+  the spacing squeezed out.
+hints:
+  - Word count is the name, but the flag you want counts lines.
+  - wc -_ app.log

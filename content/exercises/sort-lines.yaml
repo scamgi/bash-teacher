@@ -1,0 +1,20 @@
+id: sort-lines
+track: text-processing
+level: 1
+title: Alphabetical order
+prompt: >
+  Print every line of subscribers.txt in sorted order.
+fixture: mailinglist
+expected_stdout_file: expected/sort-lines.txt
+match: exact
+teaches: [sort]
+must_use: []
+forbid: []
+reference_solution: sort subscribers.txt
+solution_notes: >
+  Sorting is the setup move for half of text processing: it puts duplicates
+  next to each other, which is the precondition for uniq, comm and join all
+  working.
+hints:
+  - The command is named after what it does, and needs no flags here.
+  - ____ subscribers.txt

@@ -1,0 +1,21 @@
+id: squeeze-spaces
+track: text-processing
+level: 2
+title: Collapse the runs
+prompt: >
+  Print padded.txt with every run of repeated spaces collapsed into a single
+  space.
+fixture: messy
+expected_stdout_file: expected/squeeze-spaces.txt
+match: exact
+teaches: [tr]
+must_use: []
+forbid: []
+reference_solution: tr -s ' ' < padded.txt
+solution_notes: >
+  tr -s squeezes repeats of the characters in the set down to one. With one
+  character in the set it is the cheapest way to normalize ragged spacing
+  before cut gets to it.
+hints:
+  - tr has a flag for squeezing repeated characters.
+  - tr -_ ' ' < padded.txt

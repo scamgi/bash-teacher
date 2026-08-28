@@ -1,0 +1,26 @@
+id: word-frequency
+track: text-processing
+level: 4
+title: The five commonest words
+prompt: >
+  Print the five words that appear most often in README.md, most frequent
+  first and — since several words tie — with equal counts broken
+  alphabetically. Treat any run of letters as a word, ignore punctuation,
+  and let case not matter. Use uniq -c format.
+fixture: notes
+expected_stdout_file: expected/word-frequency.txt
+match: squeezed
+teaches: [tr, sort, uniq, head]
+must_use: []
+forbid: []
+reference_solution: tr -cs 'A-Za-z' '\n' < README.md | tr A-Z a-z | sort | uniq -c | sort -k1,1rn -k2,2 | head -5
+solution_notes: >
+  tr -cs 'A-Za-z' '\n' is the word-splitting idiom: -c complements the set,
+  so every run of non-letters is replaced, and -s squeezes those
+  replacements into one newline instead of a blank line each. The two-key
+  sort matters as much: a plain `sort -rn` leaves tied counts in whatever
+  order the implementation happens to produce, so a "top five" cut through a
+  tie is not reproducible until the tie is broken explicitly.
+hints:
+  - Turn everything that is not a letter into a line break, squeezing the runs; then fold case, run the counting sandwich, and sort on the count and then the word.
+  - tr -__ 'A-Za-z' '\n' < README.md | tr A-Z a-z | sort | uniq -c | sort -k1,1__ -k2,2 | head -5

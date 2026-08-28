@@ -1,0 +1,8 @@
+2026-03-12 09:00:00 INFO  build started
+2026-03-12 09:00:04 INFO  compiled main.go
+2026-03-12 09:00:05 INFO  compiled server.go
+2026-03-12 09:00:06 WARN  util.go: lower is unused
+2026-03-12 09:00:07 INFO  compiled parser.go
+2026-03-12 09:00:09 ERROR link failed: missing symbol
+2026-03-12 09:00:09 INFO  retrying
+2026-03-12 09:00:12 INFO  build finished

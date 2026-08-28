@@ -1,0 +1,21 @@
+id: notfound-visitors
+track: real-world
+level: 4
+title: Who hit a missing page?
+prompt: >
+  Print the distinct client addresses — the first field of access.log — that
+  received a 404, sorted.
+fixture: weblogs
+expected_stdout_file: expected/notfound-visitors.txt
+match: exact
+teaches: [awk, sort]
+must_use: []
+forbid: []
+reference_solution: awk '$9 == 404 { print $1 }' access.log | sort -u
+solution_notes: >
+  Pattern and action in one awk program: the pattern picks the lines, the
+  action prints the field. Doing it with grep and cut would need the status
+  pattern to be careful about where in the line it matched.
+hints:
+  - One awk program can both test the status field and print the address field.
+  - awk '$9 __ 404 { print $_ }' access.log | sort -_

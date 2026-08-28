@@ -127,3 +127,42 @@ hints:
 		}
 	}
 }
+
+// TestLibraryMeetsTheContentBudget guards the shipped library against
+// accidental loss: SPEC §4.5 budgets 80 commands and 120 exercises in 6
+// tracks, and M4's exercise set is what makes the practice screen worth
+// opening. The assertions are floors, so growing the library is free.
+func TestLibraryMeetsTheContentBudget(t *testing.T) {
+	lib, err := content.Load(embedded.FS)
+	if err != nil {
+		t.Fatalf("load content: %v", err)
+	}
+	if n := len(lib.Commands); n < 80 {
+		t.Errorf("library has %d commands, the budget is 80", n)
+	}
+	if n := len(lib.Exercises); n < 120 {
+		t.Errorf("library has %d exercises, the budget is 120", n)
+	}
+	if n := len(lib.Tracks); n != len(content.TrackOrder) {
+		t.Errorf("library has %d tracks, want the %d in TrackOrder", n, len(content.TrackOrder))
+	}
+	// The ladder is what makes a track teachable: every level has to be
+	// represented, or a learner walks from trivial to impossible.
+	byLevel := map[int]int{}
+	for _, e := range lib.Exercises {
+		byLevel[e.Level]++
+	}
+	for level := 1; level <= 5; level++ {
+		if byLevel[level] == 0 {
+			t.Errorf("no exercises at level %d", level)
+		}
+	}
+	for _, tr := range lib.Tracks {
+		if len(tr.Exercises) == 0 {
+			t.Errorf("track %s is empty", tr.Name)
+		}
+		if content.TrackTitle(tr.Name) == tr.Name {
+			t.Errorf("track %s has no title", tr.Name)
+		}
+	}
+}

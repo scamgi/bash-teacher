@@ -1,0 +1,22 @@
+id: failed-request-count
+track: real-world
+level: 3
+title: How many requests failed?
+prompt: >
+  The ninth whitespace-separated field of access.log is the HTTP status.
+  Print how many requests came back with a status of 400 or more, and
+  nothing else.
+fixture: weblogs
+expected_stdout_file: expected/failed-request-count.txt
+match: squeezed
+teaches: [awk, wc]
+must_use: []
+forbid: []
+reference_solution: awk '$9 >= 400' access.log | wc -l
+solution_notes: >
+  An awk program that is a pattern with no action prints the lines that
+  match it, which makes awk a grep that understands fields and numbers.
+  Comparing $9 as a number is something no regular expression does well.
+hints:
+  - awk can filter on a numeric comparison and, with no action block, prints the lines that pass.
+  - awk '$_ >= ___' access.log | wc -l

@@ -1,0 +1,23 @@
+id: humans-report
+track: streams
+level: 5
+title: Save the list, report the count
+prompt: >
+  users.txt has colon-separated fields: name, placeholder, uid, gid,
+  comment, home, shell. Save the names of the accounts whose uid is 1000 or
+  more into humans.txt, sorted, and print how many there were — the number
+  alone.
+fixture: accounts
+expected_stdout_file: expected/humans-report.txt
+match: squeezed
+teaches: [awk, sort, tee, wc]
+must_use: []
+forbid: []
+reference_solution: "awk -F: '$3 >= 1000 { print $1 }' users.txt | sort | tee humans.txt | wc -l"
+solution_notes: >
+  awk with -F: gets the same fields cut would, plus the ability to test one
+  of them. tee then serves both outputs at once: the file gets the list, the
+  terminal gets the count.
+hints:
+  - Filter on the third field with awk, then split the stream so the file gets the names and the screen gets the count.
+  - "awk -F: '$_ >= 1000 { print $_ }' users.txt | sort | ___ humans.txt | wc -l"

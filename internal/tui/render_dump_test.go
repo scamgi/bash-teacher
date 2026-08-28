@@ -31,4 +31,23 @@ func TestDumpFrames(t *testing.T) {
 		}
 	}
 	t.Logf("\n=== Dictionary (searched, detail focused) ===\n%s", view(b))
+
+	// The practice workspace, with a wrong answer and its diff.
+	c := newTestApp(t, 96, 28)
+	openExerciseIn(t, c, "top-talkers")
+	typeIn(c, "", "cut -d' ' -f1 access.log | sort | uniq -c")
+	runNow(t, c)
+	t.Logf("\n=== Practice (after a failed run) ===\n%s", view(c))
+
+	// The same exercise solved, in the smallest supported terminal.
+	small := newTestApp(t, 80, 24)
+	ex := openExerciseIn(t, small, "top-talkers")
+	typeIn(small, "", ex.ReferenceSolution)
+	runNow(t, small)
+	t.Logf("\n=== Practice (passed, 80x24) ===\n%s", view(small))
+
+	// The exercise browser, showing tracks and progress.
+	list := newTestApp(t, 96, 28)
+	press(list, "2")
+	t.Logf("\n=== Practice (browser) ===\n%s", view(list))
 }

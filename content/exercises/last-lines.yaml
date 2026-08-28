@@ -1,0 +1,20 @@
+id: last-lines
+track: inspection
+level: 1
+title: The end of the log
+prompt: >
+  Print the last 5 lines of access.log.
+fixture: weblogs
+expected_stdout_file: expected/last-lines.txt
+match: exact
+teaches: [tail]
+must_use: []
+forbid: []
+reference_solution: tail -5 access.log
+solution_notes: >
+  The end of a log is where the interesting thing usually just happened.
+  tail -f follows a file as it grows, which is the same command in its other
+  mode.
+hints:
+  - The opposite end of the file from head, with the same kind of count flag.
+  - ____ -5 access.log

@@ -1,0 +1,6 @@
+0 dowel
+9 clamp
+12 hinge
+57 anchor
+74 spacer
+85 washer

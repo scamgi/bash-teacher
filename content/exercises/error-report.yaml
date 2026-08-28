@@ -1,0 +1,22 @@
+id: error-report
+track: streams
+level: 5
+title: Two files and a summary
+prompt: >
+  From build.log, write the ERROR lines into errors.txt and the WARN lines
+  into warnings.txt, then print the line count of both files together with
+  the total.
+fixture: sourcetree
+expected_stdout_file: expected/error-report.txt
+match: squeezed
+teaches: [grep, wc]
+must_use: []
+forbid: []
+reference_solution: grep ERROR build.log > errors.txt; grep WARN build.log > warnings.txt; wc -l errors.txt warnings.txt
+solution_notes: >
+  Three independent steps joined with semicolons rather than &&: grep exits
+  non-zero when it finds nothing, so && would abandon the rest of the line
+  on a clean build — which is exactly when you still want the report.
+hints:
+  - Two filtered writes and then one count of both files. Think about what grep's exit status does to a chain joined with &&.
+  - grep ERROR build.log _ errors.txt _ grep WARN build.log _ warnings.txt; wc -l errors.txt warnings.txt

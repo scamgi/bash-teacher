@@ -1,0 +1,7 @@
+root:x:0:
+sudo:x:27:ada,linus,margaret
+docker:x:999:ada,build
+staff:x:50:grace,ken,dennis,barbara
+research:x:60:edsger,alan,radia
+build:x:200:build
+nogroup:x:65534:sshd

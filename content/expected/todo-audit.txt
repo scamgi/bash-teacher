@@ -1,0 +1,3 @@
+main.go // TODO: read the config path from a flag
+parser.go // TODO: handle quoted fields
+server.go // TODO: honour c.Port

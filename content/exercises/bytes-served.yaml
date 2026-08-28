@@ -1,0 +1,21 @@
+id: bytes-served
+track: real-world
+level: 4
+title: How much was sent?
+prompt: >
+  The tenth whitespace-separated field of each line in access.log is the
+  response size in bytes. Print their total, and nothing else.
+fixture: weblogs
+expected_stdout_file: expected/bytes-served.txt
+match: exact
+teaches: [awk]
+must_use: []
+forbid: []
+reference_solution: awk '{ s += $10 } END { print s }' access.log
+solution_notes: >
+  Summing a column is awk's home ground. Note the braces around $10: awk
+  needs two characters of field number, and $1 0 would be the first field
+  followed by a zero.
+hints:
+  - Accumulate the tenth field over every line and print the running total once at the end.
+  - awk '{ s += $__ } END { print s }' access.log

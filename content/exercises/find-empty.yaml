@@ -1,0 +1,19 @@
+id: find-empty
+track: search-find
+level: 3
+title: The empty ones
+prompt: >
+  Print the path of every file with no content at all.
+fixture: sourcetree
+expected_stdout_file: expected/find-empty.txt
+match: exact
+teaches: [find, sort]
+must_use: []
+forbid: []
+reference_solution: find . -type f -empty | sort
+solution_notes: >
+  find has a test for this, which beats piping every file through wc. -type
+  f matters: an empty directory is empty too, and you rarely mean both.
+hints:
+  - find has a test named after exactly this property.
+  - find . -type f -_____ | sort

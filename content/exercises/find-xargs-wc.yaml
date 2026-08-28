@@ -1,0 +1,22 @@
+id: find-xargs-wc
+track: search-find
+level: 4
+title: Total lines of documentation
+prompt: >
+  Print the total number of lines across every .md file, using find to
+  locate them — the total row alone.
+fixture: sourcetree
+expected_stdout_file: expected/find-xargs-wc.txt
+match: squeezed
+teaches: [find, xargs, wc, tail]
+must_use: [xargs]
+forbid: []
+reference_solution: find . -name '*.md' | xargs wc -l | tail -1
+solution_notes: >
+  xargs turns lines of input into arguments for a command, which is how you
+  connect a producer of file names to a command that wants file names rather
+  than standard input. wc prints a total row last when it is given more than
+  one file.
+hints:
+  - Pipe the found paths into the thing that turns lines into arguments, then keep only wc's last row.
+  - find . -name '*.md' | _____ wc -l | tail -_

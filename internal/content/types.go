@@ -5,6 +5,8 @@ package content
 import (
 	"fmt"
 	"io/fs"
+	"path"
+	"strings"
 )
 
 // Category groups commands in the dictionary. The order of the slice below is
@@ -90,6 +92,7 @@ type MatchMode string
 const (
 	MatchExact     MatchMode = "exact"
 	MatchTrimmed   MatchMode = "trimmed"
+	MatchSqueezed  MatchMode = "squeezed"
 	MatchUnordered MatchMode = "unordered"
 	MatchRegex     MatchMode = "regex"
 )
@@ -110,6 +113,38 @@ type Exercise struct {
 	ReferenceSolution  string    `yaml:"reference_solution"`
 	SolutionNotes      string    `yaml:"solution_notes"`
 	Hints              []string  `yaml:"hints"`
+}
+
+// TrackOrder is the sequence of exercise tracks a learner walks, and the order
+// they are presented in. A track is unlocked by the one before it, so the
+// order is content, not presentation: it is declared here rather than derived
+// from the exercises, which know only their own track's name.
+var TrackOrder = []string{
+	"files-navigation",
+	"inspection",
+	"text-processing",
+	"search-find",
+	"streams",
+	"real-world",
+}
+
+// TrackTitles maps a track id to its heading.
+var TrackTitles = map[string]string{
+	"files-navigation": "Files & Navigation",
+	"inspection":       "Inspection",
+	"text-processing":  "Text Processing",
+	"search-find":      "Search & Find",
+	"streams":          "Streams & Redirection",
+	"real-world":       "Real-World Pipelines",
+}
+
+// TrackTitle returns a track's heading, falling back to its id so that content
+// under review is still readable before it is added to TrackOrder.
+func TrackTitle(id string) string {
+	if t, ok := TrackTitles[id]; ok {
+		return t
+	}
+	return id
 }
 
 // CardType is the kind of recall drill a flashcard performs.
@@ -146,6 +181,9 @@ type Track struct {
 	Exercises []*Exercise
 }
 
+// Title returns the track's display heading.
+func (t *Track) Title() string { return TrackTitle(t.Name) }
+
 // Library is the whole validated content set.
 type Library struct {
 	Commands  []*Command
@@ -177,6 +215,52 @@ func (l *Library) ExpectedOutput(e *Exercise) (string, error) {
 		return "", fmt.Errorf("exercise %s: %w", e.ID, err)
 	}
 	return string(data), nil
+}
+
+// FixtureFile describes one file of a fixture: what the practice screen shows
+// a learner before they have run anything.
+type FixtureFile struct {
+	Name  string
+	Size  int64
+	Lines int
+	// Preview holds the first few lines, for the fixture preview pane. It is
+	// capped so that opening the preview is cheap however large the file is.
+	Preview []string
+	// Truncated reports whether Preview stops short of the whole file.
+	Truncated bool
+}
+
+// FixturePreviewLines is how much of a fixture file the preview pane holds.
+const FixturePreviewLines = 40
+
+// Fixture describes the files an exercise's fixture directory contains.
+func (l *Library) Fixture(name string) ([]FixtureFile, error) {
+	dir := path.Join("fixtures", name)
+	entries, err := fs.ReadDir(l.src, dir)
+	if err != nil {
+		return nil, fmt.Errorf("fixture %q: %w", name, err)
+	}
+	out := make([]FixtureFile, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		data, err := fs.ReadFile(l.src, path.Join(dir, e.Name()))
+		if err != nil {
+			return nil, fmt.Errorf("fixture %q: %w", name, err)
+		}
+		f := FixtureFile{Name: e.Name(), Size: int64(len(data))}
+		text := strings.TrimSuffix(string(data), "\n")
+		if text != "" {
+			f.Preview = strings.Split(text, "\n")
+			f.Lines = len(f.Preview)
+		}
+		if len(f.Preview) > FixturePreviewLines {
+			f.Preview, f.Truncated = f.Preview[:FixturePreviewLines], true
+		}
+		out = append(out, f)
+	}
+	return out, nil
 }
 
 // Command returns the dictionary entry with the given id, if any.
@@ -225,6 +309,16 @@ func (l *Library) CardsFor(commandID string) []*Card {
 		}
 	}
 	return out
+}
+
+// Track returns the track with the given id, if any.
+func (l *Library) Track(name string) (*Track, bool) {
+	for _, t := range l.Tracks {
+		if t.Name == name {
+			return t, true
+		}
+	}
+	return nil, false
 }
 
 // Allowlist returns the set of command names the sandbox runner may execute.

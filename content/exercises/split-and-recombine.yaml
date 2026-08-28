@@ -1,0 +1,22 @@
+id: split-and-recombine
+track: streams
+level: 5
+title: Split it up and put it back
+prompt: >
+  Break numbers.txt into chunks of five lines named part_aa, part_ab and so
+  on, then read every chunk back in, sort the result numerically, and print
+  the three smallest numbers.
+fixture: numbers
+expected_stdout_file: expected/split-and-recombine.txt
+match: exact
+teaches: [split, cat, sort, head]
+must_use: []
+forbid: []
+reference_solution: split -l 5 numbers.txt part_ && cat part_* | sort -n | head -3
+solution_notes: >
+  split names its pieces by appending a suffix to the prefix you give it,
+  which is what makes `part_*` match them all in order. This is how a file
+  too big for a tool gets processed in chunks and reassembled.
+hints:
+  - One command splits by line count and takes a name prefix; the glob that matches the pieces puts them back in order.
+  - _____ -_ 5 numbers.txt part_ && cat part_* | sort -n | head -3

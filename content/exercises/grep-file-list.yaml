@@ -1,0 +1,21 @@
+id: grep-file-list
+track: search-find
+level: 1
+title: Which file mentions it?
+prompt: >
+  Print the name of each .go file that mentions http — the file names only,
+  not the matching lines.
+fixture: sourcetree
+expected_stdout_file: expected/grep-file-list.txt
+match: exact
+teaches: [grep]
+must_use: []
+forbid: []
+reference_solution: grep -l http *.go
+solution_notes: >
+  -l stops at the first match in each file and prints its name, which makes
+  it both faster and quieter than reading the matches. -L prints the files
+  that did not match.
+hints:
+  - There is a flag that makes grep print names instead of lines.
+  - grep -_ http *.go

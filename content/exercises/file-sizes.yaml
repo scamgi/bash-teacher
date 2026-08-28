@@ -1,0 +1,20 @@
+id: file-sizes
+track: inspection
+level: 2
+title: Sizes of the documents
+prompt: >
+  Print the size in bytes of each .md file, with the total.
+fixture: sourcetree
+expected_stdout_file: expected/file-sizes.txt
+match: squeezed
+teaches: [wc]
+must_use: []
+forbid: []
+reference_solution: wc -c *.md
+solution_notes: >
+  wc -c is the honest way to ask how big a file is inside a pipeline: ls -l
+  and du both answer a slightly different question, and du's answer depends
+  on the filesystem's block size.
+hints:
+  - Byte count, applied to a pattern rather than one name.
+  - wc -_ *.md

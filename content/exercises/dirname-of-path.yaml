@@ -1,0 +1,20 @@
+id: dirname-of-path
+track: files-navigation
+level: 2
+title: Just the directory
+prompt: >
+  Print everything except the last component of the path docs/design/spec.md
+  — the directory it names.
+fixture: notes
+expected_stdout_file: expected/dirname-of-path.txt
+match: exact
+teaches: [dirname]
+must_use: []
+forbid: []
+reference_solution: dirname docs/design/spec.md
+solution_notes: >
+  dirname is basename's other half. Together they split a path in two, which
+  is how scripts derive an output directory from an input file.
+hints:
+  - The opposite half of the command that keeps only the file name.
+  - _______ docs/design/spec.md

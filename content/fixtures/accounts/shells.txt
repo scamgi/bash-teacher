@@ -1,0 +1,6 @@
+# valid login shells
+/bin/sh
+/bin/bash
+/bin/zsh
+# service accounts only
+/usr/sbin/nologin

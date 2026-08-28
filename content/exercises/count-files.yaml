@@ -1,0 +1,19 @@
+id: count-files
+track: files-navigation
+level: 1
+title: How many files?
+prompt: >
+  Print the number of entries in this directory, and nothing else.
+fixture: sourcetree
+expected_stdout_file: expected/count-files.txt
+match: squeezed
+teaches: [ls, wc]
+must_use: []
+forbid: []
+reference_solution: ls | wc -l
+solution_notes: >
+  This is the smallest possible pipeline and the shape of a hundred larger
+  ones: one command produces lines, the next one counts them.
+hints:
+  - List the entries, then count the lines that come out.
+  - ls | __ -l
