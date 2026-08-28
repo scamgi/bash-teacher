@@ -1,0 +1,29 @@
+id: comm
+name: comm
+category: text
+summary: Compare two sorted files line by line, as sets.
+purpose: >
+  Splits two sorted files into three columns: only in the first, only in the
+  second, and in both. It answers set questions that diff answers badly.
+synopsis: comm [-123] FILE1 FILE2
+flags:
+  - flag: "-1"
+    gloss: Suppress column 1 — lines only in the first file.
+  - flag: "-2"
+    gloss: Suppress column 2 — lines only in the second file.
+  - flag: "-3"
+    gloss: Suppress column 3 — lines in both.
+  - flag: "-12"
+    gloss: Together, leave only what is in both files.
+examples:
+  - cmd: comm -12 a.txt b.txt
+    caption: "The intersection: lines present in both."
+  - cmd: comm -23 a.txt b.txt
+    caption: "The difference: lines in a.txt that are missing from b.txt."
+  - cmd: comm -13 <(sort a) <(sort b)
+    caption: Sort on the fly with process substitution, then take what only b has.
+plays_well_with: [sort, uniq, join, diff]
+gotchas:
+  - Both files must be sorted or the output is nonsense, and comm will not warn you.
+  - The digits suppress columns rather than select them, which reads backwards until you have used it a few times.
+see_also: [join, diff, sort, uniq]

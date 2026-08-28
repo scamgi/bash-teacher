@@ -1,0 +1,27 @@
+id: sleep
+name: sleep
+category: process
+summary: Wait for a given time.
+purpose: >
+  Does nothing, on purpose. It paces loops, waits for a service to come up,
+  and separates steps that would otherwise race each other.
+synopsis: sleep NUMBER[smhd]
+flags:
+  - flag: s
+    gloss: Seconds; the default when no unit is given.
+  - flag: m
+    gloss: Minutes.
+  - flag: h
+    gloss: Hours.
+  - flag: d
+    gloss: Days.
+examples:
+  - cmd: "sleep 2 && curl -s localhost:8080/health"
+    caption: Give a service a moment before probing it.
+  - cmd: for i in $(seq 3); do echo $i; sleep 1; done
+    caption: One line per second.
+plays_well_with: [timeout, watch, seq, yes]
+gotchas:
+  - Sleeping a fixed time to wait for a service is a guess. Polling in a loop with a timeout is slower to write and far more reliable.
+  - GNU sleep accepts fractions such as 0.5; some other implementations do not.
+see_also: [timeout, watch, seq]

@@ -1,0 +1,32 @@
+id: split
+name: split
+category: text
+summary: Split a file into pieces.
+purpose: >
+  Cuts one large file into many smaller ones, by lines, by size, or into a
+  fixed number of chunks. The usual reason is a file too big for whatever
+  comes next.
+synopsis: split [-l LINES | -b SIZE | -n CHUNKS] [FILE] [PREFIX]
+flags:
+  - flag: "-l N"
+    gloss: N lines per output file.
+  - flag: "-b SIZE"
+    gloss: SIZE bytes per output file, e.g. 10M.
+  - flag: "-n N"
+    gloss: Split into exactly N pieces.
+  - flag: "-d"
+    gloss: Use numeric suffixes instead of aa, ab, ac.
+  - flag: "--additional-suffix=S"
+    gloss: Append S to each name, so the pieces keep an extension.
+examples:
+  - cmd: split -l 1000 big.csv part_
+    caption: Thousand-line pieces named part_aa, part_ab, and so on.
+  - cmd: split -b 10M archive.tar chunk_
+    caption: Ten-megabyte chunks, reassembled later with cat.
+  - cmd: cat chunk_* > archive.tar
+    caption: Putting it back together is just cat, in sorted order.
+plays_well_with: [cat, wc, xargs, find]
+gotchas:
+  - split -b can cut a line in half; use -l when the pieces must stay line-oriented.
+  - The default two-letter suffixes stop at zz. -d or -a fixes that for very large splits.
+see_also: [cat, head, wc]

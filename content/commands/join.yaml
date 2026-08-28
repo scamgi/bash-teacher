@@ -1,0 +1,31 @@
+id: join
+name: join
+category: text
+summary: Join two sorted files on a common field.
+purpose: >
+  A relational join for text files. Given two files sharing a key, it
+  produces the combined lines — the shell's answer to a database JOIN.
+synopsis: join [-1 FIELD] [-2 FIELD] [-t CHAR] FILE1 FILE2
+flags:
+  - flag: "-1 N"
+    gloss: Join on field N of the first file.
+  - flag: "-2 N"
+    gloss: Join on field N of the second file.
+  - flag: "-t CHAR"
+    gloss: Field separator.
+  - flag: "-a N"
+    gloss: Also print unpairable lines from file N — an outer join.
+  - flag: "-v N"
+    gloss: Print only the unpairable lines from file N.
+examples:
+  - cmd: join users.txt scores.txt
+    caption: Combine two files that share a first field.
+  - cmd: join -t, -1 2 -2 1 a.csv b.csv
+    caption: Join on different columns of two comma-separated files.
+  - cmd: join -v1 all.txt seen.txt
+    caption: Everything in the first file with no match in the second — a set difference.
+plays_well_with: [sort, comm, cut, awk]
+gotchas:
+  - Both inputs must be sorted on the join field, by the same collation. `LC_ALL=C sort` on both sides avoids surprises.
+  - join's default separator is whitespace, but -t changes it for input and output at once.
+see_also: [comm, sort, paste, awk]

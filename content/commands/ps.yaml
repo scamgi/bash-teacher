@@ -1,0 +1,29 @@
+id: ps
+name: ps
+category: process
+summary: List running processes.
+purpose: >
+  A snapshot of what is running right now. Piped into grep it answers is my
+  thing running, and its output carries the PID everything else needs.
+synopsis: ps [aux | -ef]
+flags:
+  - flag: aux
+    gloss: "BSD style: all processes, with users and no controlling terminal required."
+  - flag: "-ef"
+    gloss: "System V style: the same idea, different columns."
+  - flag: "-o FMT"
+    gloss: Choose the columns, e.g. -o pid,rss,comm.
+  - flag: "--sort=-rss"
+    gloss: Sort by a column; a leading minus reverses.
+examples:
+  - cmd: ps aux | grep [n]ginx
+    caption: The bracket trick stops grep from matching its own command line.
+  - cmd: ps -eo pid,rss,comm --sort=-rss | head
+    caption: The ten processes using the most memory.
+  - cmd: ps -p 1234 -o comm=
+    caption: What command a PID belongs to, with no header.
+plays_well_with: [grep, sort, head, kill]
+gotchas:
+  - ps aux and ps -ef come from two different Unix lineages and both work on Linux; the columns differ, so scripts should pick one and use -o.
+  - Piping ps into grep always risks matching the grep itself. `pgrep` avoids the whole problem.
+see_also: [pgrep, top, kill]

@@ -8,17 +8,31 @@ See [SPEC.md](SPEC.md) for the full design.
 
 ## Status
 
-**M1 (skeleton) is done.** The app runs, navigates, and loads its content:
+**M1 (skeleton) and M2 (dictionary) are done.**
 
 - Bubble Tea v2 shell with screen routing, Catppuccin theming across all four
   flavours, a global key map, a help overlay, and a minimum-size fallback.
 - A validated YAML content library, embedded in the binary, with `bt content lint`
-  as the CI gate.
-- Dictionary browsing with fuzzy search and a detail pane; an exercise browser; a
-  deck walk over the flashcards; a coverage view.
+  as the CI gate: **80 commands** across nine categories, plus exercises and cards.
+- A two-pane dictionary: fuzzy-ranked search, a scrollable entry with flags,
+  worked examples, and gotchas, and actionable cross-references — jump to a
+  related command, copy an example, open an exercise, or drill the cards.
+- An exercise browser, a deck walk over the flashcards, and a coverage view.
 
 Still to come: the sandboxed runner (M3), the pipeline editor and grading (M4),
 FSRS-lite scheduling and the progress store (M5).
+
+### Dictionary keys
+
+| Key | Does |
+| --- | --- |
+| `/` | fuzzy search; typing narrows and re-ranks, `esc` clears |
+| `→` | focus the entry; `↑`/`↓` then walk its examples, related commands, and exercises |
+| `Enter` | copy the focused example, jump to the focused command, or open the focused exercise |
+| `y` | copy the focused example to the clipboard |
+| `p` | open an exercise that teaches this command |
+| `f` | narrow the flashcard deck to this command |
+| `backspace` | walk back out of a jump, or restore the whole deck |
 
 ## Build and run
 

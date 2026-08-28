@@ -1,0 +1,25 @@
+id: cmp
+name: cmp
+category: inspection
+summary: Compare two files byte by byte.
+purpose: >
+  Answers only are these identical, and where do they first differ. Unlike
+  diff it works on binaries and stops at the first difference, which makes
+  it fast.
+synopsis: cmp [-s] [-l] FILE1 [FILE2]
+flags:
+  - flag: "-s"
+    gloss: "Silent: say nothing, just set the exit status."
+  - flag: "-l"
+    gloss: List every differing byte, with offsets.
+  - flag: "-i N"
+    gloss: Skip the first N bytes of both files.
+examples:
+  - cmd: cmp -s a.bin b.bin && echo identical
+    caption: Use the exit status rather than the output; this is the scriptable form.
+  - cmd: cmp a.bin b.bin
+    caption: Prints the byte and line number where they first diverge.
+plays_well_with: [diff, find, od]
+gotchas:
+  - cmp exits 0 for identical, 1 for different, and 2 for an error. Treating any non-zero as different will report a missing file as a difference.
+see_also: [diff, od, file]

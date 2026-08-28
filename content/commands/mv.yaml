@@ -1,0 +1,25 @@
+id: mv
+name: mv
+category: navigation
+summary: Move or rename files.
+purpose: >
+  Renaming and moving are the same operation: changing where a name points.
+  Within one filesystem it is instantaneous, because no data moves at all.
+synopsis: mv [-i] [-n] SOURCE... DEST
+flags:
+  - flag: "-i"
+    gloss: Prompt before overwriting.
+  - flag: "-n"
+    gloss: Never overwrite an existing file.
+  - flag: "-v"
+    gloss: Print each move.
+examples:
+  - cmd: mv notes.txt notes.md
+    caption: Rename, which is just a move to a new name in the same directory.
+  - cmd: mv *.log archive/
+    caption: Move a batch into a directory.
+plays_well_with: [cp, rm, find, ls]
+gotchas:
+  - mv across filesystems copies then deletes, so it is no longer atomic and can leave a partial file if it is interrupted.
+  - mv silently overwrites the destination by default. -i or -n if that matters.
+see_also: [cp, rm]

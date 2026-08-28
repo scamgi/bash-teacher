@@ -15,4 +15,20 @@ func TestDumpFrames(t *testing.T) {
 		a.current = s
 		t.Logf("\n=== %v ===\n%s", s, view(a))
 	}
+
+	// A searched, detail-focused entry, scrolled to its related commands.
+	b := newTestApp(t, 96, 28)
+	press(b, "1")
+	typeIn(b, "/", "sort")
+	press(b, "enter")
+	press(b, "right")
+	d := dictOf(b)
+	for i, it := range d.items {
+		if it.kind == itemRelated {
+			d.item = i
+			d.scrollToItem()
+			break
+		}
+	}
+	t.Logf("\n=== Dictionary (searched, detail focused) ===\n%s", view(b))
 }

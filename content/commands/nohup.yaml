@@ -1,0 +1,24 @@
+id: nohup
+name: nohup
+category: process
+summary: Run a command immune to hangups.
+purpose: >
+  Detaches a command from the terminal that started it, so closing the
+  session does not kill it. The traditional way to leave something running
+  over an ssh disconnect.
+synopsis: nohup COMMAND [ARG]... &
+flags:
+  - flag: "&"
+    gloss: "Not a nohup flag, but nearly always paired with it: run in the background."
+  - flag: "> file 2>&1"
+    gloss: Redirect explicitly; otherwise output lands in nohup.out.
+examples:
+  - cmd: nohup ./long-job.sh > job.log 2>&1 &
+    caption: "The full incantation: detached, backgrounded, and with output going somewhere you chose."
+  - cmd: nohup make build &
+    caption: Output goes to nohup.out in the current directory.
+plays_well_with: [timeout, tee, ps, pgrep]
+gotchas:
+  - nohup only blocks SIGHUP. A process that writes to the closed terminal still dies, which is why redirecting output is part of the idiom.
+  - For anything that must survive properly, a terminal multiplexer or a service manager is a better answer than nohup.
+see_also: [timeout, watch, ps]

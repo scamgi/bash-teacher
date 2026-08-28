@@ -1,0 +1,33 @@
+id: less
+name: less
+category: inspection
+summary: View a file or stream one screen at a time.
+purpose: >
+  A pager: it holds a stream still so you can read it. It is where long
+  pipeline output goes when you want to look at all of it rather than the
+  first ten lines.
+synopsis: less [OPTION]... [FILE]...
+executable: false
+flags:
+  - flag: "-N"
+    gloss: Show line numbers.
+  - flag: "-S"
+    gloss: Do not wrap long lines; scroll sideways instead.
+  - flag: "-i"
+    gloss: Search case-insensitively.
+  - flag: "+F"
+    gloss: Start in follow mode, like tail -f but you can stop and scroll.
+  - flag: "-R"
+    gloss: Pass colour escape codes through instead of showing them raw.
+examples:
+  - cmd: less -S wide.csv
+    caption: Read a wide file without every row wrapping into a mess.
+  - cmd: grep ERROR app.log | less
+    caption: Page through a filtered stream rather than losing it off the top of the screen.
+  - cmd: less +F app.log
+    caption: Follow a growing log, then press Ctrl-C to stop and scroll back.
+plays_well_with: [grep, tail, cat, find]
+gotchas:
+  - less is interactive, so it never belongs in the middle of a pipeline — only at the end.
+  - Inside less, / searches forward, n repeats, and q quits. G goes to the end, which is usually what you want in a log.
+see_also: [cat, tail, head]

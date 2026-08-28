@@ -1,0 +1,24 @@
+id: realpath
+name: realpath
+category: navigation
+summary: Resolve a path to its canonical absolute form.
+purpose: >
+  Removes the guesswork from a path: resolves every symlink, every dot and
+  double dot, and returns the one true location.
+synopsis: realpath [-e] [-m] [--relative-to=DIR] PATH...
+flags:
+  - flag: "-e"
+    gloss: Require every component to exist; error otherwise.
+  - flag: "-m"
+    gloss: Allow components not to exist at all.
+  - flag: "--relative-to=DIR"
+    gloss: Print the result relative to DIR instead of absolute.
+examples:
+  - cmd: realpath ./build/../src
+    caption: Collapses to the plain absolute path of src.
+  - cmd: realpath --relative-to="$PWD" /var/log/app.log
+    caption: The same file, expressed from where you are standing.
+plays_well_with: [dirname, basename, ln, pwd]
+gotchas:
+  - macOS ships realpath only in recent versions; older systems need `readlink -f` or coreutils from Homebrew.
+see_also: [dirname, basename, ln, pwd]

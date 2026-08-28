@@ -1,0 +1,31 @@
+id: watch
+name: watch
+category: process
+summary: Run a command repeatedly and show the latest output.
+purpose: >
+  Turns any command into a live dashboard by rerunning it on an interval and
+  redrawing the screen. It is how you watch something change without writing
+  a loop.
+synopsis: watch [-n SECONDS] [-d] COMMAND
+executable: false
+flags:
+  - flag: "-n N"
+    gloss: Interval in seconds; two by default.
+  - flag: "-d"
+    gloss: Highlight what changed since the last run.
+  - flag: "-t"
+    gloss: Hide the header line.
+  - flag: "-g"
+    gloss: Exit as soon as the output changes.
+examples:
+  - cmd: watch -n 1 'df -h /'
+    caption: A once-a-second view of one filesystem filling up.
+  - cmd: watch -d 'ls -l build/'
+    caption: Highlight files as they appear.
+  - cmd: watch -g 'pgrep -c worker'
+    caption: Wait until the number of workers changes, then exit.
+plays_well_with: [df, du, ps, ls]
+gotchas:
+  - watch runs its argument through a shell only if you quote it as one string; unquoted pipes are interpreted by your shell before watch ever sees them.
+  - It repaints the whole screen, so it is interactive-only and never belongs in a pipeline.
+see_also: [top, timeout, sleep]

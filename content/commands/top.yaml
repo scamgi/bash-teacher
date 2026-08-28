@@ -1,0 +1,28 @@
+id: top
+name: top
+category: process
+summary: Show processes interactively, updating live.
+purpose: >
+  ps that refreshes. It answers what is eating the machine right now, which
+  a single snapshot cannot.
+synopsis: top [-o FIELD] [-u USER]
+executable: false
+flags:
+  - flag: "-o FIELD"
+    gloss: Sort by a field, e.g. -o cpu.
+  - flag: "-u USER"
+    gloss: Only this user's processes.
+  - flag: "-b"
+    gloss: "Batch mode: plain output suitable for redirecting to a file."
+  - flag: "-n N"
+    gloss: Exit after N refreshes.
+examples:
+  - cmd: top
+    caption: The live view; press q to leave, M to sort by memory, P by CPU.
+  - cmd: top -b -n 1 > snapshot.txt
+    caption: Batch mode makes top scriptable — one refresh, plain text, then exit.
+plays_well_with: [ps, grep, kill]
+gotchas:
+  - top is interactive and repaints the screen, so it belongs in a terminal, never in a pipeline. Batch mode is the exception.
+  - The first CPU figure top prints is an average since boot; the second refresh onward is the real current load.
+see_also: [ps, pgrep, watch]

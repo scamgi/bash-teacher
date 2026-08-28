@@ -1,0 +1,28 @@
+id: time
+name: time
+category: process
+summary: Measure how long a command takes.
+purpose: >
+  Reports three numbers: wall clock, CPU time in your code, and CPU time in
+  the kernel. The gap between real and the other two is where the waiting
+  is.
+synopsis: time COMMAND [ARG]...
+flags:
+  - flag: real
+    gloss: Wall-clock time from start to finish.
+  - flag: user
+    gloss: CPU time spent in the program itself.
+  - flag: sys
+    gloss: CPU time spent in the kernel on the program's behalf.
+  - flag: "-v"
+    gloss: With /usr/bin/time, a much fuller report including peak memory.
+examples:
+  - cmd: time ./build.sh
+    caption: The three-line summary after it finishes.
+  - cmd: "/usr/bin/time -v ./job.sh"
+    caption: The external command, which reports peak memory and I/O as well.
+plays_well_with: [timeout, watch, sleep]
+gotchas:
+  - Most shells have their own time builtin whose output differs from /usr/bin/time; the -v report needs the external one, spelled with a full path.
+  - real much larger than user plus sys means the command was waiting on disk, network, or a lock — not computing.
+see_also: [timeout, sleep, watch]

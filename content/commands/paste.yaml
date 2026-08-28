@@ -1,0 +1,25 @@
+id: paste
+name: paste
+category: text
+summary: Join lines from files side by side.
+purpose: >
+  The transpose of cat: where cat stacks files vertically, paste puts them
+  next to each other, line for line. It is also the quickest way to turn a
+  column back into a single delimited line.
+synopsis: paste [-d LIST] [-s] [FILE]...
+flags:
+  - flag: "-d LIST"
+    gloss: Use these characters as separators instead of tab.
+  - flag: "-s"
+    gloss: "Serial: paste each file onto one line rather than merging across files."
+examples:
+  - cmd: paste names.txt scores.txt
+    caption: Two columns from two files, tab separated.
+  - cmd: paste -sd, values.txt
+    caption: Collapse a column into one comma-separated line — the inverse of tr ',' '\n'.
+  - cmd: "paste -d: - - < pairs.txt"
+    caption: Read two lines at a time from stdin and join them with a colon.
+plays_well_with: [cut, tr, sort, column]
+gotchas:
+  - paste matches lines by position, not by key. When the files can differ in length or order, join is the right tool.
+see_also: [join, cut, tr, column]

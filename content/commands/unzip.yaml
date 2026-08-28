@@ -1,0 +1,31 @@
+id: unzip
+name: unzip
+category: archives
+summary: Extract a zip archive.
+purpose: >
+  Unpacks what zip made, and what most download links hand you. It can list
+  and extract selectively, which tar cannot do cheaply.
+synopsis: unzip [-l] [-o] [-d DIR] ARCHIVE.zip [FILE]...
+flags:
+  - flag: "-l"
+    gloss: List the contents without extracting.
+  - flag: "-d DIR"
+    gloss: Extract into DIR rather than the current directory.
+  - flag: "-o"
+    gloss: Overwrite existing files without asking.
+  - flag: "-j"
+    gloss: Ignore the stored paths and extract everything flat.
+  - flag: "-p"
+    gloss: Write a file's contents to stdout.
+examples:
+  - cmd: unzip -l download.zip
+    caption: Look before you unpack.
+  - cmd: unzip download.zip -d /tmp/staging
+    caption: Extract somewhere disposable first.
+  - cmd: unzip -p report.zip data.csv | head
+    caption: Read one file out of the archive straight into a pipeline.
+plays_well_with: [zip, less, grep, find]
+gotchas:
+  - A zip file that unpacks into the current directory rather than one folder will scatter files across it. `unzip -l` first, every time.
+  - unzip prompts on conflicts and will sit waiting for an answer in a script. -o or -n makes the choice explicit.
+see_also: [zip, tar, gunzip]

@@ -1,0 +1,29 @@
+id: zip
+name: zip
+category: archives
+summary: Create a zip archive.
+purpose: >
+  Bundles and compresses in one step, unlike tar plus gzip. Its reason to
+  exist here is that it is what the rest of the world expects to receive.
+synopsis: zip [-r] [-9] ARCHIVE.zip FILE...
+flags:
+  - flag: "-r"
+    gloss: Recurse into directories.
+  - flag: "-9"
+    gloss: Maximum compression.
+  - flag: "-e"
+    gloss: Encrypt with a password.
+  - flag: "-x PATTERN"
+    gloss: Exclude paths matching a pattern.
+  - flag: "-j"
+    gloss: Junk the paths, storing only filenames.
+examples:
+  - cmd: zip -r report.zip report/
+    caption: "The everyday case: a whole directory, recursively."
+  - cmd: zip -r site.zip site/ -x '*.git*'
+    caption: Bundle a tree while leaving version-control files out.
+plays_well_with: [unzip, find, tar]
+gotchas:
+  - Without -r, zip silently stores an empty directory entry and none of its contents.
+  - zip stores each file separately, so it compresses a little worse than tar plus gzip but lets you extract one file without reading the whole archive.
+see_also: [unzip, tar, gzip]

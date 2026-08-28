@@ -1,0 +1,25 @@
+id: fold
+name: fold
+category: text
+summary: Wrap lines to a fixed width.
+purpose: >
+  Breaks long lines at a hard column so the output fits a terminal or a
+  fixed-width format. It counts characters, not words, unless you ask
+  otherwise.
+synopsis: fold [-w WIDTH] [-s] [FILE]
+flags:
+  - flag: "-w N"
+    gloss: Wrap at N columns, 80 by default.
+  - flag: "-s"
+    gloss: Break at spaces rather than mid-word.
+  - flag: "-b"
+    gloss: Count bytes rather than columns.
+examples:
+  - cmd: fold -w 72 -s prose.txt
+    caption: Wrap prose to 72 columns without splitting words.
+  - cmd: fold -w1 word.txt
+    caption: One character per line, which is how you count letter frequencies with sort and uniq.
+plays_well_with: [fmt, sort, uniq, tr]
+gotchas:
+  - Without -s, fold will happily cut a word in half, because it is counting columns and nothing else.
+see_also: [fmt, tr, column]

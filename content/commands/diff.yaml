@@ -1,0 +1,31 @@
+id: diff
+name: diff
+category: inspection
+summary: Report the differences between two files.
+purpose: >
+  Says what changed. Its unified output is the same format patches and code
+  review use, which is why it is worth being able to read fluently.
+synopsis: diff [-u] [-r] [-i] FILE1 FILE2
+flags:
+  - flag: "-u"
+    gloss: "Unified format: three lines of context, plus and minus markers."
+  - flag: "-r"
+    gloss: Compare directories recursively.
+  - flag: "-i"
+    gloss: Ignore case.
+  - flag: "-w"
+    gloss: Ignore all whitespace.
+  - flag: "-q"
+    gloss: Report only whether the files differ, with no detail.
+examples:
+  - cmd: diff -u old.conf new.conf
+    caption: The familiar patch-style listing of what changed.
+  - cmd: diff <(sort a.txt) <(sort b.txt)
+    caption: Compare two files ignoring order, using process substitution to sort on the fly.
+  - cmd: diff -rq dir1 dir2
+    caption: Which files differ between two trees, without printing the contents.
+plays_well_with: [sort, comm, cmp, less]
+gotchas:
+  - diff pairs lines, so a file with different line endings appears to differ on every single line. Strip carriage returns first.
+  - For sorted lists of items rather than prose, comm gives a cleaner answer than diff.
+see_also: [comm, cmp, sort]

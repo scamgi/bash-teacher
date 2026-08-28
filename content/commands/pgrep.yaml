@@ -1,0 +1,30 @@
+id: pgrep
+name: pgrep
+category: process
+summary: Find process IDs by name.
+purpose: >
+  The read-only half of pkill, and the safe replacement for `ps | grep`. It
+  never matches itself, and it prints PIDs ready for another command.
+synopsis: pgrep [-f] [-l] [-u USER] PATTERN
+flags:
+  - flag: "-l"
+    gloss: Print the process name beside the PID.
+  - flag: "-a"
+    gloss: Print the whole command line.
+  - flag: "-f"
+    gloss: Match against the full command line.
+  - flag: "-u USER"
+    gloss: Restrict to a user.
+  - flag: "-n"
+    gloss: Only the newest matching process.
+examples:
+  - cmd: pgrep -a python
+    caption: Every python process with its full command line — check this before pkill.
+  - cmd: kill $(pgrep -f worker.py)
+    caption: Look up and signal in one line.
+  - cmd: pgrep -n node
+    caption: The most recently started match.
+plays_well_with: [kill, pkill, ps, xargs]
+gotchas:
+  - pgrep exits non-zero when nothing matches, which makes `pgrep -q name && ...` a clean way to test whether something is running.
+see_also: [pkill, ps, kill]

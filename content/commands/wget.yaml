@@ -1,0 +1,31 @@
+id: wget
+name: wget
+category: network
+summary: Download files over HTTP and FTP.
+purpose: >
+  A downloader rather than a general HTTP client: it writes to a file by
+  default, retries, and can walk a whole site. Documented here but never
+  executed — exercises run offline in a sandbox with no network.
+synopsis: wget [OPTION]... URL...
+flags:
+  - flag: "-O FILE"
+    gloss: Write to this filename; -O - means stdout.
+  - flag: "-c"
+    gloss: Continue a partial download.
+  - flag: "-q"
+    gloss: Quiet.
+  - flag: "-r"
+    gloss: Recurse into linked pages.
+  - flag: "--limit-rate=N"
+    gloss: Cap the bandwidth used.
+examples:
+  - cmd: "wget https://example.com/data.csv"
+    caption: Saves as data.csv, with a progress bar.
+  - cmd: "wget -qO- https://example.com/list | wc -l"
+    caption: Quiet, to stdout, straight into a pipeline — the curl -s equivalent.
+  - cmd: wget -c big.iso
+    caption: Resume where an interrupted download stopped.
+plays_well_with: [curl, grep, tar, gunzip]
+gotchas:
+  - wget saves to a file and curl prints to stdout. That single difference is the reason to pick one over the other.
+see_also: [curl, ssh, scp]

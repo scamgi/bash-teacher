@@ -1,0 +1,20 @@
+id: yes
+name: yes
+category: streams
+summary: Print a string over and over, forever.
+purpose: >
+  An infinite stream. Its original job was answering interactive prompts;
+  its more useful job now is generating test input and load.
+synopsis: yes [STRING]
+examples:
+  - cmd: yes | head -5
+    caption: Five lines of y — the standard way to prove head stops an infinite producer.
+  - cmd: yes 'test line' | head -1000 > big.txt
+    caption: Generate a thousand-line file to test something against.
+  - cmd: yes | rm -i *.tmp
+    caption: Answer every prompt with y, though rm -f is the honest way to say that.
+plays_well_with: [head, tee, wc, seq]
+gotchas:
+  - yes never stops on its own. Whatever consumes it must be the thing that ends the pipeline, or you will be pressing Ctrl-C.
+  - When the reader exits, yes gets SIGPIPE and dies, which is exactly how `yes | head` terminates.
+see_also: [seq, head, echo]

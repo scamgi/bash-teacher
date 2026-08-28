@@ -1,0 +1,26 @@
+id: file
+name: file
+category: inspection
+summary: Identify what kind of file something is.
+purpose: >
+  Looks at the contents rather than the extension. Run it before you cat
+  something unknown, and before you assume a .txt is really text.
+synopsis: file [-b] [-i] FILE...
+flags:
+  - flag: "-b"
+    gloss: "Brief: omit the filename from the output."
+  - flag: "-i"
+    gloss: Print a MIME type instead of prose.
+  - flag: "-L"
+    gloss: Follow symlinks and describe the target.
+examples:
+  - cmd: file mystery.dat
+    caption: "Prose description: what the magic bytes say it is."
+  - cmd: file -i upload.bin
+    caption: A MIME type, which is the form a script can branch on.
+  - cmd: find . -type f | xargs file | grep -i text
+    caption: Which files in a tree are actually text.
+plays_well_with: [find, xargs, grep, stat]
+gotchas:
+  - file guesses from content, so it can be confidently wrong about short or unusual files.
+see_also: [stat, cat, od]

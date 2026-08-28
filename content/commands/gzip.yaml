@@ -1,0 +1,31 @@
+id: gzip
+name: gzip
+category: archives
+summary: Compress a single file.
+purpose: >
+  Compresses one stream, fast. It does not bundle — that is tar's job —
+  which is why the two are almost always used together.
+synopsis: gzip [-k] [-N] [-d] FILE...
+flags:
+  - flag: "-k"
+    gloss: Keep the original instead of replacing it.
+  - flag: "-d"
+    gloss: Decompress; the same as gunzip.
+  - flag: "-1 to -9"
+    gloss: Trade speed for ratio; -9 is smallest, -1 fastest.
+  - flag: "-c"
+    gloss: Write to stdout, leaving the input alone.
+  - flag: "-l"
+    gloss: List the compression ratio of an existing archive.
+examples:
+  - cmd: gzip -k access.log
+    caption: Produces access.log.gz and keeps the original.
+  - cmd: gzip -c big.txt | ssh host 'cat > big.txt.gz'
+    caption: Compress on the fly and send it somewhere, never writing a local copy.
+  - cmd: cat *.log | gzip > all.log.gz
+    caption: Combine and compress a set of logs in one pass.
+plays_well_with: [tar, cat, tee, ssh]
+gotchas:
+  - By default gzip replaces the file with the compressed version and deletes the original. -k or -c if that is not what you want.
+  - gzip compresses one file only. `gzip dir/` does nothing useful; tar first.
+see_also: [gunzip, tar, xz, zip]

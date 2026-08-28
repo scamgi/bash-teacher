@@ -20,7 +20,7 @@ examples:
     caption: Join two files into one — the concatenating that gives cat its name.
   - cmd: cat -n script.sh | sed -n '10,20p'
     caption: Number the lines, then look at a numbered window of them.
-plays_well_with: [head, tail, grep, wc]
+plays_well_with: [head, tail, grep, wc, less]
 gotchas:
   - "`cat file | grep x` works but spawns a process for nothing: `grep x file` is the same result with one less command. This is the classic \"useless use of cat\"."
   - cat happily prints binary files and will scramble your terminal. Use `file` first if unsure.

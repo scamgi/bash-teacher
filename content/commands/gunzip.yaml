@@ -1,0 +1,26 @@
+id: gunzip
+name: gunzip
+category: archives
+summary: Decompress a gzip file.
+purpose: >
+  The other direction. It is the same program as gzip under a different
+  name, so everything gzip -d does, gunzip does.
+synopsis: gunzip [-k] [-c] FILE...
+flags:
+  - flag: "-k"
+    gloss: Keep the .gz file rather than removing it.
+  - flag: "-c"
+    gloss: Write to stdout, which is what zcat is.
+  - flag: "-t"
+    gloss: Test the archive's integrity without extracting.
+examples:
+  - cmd: gunzip -k access.log.gz
+    caption: Recover access.log and keep the compressed copy.
+  - cmd: gunzip -c app.log.gz | grep ERROR
+    caption: Search inside a compressed log without unpacking it to disk.
+  - cmd: gunzip -t archive.gz
+    caption: Check that a file is not corrupt before relying on it.
+plays_well_with: [grep, tar, less, cat]
+gotchas:
+  - "`gunzip -c` and `zcat` are the same thing; both leave the archive untouched, which is what you want in a pipeline."
+see_also: [gzip, tar, xz]

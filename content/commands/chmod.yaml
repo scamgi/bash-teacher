@@ -1,0 +1,31 @@
+id: chmod
+name: chmod
+category: permissions
+summary: Change a file's permission bits.
+purpose: >
+  Decides who may read, write, and execute a file. The symbolic form says
+  what to change; the octal form says what the result should be.
+synopsis: chmod [-R] MODE FILE...
+flags:
+  - flag: "+x"
+    gloss: Make executable, for everyone the current mask allows.
+  - flag: u+w
+    gloss: Give the owner write permission, leaving others alone.
+  - flag: go-rwx
+    gloss: Remove all access for group and others.
+  - flag: 755
+    gloss: Owner may do anything; everyone else may read and execute.
+  - flag: "-R"
+    gloss: Apply recursively through a directory.
+examples:
+  - cmd: chmod +x deploy.sh
+    caption: "The most common chmod there is: make a script runnable."
+  - cmd: chmod 600 ~/.ssh/id_ed25519
+    caption: Owner-only, which ssh insists on for private keys.
+  - cmd: find . -type d -exec chmod 755 {} +
+    caption: Directories need execute permission to be entered, so they are set separately from files.
+plays_well_with: [find, ls, chown, umask]
+gotchas:
+  - "`chmod -R 777` on a tree makes every file executable and world-writable. Set directories and files separately with find."
+  - On a directory, execute means may enter, not may run. A directory without it is invisible from the inside.
+see_also: [chown, umask, ls]

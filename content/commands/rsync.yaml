@@ -1,0 +1,34 @@
+id: rsync
+name: rsync
+category: network
+summary: Sync directory trees efficiently, locally or over ssh.
+purpose: >
+  Copies only the differences. That makes a second run nearly free, which is
+  what makes it the right tool for backups, deploys, and anything you will
+  run more than once.
+synopsis: rsync [-a] [-v] [-z] [--delete] SOURCE DEST
+flags:
+  - flag: "-a"
+    gloss: "Archive: recursive, preserving permissions, times, symlinks and ownership."
+  - flag: "-v"
+    gloss: Verbose.
+  - flag: "-z"
+    gloss: Compress during transfer.
+  - flag: "-n"
+    gloss: "Dry run: report what would happen and change nothing."
+  - flag: "--delete"
+    gloss: Remove files at the destination that are gone from the source.
+  - flag: "--exclude=PATTERN"
+    gloss: Skip paths matching a pattern.
+examples:
+  - cmd: "rsync -avn site/ web1:/var/www/"
+    caption: Always dry-run first — the -n makes it show its plan without touching anything.
+  - cmd: "rsync -az --delete site/ web1:/var/www/"
+    caption: Make the destination match the source exactly, compressed in transit.
+  - cmd: rsync -a --exclude='.git' src/ backup/
+    caption: A local copy that skips version-control data.
+plays_well_with: [ssh, cp, find, tar]
+gotchas:
+  - A trailing slash on the source means copy the contents; without it, the directory itself is copied inside the destination. This is the single most common rsync mistake.
+  - "--delete does exactly what it says. Pair it with -n until the output is what you expect."
+see_also: [scp, cp, ssh]

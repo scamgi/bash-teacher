@@ -1,0 +1,32 @@
+id: dd
+name: dd
+category: streams
+summary: Copy blocks of data, with conversion.
+purpose: >
+  A blunt, block-level copier from the era of tape drives. It survives
+  because it can copy exact byte ranges, write raw devices, and generate
+  files of a precise size.
+synopsis: dd if=INPUT of=OUTPUT [bs=N] [count=N] [skip=N]
+flags:
+  - flag: if=FILE
+    gloss: Input file; stdin by default.
+  - flag: of=FILE
+    gloss: Output file; stdout by default.
+  - flag: bs=N
+    gloss: Block size, e.g. 1M.
+  - flag: count=N
+    gloss: Copy only N blocks.
+  - flag: skip=N
+    gloss: Skip N input blocks before starting.
+  - flag: status=progress
+    gloss: Report progress while running (GNU).
+examples:
+  - cmd: dd if=/dev/urandom of=test.bin bs=1M count=10
+    caption: A ten-megabyte file of random bytes, for testing.
+  - cmd: dd if=big.iso of=/dev/null bs=1M
+    caption: Read a file at full speed to measure throughput.
+plays_well_with: [od, cmp, split, tee]
+gotchas:
+  - dd writes wherever of= points, with no confirmation. A wrong device name destroys a disk, which is why it is sometimes called disk destroyer.
+  - Its argument syntax is its own — key=value, no dashes — because it predates the conventions everything else follows.
+see_also: [split, od, cmp]

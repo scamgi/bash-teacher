@@ -1,0 +1,27 @@
+id: locate
+name: locate
+category: search
+summary: Find files by name using a prebuilt index.
+purpose: >
+  Answers where is that file instantly, by consulting a database rather than
+  walking the disk. It is find's fast, stale cousin.
+synopsis: locate [-i] [-l N] PATTERN
+flags:
+  - flag: "-i"
+    gloss: Match case-insensitively.
+  - flag: "-l N"
+    gloss: Stop after N results.
+  - flag: "-b"
+    gloss: Match only the basename, not the whole path.
+  - flag: "-e"
+    gloss: Skip entries whose files no longer exist.
+examples:
+  - cmd: locate nginx.conf
+    caption: Every path containing that name, in milliseconds.
+  - cmd: locate -b -i readme | head
+    caption: Case-insensitive basename search, capped to a screenful.
+plays_well_with: [find, grep, head, which]
+gotchas:
+  - The index is rebuilt on a schedule, so locate misses files created since the last run and lists files that have been deleted. When freshness matters, use find.
+  - Many systems ship it disabled or absent; on macOS the database needs to be built once before it returns anything.
+see_also: [find, which, grep]

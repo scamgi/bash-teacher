@@ -1,0 +1,22 @@
+id: pwd
+name: pwd
+category: navigation
+summary: Print the working directory.
+purpose: >
+  Answers where am I. Mostly used inside scripts, where there is no prompt
+  to remind you.
+synopsis: pwd [-L | -P]
+flags:
+  - flag: "-L"
+    gloss: "Logical: print the path you took, symlinks and all. The default."
+  - flag: "-P"
+    gloss: "Physical: resolve every symlink and print the real path."
+examples:
+  - cmd: pwd
+    caption: The current directory.
+  - cmd: cd /tmp/link && pwd -P
+    caption: Where the symlink actually leads, rather than the name you followed.
+plays_well_with: [cd, basename, realpath]
+gotchas:
+  - The shell's $PWD and the pwd builtin agree; /bin/pwd is a separate program that always behaves like -P.
+see_also: [cd, realpath, basename]

@@ -1,0 +1,25 @@
+id: cd
+name: cd
+category: navigation
+summary: Change the working directory.
+purpose: >
+  Moves the shell itself, which is why it has to be a builtin rather than a
+  program: a child process could only change its own directory, not yours.
+synopsis: cd [DIR]
+flags:
+  - flag: "-"
+    gloss: Return to the previous directory, whatever it was.
+  - flag: "~"
+    gloss: Home, and the default when cd is given no argument at all.
+examples:
+  - cmd: cd /var/log
+    caption: Go somewhere absolute.
+  - cmd: cd -
+    caption: Bounce back to where you just came from — the fastest way to alternate between two directories.
+  - cmd: cd
+    caption: With no argument, go home.
+plays_well_with: [pwd, ls, find]
+gotchas:
+  - cd is a shell builtin, so `man cd` finds nothing and `which cd` is empty. Its documentation lives in the shell's own man page.
+  - A cd inside a pipeline or a subshell affects only that subshell, and the parent shell stays where it was.
+see_also: [pwd, ls]

@@ -60,8 +60,12 @@ A searchable, browsable reference for every command in the library.
   - **"Plays well with"**: commands frequently piped before/after this one, each
     jumping to its own entry,
   - **"Seen in"**: links to the exercises and cards that use this command.
-- **Actions:** `Enter` open detail, `p` practice an exercise using this command,
-  `f` add this command's cards to the review queue, `y` copy an example to the clipboard.
+- **Actions:** `→` focuses the entry, where `↑`/`↓` walk its actionable items —
+  examples, related commands, exercises — and `Enter` does the obvious thing with
+  the focused one: copy the example, jump to the command, or open the exercise.
+  `y` copies the focused example, `p` opens an exercise that teaches this command,
+  `f` narrows the flashcard deck to it, and `backspace` walks back out of a jump.
+  (`f` filters the deck rather than scheduling: the review queue arrives in M5.)
 
 Every dictionary entry is also reachable from anywhere with `?` (contextual lookup on
 the command under the cursor in the exercise editor).
@@ -146,6 +150,7 @@ per-command mastery (a heat grid over the dictionary), and current/longest strea
 cmd/bt/main.go            entrypoint, flag parsing, TUI bootstrap
 internal/tui/             Bubble Tea models: app, dictionary, practice, cards, stats
 internal/content/         loader + validator for the YAML content library
+internal/fuzzy/           subsequence matching and ranking for the search box
 internal/runner/          sandboxed execution, fixture materialization, diffing
 internal/srs/             scheduler (FSRS-lite), review log
 internal/store/           SQLite persistence (progress, review log, settings)
@@ -411,7 +416,7 @@ rebuilt.
 | Milestone | Contents | Exit criterion |
 | --- | --- | --- |
 | **M1 — Skeleton** ✅ | Bubble Tea v2 shell, Home, screen routing, theme, content loader + linter | `bt` runs, navigates, loads content |
-| **M2 — Dictionary** | Full dictionary UI, fuzzy search, 80 command entries | Every command entry passes lint and renders |
+| **M2 — Dictionary** ✅ | Full dictionary UI, fuzzy search, 80 command entries | Every command entry passes lint and renders |
 | **M3 — Runner** | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |

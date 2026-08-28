@@ -1,0 +1,24 @@
+id: fmt
+name: fmt
+category: text
+summary: Reflow paragraphs to a target width.
+purpose: >
+  Where fold breaks lines mechanically, fmt rewraps whole paragraphs, moving
+  words between lines to make them even. It is for prose, not data.
+synopsis: fmt [-w WIDTH] [-u] [FILE]...
+flags:
+  - flag: "-w N"
+    gloss: Target width, 75 by default.
+  - flag: "-u"
+    gloss: "Uniform spacing: one space between words, two between sentences."
+  - flag: "-s"
+    gloss: Split long lines but never join short ones.
+examples:
+  - cmd: fmt -w 72 README.txt
+    caption: Rewrap a text file to a comfortable reading width.
+  - cmd: fmt -s -w 80 notes.txt
+    caption: Shorten the long lines but leave deliberate short ones alone.
+plays_well_with: [fold, sed, column]
+gotchas:
+  - fmt joins lines it thinks belong to the same paragraph, which mangles anything line-oriented such as a list or a config file. Use fold there.
+see_also: [fold, column, sed]

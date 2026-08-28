@@ -1,0 +1,31 @@
+id: cp
+name: cp
+category: navigation
+summary: Copy files and directories.
+purpose: >
+  Duplicates. The flags decide how much of the original comes along: just
+  the bytes, or the timestamps, permissions, and symlinks too.
+synopsis: cp [-r] [-a] [-i] SOURCE... DEST
+flags:
+  - flag: "-r"
+    gloss: Copy directories recursively.
+  - flag: "-a"
+    gloss: "Archive: recursive, and preserve everything — mode, ownership, timestamps, symlinks."
+  - flag: "-i"
+    gloss: Prompt before overwriting.
+  - flag: "-n"
+    gloss: Never overwrite an existing file.
+  - flag: "-p"
+    gloss: Preserve mode, ownership, and timestamps.
+  - flag: "-v"
+    gloss: Print each file as it is copied.
+examples:
+  - cmd: cp -a src/ backup/
+    caption: "A faithful copy: same permissions, same timestamps, symlinks left as symlinks."
+  - cmd: cp config.yaml config.yaml.bak
+    caption: The one-second backup before you edit something.
+plays_well_with: [mv, rsync, find, mkdir]
+gotchas:
+  - A trailing slash on the source changes the meaning for some tools but not for cp; rsync is the one where `src/` and `src` differ.
+  - Plain cp follows symlinks and copies what they point at. Use -a or -d to copy the link itself.
+see_also: [mv, rsync, ln]

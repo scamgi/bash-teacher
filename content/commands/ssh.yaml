@@ -1,0 +1,32 @@
+id: ssh
+name: ssh
+category: network
+summary: Open an encrypted shell on another machine.
+purpose: >
+  Runs a command, or a whole session, on a remote host. Its second job is
+  quieter and more useful: it can be one end of a pipeline that spans two
+  machines.
+synopsis: ssh [-p PORT] [-i KEY] [USER@]HOST [COMMAND]
+flags:
+  - flag: "-p PORT"
+    gloss: Connect to a non-default port.
+  - flag: "-i KEY"
+    gloss: Use this private key.
+  - flag: "-A"
+    gloss: Forward your agent, so the remote host can authenticate onward as you.
+  - flag: "-L LOCAL:HOST:PORT"
+    gloss: Forward a local port through the connection.
+  - flag: "-N"
+    gloss: Do not run a command; useful with port forwarding.
+examples:
+  - cmd: ssh deploy@web1 'tail -100 /var/log/app.log'
+    caption: Run one command remotely and get the output locally.
+  - cmd: ssh web1 'cat /var/log/app.log' | grep ERROR
+    caption: The remote end produces, the local end filters — one pipeline, two machines.
+  - cmd: tar -cz site/ | ssh web1 'tar -xz -C /var/www'
+    caption: Copy a directory without ever writing an archive to disk.
+plays_well_with: [tar, scp, rsync, grep]
+gotchas:
+  - A remote command is passed through a shell on the far side, so it needs quoting that survives both shells. Single quotes locally are the usual answer.
+  - ssh refuses to use a private key that other users can read, which is why key files are chmod 600.
+see_also: [scp, rsync, curl]

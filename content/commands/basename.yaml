@@ -1,0 +1,24 @@
+id: basename
+name: basename
+category: navigation
+summary: Strip the directory, and optionally a suffix, from a path.
+purpose: >
+  Turns a path into just the filename. In a loop over find results, it is
+  how you get a short name to print or to build an output filename from.
+synopsis: basename NAME [SUFFIX]
+flags:
+  - flag: "-s SUFFIX"
+    gloss: Remove this suffix as well as the directory.
+  - flag: "-a"
+    gloss: Treat every argument as a name to strip.
+examples:
+  - cmd: basename /var/log/nginx/access.log
+    caption: Prints access.log.
+  - cmd: basename /var/log/access.log .log
+    caption: Prints access, with the extension removed too.
+  - cmd: find . -name '*.md' | xargs -n1 basename
+    caption: The short name of every Markdown file found.
+plays_well_with: [dirname, find, xargs, realpath]
+gotchas:
+  - basename is pure string manipulation — it never checks whether the path exists.
+see_also: [dirname, realpath, find]

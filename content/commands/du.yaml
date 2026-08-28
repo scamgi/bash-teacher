@@ -1,0 +1,31 @@
+id: du
+name: du
+category: inspection
+summary: Estimate how much disk space files and directories use.
+purpose: >
+  Answers what is taking up all the space. Almost always run with -sh and
+  sorted, since the raw recursive output is unreadable.
+synopsis: du [-s] [-h] [-d DEPTH] [PATH]...
+flags:
+  - flag: "-s"
+    gloss: "Summarise: one total per argument instead of every subdirectory."
+  - flag: "-h"
+    gloss: Human-readable sizes.
+  - flag: "-d N"
+    gloss: Descend at most N levels.
+  - flag: "-a"
+    gloss: Include files, not only directories.
+  - flag: "-x"
+    gloss: Stay on one filesystem.
+examples:
+  - cmd: du -sh *
+    caption: The size of everything in this directory, one line each.
+  - cmd: du -h -d1 . | sort -h | tail
+    caption: The biggest immediate subdirectories, smallest first — sort -h understands 1.2G.
+  - cmd: du -sh /var/log
+    caption: One number for a whole tree.
+plays_well_with: [sort, head, df, find]
+gotchas:
+  - du measures blocks used, so it disagrees with the sum of file sizes for sparse files and for many tiny ones.
+  - Sorting du output needs `sort -h`, not `sort -n`, or 900K sorts above 2G.
+see_also: [df, ls, find]

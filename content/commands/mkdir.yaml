@@ -1,0 +1,25 @@
+id: mkdir
+name: mkdir
+category: navigation
+summary: Create directories.
+purpose: >
+  Makes a directory, and with -p makes a whole path at once without
+  complaining about what already exists — which is what makes it safe to run
+  in a script twice.
+synopsis: mkdir [-p] [-m MODE] DIRECTORY...
+flags:
+  - flag: "-p"
+    gloss: Create parent directories as needed, and do not fail if the target exists.
+  - flag: "-m MODE"
+    gloss: Set the permissions at creation time rather than after.
+  - flag: "-v"
+    gloss: Print each directory as it is created.
+examples:
+  - cmd: mkdir -p build/reports/coverage
+    caption: Create the whole chain in one call; no error if part of it is already there.
+  - cmd: mkdir -m 700 secrets
+    caption: Create it already private, with no window where it is world-readable.
+plays_well_with: [cp, mv, touch, chmod]
+gotchas:
+  - Without -p, mkdir fails when the directory exists — which is sometimes exactly what you want as a cheap lock.
+see_also: [rm, touch, chmod]

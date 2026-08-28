@@ -1,0 +1,28 @@
+id: chown
+name: chown
+category: permissions
+summary: Change a file's owner and group.
+purpose: >
+  Permissions decide what the owner may do; chown decides who the owner is.
+  Almost always needed after moving files between users or unpacking an
+  archive as root.
+synopsis: "chown [-R] USER[:GROUP] FILE..."
+flags:
+  - flag: "-R"
+    gloss: Apply recursively.
+  - flag: "USER:GROUP"
+    gloss: Set both at once; a trailing colon means the user's login group.
+  - flag: "--reference=FILE"
+    gloss: Copy ownership from another file.
+  - flag: "-h"
+    gloss: Act on a symlink itself rather than its target.
+examples:
+  - cmd: "chown -R www-data:www-data /var/www"
+    caption: Hand a whole tree to the web server's user.
+  - cmd: "chown deploy: app.log"
+    caption: Set the owner and their default group in one step.
+plays_well_with: [chmod, ls, find, id]
+gotchas:
+  - Only root can give a file away to another user, so chown usually needs elevated privileges — but chgrp to a group you belong to does not.
+  - chown resets the setuid and setgid bits as a safety measure, so those must be reapplied afterwards.
+see_also: [chmod, id, umask]

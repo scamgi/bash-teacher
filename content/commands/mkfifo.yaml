@@ -1,0 +1,22 @@
+id: mkfifo
+name: mkfifo
+category: streams
+summary: Create a named pipe.
+purpose: >
+  A pipe that exists in the filesystem, so two unrelated processes can be
+  connected by name rather than by being started together. It is how you
+  build a pipeline across two terminals.
+synopsis: mkfifo [-m MODE] NAME...
+flags:
+  - flag: "-m MODE"
+    gloss: Set permissions at creation.
+examples:
+  - cmd: mkfifo /tmp/mypipe
+    caption: Create the pipe; nothing happens until both ends are open.
+  - cmd: mkfifo p && grep ERROR < p & cat app.log > p
+    caption: A reader and a writer joined through a name rather than a | character.
+plays_well_with: [tee, cat, grep]
+gotchas:
+  - Opening a FIFO blocks until the other end is opened too, which looks exactly like a hang the first time it happens.
+  - A FIFO carries no data at rest — it is a rendezvous point, not a file. Nothing is buffered on disk.
+see_also: [tee, xargs, cat]

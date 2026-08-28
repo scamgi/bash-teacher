@@ -1,0 +1,27 @@
+id: od
+name: od
+category: inspection
+summary: Dump a file in octal, hex, or characters.
+purpose: >
+  Shows you the actual bytes. When a file looks right but behaves wrong, od
+  is how you find the stray carriage return, the BOM, or the tab that should
+  have been spaces.
+synopsis: od [-A RADIX] [-t TYPE] [FILE]
+flags:
+  - flag: "-c"
+    gloss: Show printable characters and C escapes such as \n and \t.
+  - flag: "-t x1"
+    gloss: One byte per column, in hex.
+  - flag: "-A d"
+    gloss: Print offsets in decimal instead of octal.
+  - flag: "-N BYTES"
+    gloss: Stop after this many bytes.
+examples:
+  - cmd: od -c dos.txt | head
+    caption: The escapes make \r\n line endings immediately visible.
+  - cmd: od -A d -t x1 -N 16 file.bin
+    caption: The first sixteen bytes in hex, with decimal offsets — enough to check a magic number.
+plays_well_with: [head, file, cmp, tr]
+gotchas:
+  - The default output is octal words, which is almost never what you want; reach for -c or -t x1.
+see_also: [file, cmp, tr]

@@ -1,0 +1,25 @@
+id: timeout
+name: timeout
+category: process
+summary: Run a command with a time limit.
+purpose: >
+  Puts a ceiling on how long something may run. It is the difference between
+  a script that fails and a script that hangs forever.
+synopsis: timeout [-s SIGNAL] [-k DURATION] DURATION COMMAND [ARG]...
+flags:
+  - flag: "-s SIGNAL"
+    gloss: Which signal to send at the limit; TERM by default.
+  - flag: "-k DURATION"
+    gloss: After the first signal, wait this long then send KILL.
+  - flag: "--preserve-status"
+    gloss: Exit with the command's status rather than 124.
+examples:
+  - cmd: timeout 5 ./flaky-check.sh
+    caption: Give it five seconds, then stop it.
+  - cmd: timeout -k 5 30 ./job.sh
+    caption: Ask it to stop at thirty seconds, and kill it five seconds later if it has not.
+plays_well_with: [nohup, watch, sleep]
+gotchas:
+  - timeout exits 124 when it fires, which is how a script distinguishes a timeout from the command's own failure.
+  - The signal goes to the command, not to its children; a process that spawns others can leave orphans behind.
+see_also: [sleep, watch, nohup]

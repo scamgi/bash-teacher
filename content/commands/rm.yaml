@@ -1,0 +1,31 @@
+id: rm
+name: rm
+category: navigation
+summary: Remove files and directories.
+purpose: >
+  Deletes. There is no undo and no trash, so the flags are mostly about
+  slowing you down or, with -f, deliberately not slowing you down.
+synopsis: rm [-r] [-f] [-i] FILE...
+flags:
+  - flag: "-r"
+    gloss: Recurse into directories and delete their contents.
+  - flag: "-f"
+    gloss: "Force: no prompts, and no error for files that do not exist."
+  - flag: "-i"
+    gloss: Prompt before every removal.
+  - flag: "-v"
+    gloss: Print each file as it is removed.
+  - flag: "--"
+    gloss: End of options, so a filename starting with a dash is treated as a name.
+examples:
+  - cmd: rm -r build/
+    caption: Delete a directory and everything under it.
+  - cmd: rm -- -weird-name.txt
+    caption: Delete a file whose name begins with a dash.
+  - cmd: find . -name '*.tmp' -delete
+    caption: "Often better than piping into rm: find does the deleting itself, with no filename parsing in between."
+plays_well_with: [find, xargs, ls]
+gotchas:
+  - "`rm -rf` with a variable that expands to empty is the classic way to delete far more than you meant. Quote and check first."
+  - rm removes the directory entry, not the data; anything holding the file open keeps reading it until it closes.
+see_also: [find, mkdir, mv]

@@ -1,0 +1,30 @@
+id: kill
+name: kill
+category: process
+summary: Send a signal to a process.
+purpose: >
+  Despite the name it sends a signal, and most signals ask politely. The
+  default TERM lets a program clean up; KILL does not.
+synopsis: kill [-SIGNAL] PID...
+executable: false
+flags:
+  - flag: "-15"
+    gloss: "TERM: ask the process to exit. The default."
+  - flag: "-9"
+    gloss: "KILL: the kernel removes it immediately, with no chance to clean up."
+  - flag: "-1"
+    gloss: "HUP: traditionally means reload your configuration."
+  - flag: "-l"
+    gloss: List the signal names.
+examples:
+  - cmd: kill 1234
+    caption: Ask that process to shut down.
+  - cmd: kill -9 1234
+    caption: When TERM has been ignored and you have accepted the consequences.
+  - cmd: kill -HUP $(pgrep nginx)
+    caption: Tell a server to reload its config without restarting.
+plays_well_with: [ps, pgrep, pkill]
+gotchas:
+  - "Reaching for -9 first skips every cleanup handler: temp files stay, buffers are lost, locks are left behind. Try TERM and wait."
+  - A process stuck in uninterruptible sleep ignores even -9, because it is waiting on the kernel, not on you.
+see_also: [pkill, pgrep, ps]

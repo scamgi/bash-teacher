@@ -1,0 +1,29 @@
+id: nl
+name: nl
+category: text
+summary: Number the lines of a file.
+purpose: >
+  Like cat -n but with control over which lines count and how the number is
+  formatted. Useful when the numbers themselves are part of the output.
+synopsis: nl [-b STYLE] [-w WIDTH] [-s SEP] [FILE]
+flags:
+  - flag: "-b a"
+    gloss: Number every line, including blank ones.
+  - flag: "-b t"
+    gloss: Number only non-empty lines. The default.
+  - flag: "-w N"
+    gloss: Width of the number field.
+  - flag: "-s STR"
+    gloss: String between the number and the line, tab by default.
+  - flag: "-v N"
+    gloss: Start counting at N.
+examples:
+  - cmd: nl -b a script.sh
+    caption: Number every line, blanks included, so the numbers match an editor's.
+  - cmd: "nl -s': ' -w1 notes.txt"
+    caption: Compact numbering with a colon separator.
+plays_well_with: [cat, sed, head, grep]
+gotchas:
+  - nl's default skips blank lines when numbering, so its numbers drift away from the real line numbers. -b a fixes that.
+  - For a quick look, `cat -n` and `grep -n` are usually enough; nl earns its place when the format matters.
+see_also: [cat, sed, grep]

@@ -1,0 +1,28 @@
+id: ln
+name: ln
+category: navigation
+summary: Create links between files.
+purpose: >
+  Gives a file a second name. A hard link is another name for the same data;
+  a symbolic link is a small file containing a path, which is what almost
+  everyone means.
+synopsis: ln [-s] [-f] TARGET [LINKNAME]
+flags:
+  - flag: "-s"
+    gloss: Make a symbolic link rather than a hard link.
+  - flag: "-f"
+    gloss: Remove an existing destination first.
+  - flag: "-n"
+    gloss: Treat an existing symlink to a directory as a file, not as a place to link inside.
+  - flag: "-r"
+    gloss: Make the symlink's target relative to the link's own location.
+examples:
+  - cmd: ln -s /opt/app/current/bin/app /usr/local/bin/app
+    caption: The standard way to expose one version of something under a stable name.
+  - cmd: ln -sfn releases/v2 current
+    caption: Repoint an existing `current` symlink atomically — the -n stops it from linking inside the old target.
+plays_well_with: [ls, realpath, cp]
+gotchas:
+  - A symlink to a relative path is resolved from the link's directory, not from yours, which is why so many of them dangle.
+  - "`ls -l` shows where a symlink points; `ls -L` follows it and shows the target's details instead."
+see_also: [cp, realpath, ls]

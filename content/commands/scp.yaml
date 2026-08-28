@@ -1,0 +1,29 @@
+id: scp
+name: scp
+category: network
+summary: Copy files between machines over ssh.
+purpose: >
+  cp with a hostname. It is the simplest way to move a file to or from a
+  remote machine, and it inherits ssh's keys and configuration.
+synopsis: scp [-r] [-P PORT] SOURCE... DEST
+flags:
+  - flag: "-r"
+    gloss: Copy directories recursively.
+  - flag: "-P PORT"
+    gloss: Remote port — capital P, unlike ssh's lowercase -p.
+  - flag: "-i KEY"
+    gloss: Use this private key.
+  - flag: "-C"
+    gloss: Compress in transit.
+examples:
+  - cmd: "scp report.pdf web1:/tmp/"
+    caption: Push a file to a remote directory.
+  - cmd: "scp web1:/var/log/app.log ."
+    caption: Pull a file down to the current directory.
+  - cmd: "scp -r site/ web1:/var/www/"
+    caption: Copy a whole tree.
+plays_well_with: [ssh, rsync, tar]
+gotchas:
+  - scp is -P for the port while ssh is -p, which catches everyone at least once.
+  - For anything repeated or large, rsync transfers only what changed and can resume; scp starts from the beginning every time.
+see_also: [rsync, ssh, cp]

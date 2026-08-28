@@ -1,0 +1,27 @@
+id: seq
+name: seq
+category: streams
+summary: Print a sequence of numbers.
+purpose: >
+  Generates a range, one number per line, ready to be piped into something
+  that repeats. It is the shell's counted loop when a for loop feels heavy.
+synopsis: seq [FIRST [INCREMENT]] LAST
+flags:
+  - flag: "-w"
+    gloss: Pad with leading zeros so every number is the same width.
+  - flag: "-s STR"
+    gloss: Separator between numbers instead of newline.
+  - flag: "-f FORMAT"
+    gloss: printf-style format for each number.
+examples:
+  - cmd: seq 5
+    caption: One to five, one per line.
+  - cmd: seq 0 10 100
+    caption: Zero to a hundred in steps of ten.
+  - cmd: seq -w 1 10 | xargs -I{} touch file{}.txt
+    caption: Zero-padded names, so file01 sorts before file10.
+plays_well_with: [xargs, yes, head, printf]
+gotchas:
+  - seq counts inclusively at both ends, so `seq 1 5` gives five numbers, not four.
+  - macOS ships seq but it lacks some GNU flags; jot is the traditional BSD equivalent.
+see_also: [yes, xargs, printf]

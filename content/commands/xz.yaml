@@ -1,0 +1,31 @@
+id: xz
+name: xz
+category: archives
+summary: Compress with a high ratio.
+purpose: >
+  Compresses much smaller than gzip and much more slowly. It is the right
+  trade when a file is written once and downloaded many times.
+synopsis: xz [-d] [-k] [-N] [-T N] FILE...
+flags:
+  - flag: "-d"
+    gloss: Decompress.
+  - flag: "-k"
+    gloss: Keep the original.
+  - flag: "-9"
+    gloss: Maximum compression, at real cost in time and memory.
+  - flag: "-T N"
+    gloss: Use N threads; -T0 means one per core.
+  - flag: "-c"
+    gloss: Write to stdout.
+examples:
+  - cmd: xz -k -T0 backup.tar
+    caption: Compress hard, using every core, keeping the original.
+  - cmd: tar -cJf src.tar.xz src/
+    caption: tar's -J flag pipes through xz for you.
+  - cmd: xz -dc archive.xz | grep pattern
+    caption: Search inside without unpacking.
+plays_well_with: [tar, gzip, grep]
+gotchas:
+  - Decompression is fast but compression at -9 can need hundreds of megabytes of RAM, which matters on small machines.
+  - For logs that are compressed constantly and read rarely, gzip is usually the better trade despite the larger files.
+see_also: [gzip, tar, gunzip]

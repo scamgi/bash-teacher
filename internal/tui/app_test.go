@@ -24,25 +24,59 @@ func newTestApp(t *testing.T, w, h int) *App {
 	return a
 }
 
-// press feeds a printable key, the way the terminal would.
-func press(a *App, s string) {
-	var msg tea.KeyPressMsg
-	switch s {
-	case "enter":
-		msg = tea.KeyPressMsg{Code: tea.KeyEnter}
-	case "esc":
-		msg = tea.KeyPressMsg{Code: tea.KeyEscape}
-	case "down":
-		msg = tea.KeyPressMsg{Code: tea.KeyDown}
-	case "up":
-		msg = tea.KeyPressMsg{Code: tea.KeyUp}
-	default:
-		msg = tea.KeyPressMsg{Code: rune(s[0]), Text: s}
+// namedKeys maps the key names used in tests to their v2 key codes. Anything
+// not listed is treated as printable text, so press("y") types a y.
+var namedKeys = map[string]rune{
+	"enter":     tea.KeyEnter,
+	"esc":       tea.KeyEscape,
+	"up":        tea.KeyUp,
+	"down":      tea.KeyDown,
+	"left":      tea.KeyLeft,
+	"right":     tea.KeyRight,
+	"backspace": tea.KeyBackspace,
+	"tab":       tea.KeyTab,
+}
+
+// keyMsg builds the message a terminal would send for a key name.
+func keyMsg(s string) tea.KeyPressMsg {
+	if code, ok := namedKeys[s]; ok {
+		return tea.KeyPressMsg{Code: code}
 	}
-	a.Update(msg)
+	return tea.KeyPressMsg{Code: rune(s[0]), Text: s}
+}
+
+// press feeds a key and renders, the way the event loop does. Rendering matters:
+// the dictionary builds its detail pane during View, so a test that never
+// renders would see an empty item list.
+func press(a *App, s string) {
+	a.Update(keyMsg(s))
+	_ = a.View()
 }
 
 func view(a *App) string { return a.View().Content }
+
+// pressCmd feeds a key and then runs whatever command it produced, which is how
+// the cross-screen shortcuts take effect in a headless test.
+func pressCmd(a *App, s string) {
+	_, cmd := a.Update(keyMsg(s))
+	_ = a.View()
+	for cmd != nil {
+		out := cmd()
+		if out == nil {
+			break
+		}
+		if batch, ok := out.(tea.BatchMsg); ok {
+			cmd = nil
+			for _, c := range batch {
+				if m := c(); m != nil {
+					_, cmd = a.Update(m)
+				}
+			}
+			continue
+		}
+		_, cmd = a.Update(out)
+	}
+}
 
 func TestHomeRendersLibraryCounts(t *testing.T) {
 	a := newTestApp(t, 100, 30)
@@ -90,21 +124,188 @@ func TestEnterOpensSelectedMenuItem(t *testing.T) {
 func TestDictionaryShowsAndFiltersCommands(t *testing.T) {
 	a := newTestApp(t, 100, 30)
 	press(a, "1")
-	if !strings.Contains(view(a), "grep") {
-		t.Fatalf("dictionary should list grep:\n%s", view(a))
+	if !strings.Contains(view(a), "FILES & NAVIGATION") {
+		t.Fatalf("the unfiltered dictionary should be grouped by category:\n%s", view(a))
 	}
 
-	press(a, "/")
-	for _, r := range "uniq" {
-		press(a, string(r))
-	}
+	typeIn(a, "/", "uniq")
 	v := view(a)
 	if !strings.Contains(v, "uniq") {
-		t.Errorf("filtered dictionary should still show uniq:\n%s", v)
+		t.Errorf("filtered dictionary should show uniq:\n%s", v)
 	}
-	if strings.Contains(v, "\n  grep") {
-		t.Errorf("filtered dictionary should not list grep:\n%s", v)
+	if strings.Contains(v, "FILES & NAVIGATION") {
+		t.Errorf("filtering should drop the category headings in favour of ranking:\n%s", v)
 	}
+}
+
+// typeIn opens an input with the given key, then types a string into it.
+func typeIn(a *App, open, text string) {
+	press(a, open)
+	for _, r := range text {
+		press(a, string(r))
+	}
+}
+
+// dictOf reaches into the dictionary sub-model for assertions that would be
+// fragile to make against rendered text.
+func dictOf(a *App) *dictionaryScreen { return a.screens[ScreenDictionary].(*dictionaryScreen) }
+
+// TestFuzzySearchRanksTheNamedCommandFirst is the property that makes the
+// search box worth having: typing a name selects that command, even though the
+// pattern is a subsequence of many others.
+func TestFuzzySearchRanksTheNamedCommandFirst(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "1")
+	typeIn(a, "/", "grep")
+	d := dictOf(a)
+	if got := d.current(); got == nil || got.Name != "grep" {
+		t.Fatalf("expected grep to be selected, got %v", got)
+	}
+}
+
+func TestFuzzySearchMatchesSubsequences(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "1")
+	typeIn(a, "/", "usr")
+	d := dictOf(a)
+	var names []string
+	for _, r := range d.rows {
+		if r.cmd != nil {
+			names = append(names, r.cmd.Name)
+		}
+	}
+	if len(names) == 0 {
+		t.Fatal("a subsequence search should match something")
+	}
+	// "usr" is not a substring of any command name, so every hit proves the
+	// matcher is doing subsequence work rather than strings.Contains.
+	for _, n := range names {
+		if strings.Contains(n, "usr") {
+			t.Fatalf("%q contains the pattern literally; pick a better probe", n)
+		}
+	}
+}
+
+// TestDictionaryJumpsAndComesBack covers the "plays well with" navigation and
+// the history stack that makes it safe to follow.
+func TestDictionaryJumpsAndComesBack(t *testing.T) {
+	a := newTestApp(t, 120, 40)
+	press(a, "1")
+	typeIn(a, "/", "sort")
+	press(a, "enter") // leave the filter, keeping sort selected
+	d := dictOf(a)
+	if d.current().Name != "sort" {
+		t.Fatalf("expected sort, got %s", d.current().Name)
+	}
+
+	press(a, "right") // focus the detail pane
+	if d.focus != focusDetail {
+		t.Fatal("right should move focus into the detail pane")
+	}
+	// Walk to the first related command and follow it.
+	target := ""
+	for i, it := range d.items {
+		if it.kind == itemRelated {
+			d.item = i
+			target = it.text
+			break
+		}
+	}
+	if target == "" {
+		t.Fatal("sort should list related commands")
+	}
+	press(a, "enter")
+	if got := d.current(); got == nil || got.ID != target {
+		t.Fatalf("enter on a related command should jump to %q, got %v", target, got)
+	}
+	press(a, "backspace")
+	if got := d.current(); got == nil || got.Name != "sort" {
+		t.Fatalf("backspace should return to sort, got %v", got)
+	}
+}
+
+// TestDictionaryOpensPractice checks the p shortcut hands off to the Practice
+// screen on an exercise that actually teaches the command.
+func TestDictionaryOpensPractice(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "1")
+	typeIn(a, "/", "uniq")
+	press(a, "enter")
+	pressCmd(a, "p")
+	if a.current != ScreenPractice {
+		t.Fatalf("p should open Practice, got %v", a.current)
+	}
+	ex := a.screens[ScreenPractice].(*practiceScreen)
+	teaches := ex.rows[ex.cursor].ex.Teaches
+	if !containsString(teaches, "uniq") {
+		t.Errorf("landed on an exercise that does not teach uniq: %v", teaches)
+	}
+}
+
+// TestDictionaryFiltersFlashcards checks the f shortcut narrows the deck.
+func TestDictionaryFiltersFlashcards(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "1")
+	typeIn(a, "/", "grep")
+	press(a, "enter")
+	pressCmd(a, "f")
+	if a.current != ScreenFlashcards {
+		t.Fatalf("f should open Flashcards, got %v", a.current)
+	}
+	f := a.screens[ScreenFlashcards].(*flashcardsScreen)
+	if f.filter != "grep" {
+		t.Fatalf("deck should be filtered to grep, got %q", f.filter)
+	}
+	for _, c := range f.deck {
+		if !containsString(c.Commands, "grep") {
+			t.Errorf("card %s is not a grep card", c.ID)
+		}
+	}
+	press(a, "backspace")
+	if f.filter != "" {
+		t.Error("backspace should restore the whole deck")
+	}
+}
+
+// TestCopyExampleFlashes checks the y shortcut reports what it copied; the
+// clipboard write itself is an escape sequence the harness cannot observe.
+func TestCopyExampleFlashes(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "1")
+	typeIn(a, "/", "grep")
+	press(a, "enter")
+	press(a, "right")
+	pressCmd(a, "y")
+	if !strings.Contains(a.flash, "copied:") {
+		t.Fatalf("y should report what it copied, got flash %q", a.flash)
+	}
+	if !strings.Contains(view(a), "copied:") {
+		t.Error("the flash should be visible in the footer")
+	}
+}
+
+// TestFlashClearsOnNextKey keeps a message from outliving the action.
+func TestFlashClearsOnNextKey(t *testing.T) {
+	a := newTestApp(t, 100, 30)
+	press(a, "1")
+	press(a, "right")
+	pressCmd(a, "y")
+	if a.flash == "" {
+		t.Fatal("expected a flash")
+	}
+	press(a, "down")
+	if a.flash != "" {
+		t.Errorf("the flash should clear on the next keystroke, got %q", a.flash)
+	}
+}
+
+func containsString(xs []string, want string) bool {
+	for _, x := range xs {
+		if x == want {
+			return true
+		}
+	}
+	return false
 }
 
 // TestFilterSwallowsNavigationKeys guards the rule that a screen capturing text

@@ -1,0 +1,27 @@
+id: stat
+name: stat
+category: inspection
+summary: Show a file's metadata.
+purpose: >
+  Everything the filesystem knows about a file that is not its contents:
+  size, permissions, owner, timestamps, inode. It is ls -l with all the
+  fields and a format string.
+synopsis: stat [-c FORMAT] FILE...
+flags:
+  - flag: "-c FORMAT"
+    gloss: Print only these fields, e.g. %s for size, %n for name, %U for owner.
+  - flag: "-f"
+    gloss: Describe the filesystem instead of the file.
+  - flag: "-L"
+    gloss: Follow symlinks and describe the target.
+examples:
+  - cmd: stat access.log
+    caption: Everything at once, in a labelled block.
+  - cmd: stat -c '%s %n' *.log
+    caption: Just size and name, in a form the rest of a pipeline can use.
+  - cmd: stat -c %Y file
+    caption: The modification time as a Unix timestamp, which is easy to compare in a script.
+plays_well_with: [find, ls, sort, awk]
+gotchas:
+  - BSD and GNU stat take completely different format flags; on macOS it is `stat -f` with %z for size.
+see_also: [ls, file, du]

@@ -1,0 +1,31 @@
+id: id
+name: id
+category: permissions
+summary: Print user and group identity.
+purpose: >
+  Answers who the system thinks you are, in the numbers that permissions
+  actually use. When access is denied unexpectedly, the group list is
+  usually the reason.
+synopsis: id [-u] [-g] [-G] [-n] [USER]
+flags:
+  - flag: "-u"
+    gloss: Numeric user ID only.
+  - flag: "-g"
+    gloss: Primary group ID only.
+  - flag: "-G"
+    gloss: Every group ID you belong to.
+  - flag: "-n"
+    gloss: Print names instead of numbers.
+  - flag: USER
+    gloss: Ask about someone else instead of yourself.
+examples:
+  - cmd: id
+    caption: "Your full identity: uid, gid, and every group."
+  - cmd: id -u
+    caption: Just the number — `[ "$(id -u)" -eq 0 ]` is the standard am-I-root test.
+  - cmd: id -nG deploy
+    caption: Which groups another user belongs to, by name.
+plays_well_with: [whoami, chown, chmod, sudo]
+gotchas:
+  - Group membership is read at login, so adding yourself to a group has no effect on sessions that were already open.
+see_also: [whoami, chown, sudo]

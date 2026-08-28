@@ -1,0 +1,33 @@
+id: sudo
+name: sudo
+category: permissions
+summary: Run a command as another user, usually root.
+purpose: >
+  Grants a single command elevated privileges, logged and audited, rather
+  than handing out a root shell. bash-teacher documents it but never
+  executes it: exercises run unprivileged, in a sandbox.
+synopsis: sudo [-u USER] COMMAND [ARG]...
+executable: false
+flags:
+  - flag: "-u USER"
+    gloss: Run as this user rather than root.
+  - flag: "-i"
+    gloss: Start a login shell as the target user.
+  - flag: "-E"
+    gloss: Preserve your environment variables.
+  - flag: "-l"
+    gloss: List what you are allowed to run.
+  - flag: "-k"
+    gloss: Forget the cached credentials immediately.
+examples:
+  - cmd: sudo systemctl restart nginx
+    caption: "The everyday form: one command, elevated."
+  - cmd: sudo -u postgres psql
+    caption: Become a service account without knowing its password.
+  - cmd: sudo -l
+    caption: What you are actually permitted to do on this machine.
+plays_well_with: [id, whoami, chown, chmod]
+gotchas:
+  - "sudo elevates the command, not the redirection: `sudo echo x > /root/f` fails because your shell opens the file, not root's. Use `sudo tee` instead."
+  - Environment variables are stripped by default, so a command that works for you can fail under sudo for lack of PATH or a config variable.
+see_also: [id, whoami, tee]

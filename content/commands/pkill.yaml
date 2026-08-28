@@ -1,0 +1,28 @@
+id: pkill
+name: pkill
+category: process
+summary: Signal processes by name.
+purpose: >
+  kill without the PID lookup. It matches on the command name so you do not
+  have to run ps, read a number, and type it back.
+synopsis: pkill [-SIGNAL] [-f] [-u USER] PATTERN
+executable: false
+flags:
+  - flag: "-f"
+    gloss: Match against the whole command line, not just the process name.
+  - flag: "-u USER"
+    gloss: Only this user's processes.
+  - flag: "-x"
+    gloss: Require an exact name match.
+  - flag: "-SIGNAL"
+    gloss: Which signal to send; TERM by default.
+examples:
+  - cmd: pkill -f 'python worker.py'
+    caption: Match the full command line, which is the only way to distinguish two python processes.
+  - cmd: pkill -u deploy nginx
+    caption: Only that user's copies.
+plays_well_with: [pgrep, ps, kill]
+gotchas:
+  - A loose pattern matches more than you meant. Run the identical pattern through pgrep first and read the list before signalling it.
+  - Without -x, the pattern is a substring match, so `pkill ssh` also hits sshd.
+see_also: [pgrep, kill, ps]

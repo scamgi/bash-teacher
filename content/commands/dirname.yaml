@@ -1,0 +1,17 @@
+id: dirname
+name: dirname
+category: navigation
+summary: Strip the last component from a path.
+purpose: >
+  The complement of basename: everything up to the last slash. The usual way
+  a script finds the directory it is running from.
+synopsis: dirname NAME...
+examples:
+  - cmd: dirname /var/log/nginx/access.log
+    caption: Prints /var/log/nginx.
+  - cmd: cd "$(dirname "$0")"
+    caption: The idiom for making a script run relative to its own location rather than the caller's.
+plays_well_with: [basename, realpath, cd]
+gotchas:
+  - Like basename, it is string manipulation only. `dirname foo` prints `.` because there is no directory part.
+see_also: [basename, realpath, pwd]

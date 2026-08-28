@@ -1,0 +1,24 @@
+id: which
+name: which
+category: search
+summary: Show which executable a command name resolves to.
+purpose: >
+  Answers what would actually run if I typed this. When two versions of a
+  tool are installed, which one wins is a PATH question, and this is how you
+  ask it.
+synopsis: which [-a] COMMAND...
+flags:
+  - flag: "-a"
+    gloss: Print every match on PATH, not just the first.
+  - flag: "-s"
+    gloss: "Silent: no output, just an exit status."
+examples:
+  - cmd: which python3
+    caption: The path that would run.
+  - cmd: which -a python3
+    caption: Every python3 on PATH, in the order the shell would find them — the fast way to spot a shadowed binary.
+plays_well_with: [ls, file, realpath]
+gotchas:
+  - which knows nothing about shell builtins, aliases, or functions, so it is silent about cd and misleading about anything aliased. `type -a` in bash and zsh knows about all of them.
+  - which searches PATH as the shell sees it now; a PATH change in a script is not reflected in a which you ran earlier.
+see_also: [file, realpath, locate]

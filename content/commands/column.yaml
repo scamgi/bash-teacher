@@ -1,0 +1,30 @@
+id: column
+name: column
+category: text
+summary: Format input into aligned columns.
+purpose: >
+  Turns delimited text into a readable table. It is the last step of many
+  pipelines: everything before it produces the data, column makes it
+  possible to look at.
+synopsis: column [-t] [-s SEP] [FILE]
+flags:
+  - flag: "-t"
+    gloss: Build a table, aligning columns by width.
+  - flag: "-s SEP"
+    gloss: Input separator, whitespace by default.
+  - flag: "-N NAMES"
+    gloss: Name the columns (util-linux versions).
+  - flag: "-o SEP"
+    gloss: Output separator between columns.
+examples:
+  - cmd: "column -t -s: /etc/passwd"
+    caption: The password file as an aligned table instead of a wall of colons.
+  - cmd: df -h | column -t
+    caption: Realign output that has drifted out of alignment.
+  - cmd: printf 'a,b\nlonger,c\n' | column -t -s,
+    caption: Comma-separated input, aligned output.
+plays_well_with: [cut, paste, sort, awk]
+gotchas:
+  - column is for display only; aligning with spaces makes the output much harder for the next command in a pipeline to parse.
+  - BSD and util-linux versions differ considerably in their flags; -t and -s are the portable pair.
+see_also: [paste, cut, fmt]

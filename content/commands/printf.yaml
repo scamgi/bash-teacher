@@ -1,0 +1,32 @@
+id: printf
+name: printf
+category: streams
+summary: Format and print, with a format string.
+purpose: >
+  echo done properly. It behaves the same everywhere, it can format numbers
+  and pad columns, and it prints exactly the bytes you asked for and nothing
+  else.
+synopsis: printf FORMAT [ARGUMENT]...
+flags:
+  - flag: "%s"
+    gloss: A string.
+  - flag: "%d"
+    gloss: An integer.
+  - flag: "%.2f"
+    gloss: A float with two decimal places.
+  - flag: "%-10s"
+    gloss: A string, left-aligned in ten columns.
+  - flag: "\\n"
+    gloss: An explicit newline; printf adds none of its own.
+examples:
+  - cmd: printf '%-12s %5d\n' widgets 42
+    caption: Aligned columns without reaching for column.
+  - cmd: printf '%s\n' a b c
+    caption: The format is reused until the arguments run out, so this prints three lines.
+  - cmd: printf '%.2f\n' 3.14159
+    caption: Round to two decimal places.
+plays_well_with: [awk, column, xargs, echo]
+gotchas:
+  - printf adds no trailing newline, so a missing \n is the usual reason output runs together.
+  - The format string is reapplied until the arguments are exhausted, which is a feature but surprises people the first time.
+see_also: [echo, awk, column]

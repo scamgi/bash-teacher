@@ -1,0 +1,25 @@
+id: echo
+name: echo
+category: streams
+summary: Print its arguments.
+purpose: >
+  The simplest way to put text into a pipeline. It is also the most
+  inconsistent command in this dictionary, which is why printf exists.
+synopsis: echo [-n] [-e] STRING...
+flags:
+  - flag: "-n"
+    gloss: Do not print a trailing newline.
+  - flag: "-e"
+    gloss: Interpret backslash escapes such as \n and \t.
+examples:
+  - cmd: echo 'hello' | tr a-z A-Z
+    caption: Feed a literal string into a pipeline, usually to try something out.
+  - cmd: echo -n 'no newline'
+    caption: Useful when building up a line piece by piece.
+  - cmd: "echo \"$PATH\" | tr : '\\n'"
+    caption: Split a colon-separated variable into one entry per line.
+plays_well_with: [tr, grep, printf, xargs]
+gotchas:
+  - Whether echo understands -e and -n depends on the shell and the system; the builtin and /bin/echo can behave differently on the same machine. Anything beyond plain text belongs in printf.
+  - Always quote the argument. `echo $var` word-splits and glob-expands its own output.
+see_also: [printf, cat, yes]

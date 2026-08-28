@@ -1,0 +1,17 @@
+id: whoami
+name: whoami
+category: permissions
+summary: Print the current effective username.
+purpose: >
+  The shortest possible answer to who am I. It reports the effective user,
+  which is what matters after sudo or inside a setuid program.
+synopsis: whoami
+examples:
+  - cmd: whoami
+    caption: The effective username.
+  - cmd: sudo whoami
+    caption: Prints root, which is the quickest way to confirm sudo is working.
+plays_well_with: [id, sudo, chown]
+gotchas:
+  - whoami reports the effective user, while `logname` reports who logged in. Under sudo they disagree, and that difference is usually the point.
+see_also: [id, sudo]

@@ -21,6 +21,15 @@ type KeyMap struct {
 	Stats  key.Binding
 	Home   key.Binding
 	Cancel key.Binding
+
+	// Detail-pane and cross-screen actions.
+	Act      key.Binding
+	Copy     key.Binding
+	Practise key.Binding
+	Drill    key.Binding
+	Pop      key.Binding
+	PageUp   key.Binding
+	PageDown key.Binding
 }
 
 // Keys is the single instance used by the whole app.
@@ -43,6 +52,16 @@ var Keys = KeyMap{
 	// Cancel is the one binding that fires even while a screen is capturing
 	// text input, so there is always a way out.
 	Cancel: key.NewBinding(key.WithKeys("ctrl+c"), key.WithHelp("ctrl+c", "quit")),
+
+	// Detail-pane actions. Act is enter under a different name, so a screen can
+	// advertise what enter will actually do where "choose" would be vague.
+	Act:      key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open/copy")),
+	Copy:     key.NewBinding(key.WithKeys("y"), key.WithHelp("y", "copy example")),
+	Practise: key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "practise")),
+	Drill:    key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "flashcards")),
+	Pop:      key.NewBinding(key.WithKeys("backspace"), key.WithHelp("bksp", "back")),
+	PageUp:   key.NewBinding(key.WithKeys("pgup", "ctrl+u"), key.WithHelp("pgup", "page up")),
+	PageDown: key.NewBinding(key.WithKeys("pgdown", "ctrl+d"), key.WithHelp("pgdn", "page down")),
 }
 
 // ShortHelp implements help.KeyMap for the collapsed footer legend.
@@ -57,5 +76,7 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 		{k.Choose, k.Back, k.Tab, k.Filter},
 		{k.Home, k.Dict, k.Prac, k.Cards},
 		{k.Stats, k.Help, k.Quit},
+		{k.Act, k.Copy, k.Practise, k.Drill},
+		{k.Pop, k.PageUp, k.PageDown},
 	}
 }

@@ -1,0 +1,36 @@
+id: tar
+name: tar
+category: archives
+summary: Bundle many files into one archive.
+purpose: >
+  Short for tape archive. It flattens a directory tree into a single stream,
+  which is why it pairs with a compressor rather than doing the compressing
+  itself.
+synopsis: tar [-c | -x | -t] [-z | -j | -J] -f ARCHIVE [FILE]...
+flags:
+  - flag: "-c"
+    gloss: Create an archive.
+  - flag: "-x"
+    gloss: Extract from one.
+  - flag: "-t"
+    gloss: List the contents without extracting.
+  - flag: "-f FILE"
+    gloss: The archive filename; must come last among the bundled flags.
+  - flag: "-z"
+    gloss: Compress with gzip.
+  - flag: "-v"
+    gloss: "Verbose: name each file as it is processed."
+  - flag: "-C DIR"
+    gloss: Change to DIR first, which controls where files land.
+examples:
+  - cmd: tar -czf site.tar.gz site/
+    caption: Create a compressed archive of a directory.
+  - cmd: tar -xzf site.tar.gz -C /var/www
+    caption: Extract somewhere specific rather than into the current directory.
+  - cmd: tar -tzf site.tar.gz | head
+    caption: Look inside before extracting — always worth doing with an archive you did not make.
+plays_well_with: [gzip, find, xargs, ssh]
+gotchas:
+  - Always list an unfamiliar archive first. One that expands into the current directory instead of a single folder scatters files everywhere.
+  - The -f must be immediately followed by the filename, which is why the flags are conventionally written in that exact order.
+see_also: [gzip, zip, unzip, xz]

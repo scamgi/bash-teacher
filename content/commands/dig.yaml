@@ -1,0 +1,30 @@
+id: dig
+name: dig
+category: network
+summary: Query DNS.
+purpose: >
+  Asks a name server what it knows about a name, and shows the whole answer
+  rather than one address. When something cannot connect, dig separates a
+  name problem from a network problem.
+synopsis: dig [@SERVER] NAME [TYPE]
+flags:
+  - flag: "+short"
+    gloss: Just the answer, with no ceremony — the form to pipe.
+  - flag: "@SERVER"
+    gloss: Ask a specific resolver rather than the system's.
+  - flag: TYPE
+    gloss: A, AAAA, MX, TXT, NS, CNAME.
+  - flag: "+trace"
+    gloss: Follow the delegation from the root, showing each step.
+examples:
+  - cmd: dig +short example.com
+    caption: The addresses alone, one per line.
+  - cmd: dig @1.1.1.1 example.com
+    caption: Ask a public resolver, to tell a caching problem from a real one.
+  - cmd: dig example.com MX +short | sort -n
+    caption: The mail servers, ordered by priority.
+plays_well_with: [curl, ssh, sort, grep]
+gotchas:
+  - dig bypasses the system resolver and its cache, so it can disagree with what an application sees. `getent hosts` follows the same path a program would.
+  - An empty +short answer means no record of that type, not that the domain does not exist; check the status line in the full output.
+see_also: [curl, ssh, wget]

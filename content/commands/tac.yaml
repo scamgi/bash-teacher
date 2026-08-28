@@ -1,0 +1,23 @@
+id: tac
+name: tac
+category: text
+summary: Print lines in reverse order, last first.
+purpose: >
+  cat backwards, and named accordingly. The usual reason is a log: the
+  newest entries are at the end, and tac brings them to the top.
+synopsis: tac [FILE]...
+flags:
+  - flag: "-s SEP"
+    gloss: Use SEP as the separator instead of newline.
+  - flag: "-r"
+    gloss: Treat the separator as a regular expression.
+examples:
+  - cmd: tac app.log | head -20
+    caption: The last twenty lines, newest first — tail -20 gives the same lines in the other order.
+  - cmd: tac todo.txt | nl
+    caption: Number the list from the bottom up.
+plays_well_with: [head, tail, sort, nl]
+gotchas:
+  - tac must read the whole input before printing anything, so it is a poor choice for a stream that never ends.
+  - macOS has no tac; `tail -r` is the BSD equivalent.
+see_also: [rev, tail, sort]

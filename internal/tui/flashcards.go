@@ -15,42 +15,85 @@ import (
 // learner page through cards front-then-back.
 type flashcardsScreen struct {
 	lib      *content.Library
+	deck     []*content.Card
 	index    int
 	revealed bool
+	// filter is the command id the deck is restricted to, empty for the whole
+	// library. It is set by a jump from the dictionary.
+	filter string
 }
 
-func newFlashcards(lib *content.Library) screen { return &flashcardsScreen{lib: lib} }
+func newFlashcards(lib *content.Library) screen {
+	return &flashcardsScreen{lib: lib, deck: lib.Cards}
+}
+
+// ShowCommand narrows the deck to the cards drilling one command. It reports
+// false when that command has no cards, so the caller can say so rather than
+// opening an empty deck.
+func (f *flashcardsScreen) ShowCommand(commandID string) bool {
+	cards := f.lib.CardsFor(commandID)
+	if len(cards) == 0 {
+		return false
+	}
+	f.deck, f.filter, f.index, f.revealed = cards, commandID, 0, false
+	return true
+}
+
+// clearFilter restores the full deck.
+func (f *flashcardsScreen) clearFilter() {
+	f.deck, f.filter, f.index, f.revealed = f.lib.Cards, "", 0, false
+}
 
 func (f *flashcardsScreen) Capturing() bool { return false }
 
 func (f *flashcardsScreen) Help() []key.Binding {
-	return []key.Binding{Keys.Choose, Keys.Left, Keys.Right, Keys.Back, Keys.Help, Keys.Quit}
+	b := []key.Binding{Keys.Choose, Keys.Left, Keys.Right, Keys.Back, Keys.Help, Keys.Quit}
+	if f.filter != "" {
+		b = append([]key.Binding{Keys.Pop}, b...)
+	}
+	return b
+}
+
+// deckLine is the header above a card: where you are in the deck, what kind of
+// card it is, and which commands it drills.
+func (f *flashcardsScreen) deckLine(c *content.Card) string {
+	scope := "all cards"
+	if f.filter != "" {
+		scope = "filtered to " + f.filter
+	}
+	return fmt.Sprintf("card %d/%d · %s · %s · %s",
+		f.index+1, len(f.deck), scope, c.Type, strings.Join(c.Commands, ", "))
 }
 
 func (f *flashcardsScreen) Update(a *App, msg tea.Msg) (screen, tea.Cmd) {
 	km, ok := msg.(tea.KeyPressMsg)
-	if !ok || len(f.lib.Cards) == 0 {
+	if !ok || len(f.deck) == 0 {
 		return f, nil
 	}
 	switch {
 	case key.Matches(km, Keys.Choose):
 		f.revealed = !f.revealed
 	case key.Matches(km, Keys.Right), key.Matches(km, Keys.Down):
-		f.index = (f.index + 1) % len(f.lib.Cards)
+		f.index = (f.index + 1) % len(f.deck)
 		f.revealed = false
 	case key.Matches(km, Keys.Left), key.Matches(km, Keys.Up):
-		f.index = (f.index - 1 + len(f.lib.Cards)) % len(f.lib.Cards)
+		f.index = (f.index - 1 + len(f.deck)) % len(f.deck)
 		f.revealed = false
+	case key.Matches(km, Keys.Pop):
+		if f.filter != "" {
+			f.clearFilter()
+			return f, flash("showing the whole deck again")
+		}
 	}
 	return f, nil
 }
 
 func (f *flashcardsScreen) Body(a *App, width, height int) string {
 	t := a.Theme
-	if len(f.lib.Cards) == 0 {
+	if len(f.deck) == 0 {
 		return "\n  " + t.Dim.Render("No cards loaded.")
 	}
-	c := f.lib.Cards[f.index]
+	c := f.deck[f.index]
 
 	back := t.Faint.Render("enter to reveal")
 	if f.revealed {
@@ -64,8 +107,7 @@ func (f *flashcardsScreen) Body(a *App, width, height int) string {
 	}
 
 	card := strings.Join([]string{
-		t.Faint.Render(fmt.Sprintf("card %d/%d · %s · %s",
-			f.index+1, len(f.lib.Cards), c.Type, strings.Join(c.Commands, ", "))),
+		t.Faint.Render(f.deckLine(c)),
 		"",
 		wrap(c.Front, width-12),
 		"",

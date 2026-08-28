@@ -1,0 +1,18 @@
+id: rev
+name: rev
+category: text
+summary: Reverse the characters of every line.
+purpose: >
+  Small and strange, but it turns a hard problem into an easy one: to work
+  from the end of a line with tools that only work from the start, reverse
+  it, act, and reverse it back.
+synopsis: rev [FILE]...
+examples:
+  - cmd: echo 'a.b.c.txt' | rev | cut -d. -f1 | rev
+    caption: Get the last dot-separated field, which cut cannot address directly.
+  - cmd: rev names.txt
+    caption: Each line, backwards.
+plays_well_with: [cut, tac, tr, awk]
+gotchas:
+  - rev reverses characters within each line; tac reverses the order of the lines. They are easy to confuse.
+see_also: [tac, cut, tr]

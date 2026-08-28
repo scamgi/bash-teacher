@@ -1,0 +1,28 @@
+id: umask
+name: umask
+category: permissions
+summary: Set the default permissions for new files.
+purpose: >
+  A mask of bits to remove from every file you create. It explains why a
+  fresh file is 644 rather than 666, and why that is not something chmod
+  did.
+synopsis: umask [MASK]
+flags:
+  - flag: 022
+    gloss: "The common default: remove write permission for group and others."
+  - flag: 077
+    gloss: "Private by default: nobody but the owner gets anything."
+  - flag: "-S"
+    gloss: Print the mask symbolically instead of in octal.
+examples:
+  - cmd: umask
+    caption: Print the current mask.
+  - cmd: umask 077
+    caption: Everything created from here on is owner-only — worth setting before generating keys.
+  - cmd: umask -S
+    caption: The same value in the u=rwx,g=,o= form, which is easier to read.
+plays_well_with: [chmod, touch, mkdir]
+gotchas:
+  - umask subtracts permissions and can never add them, so a 000 mask still does not make files executable — the creating program decides that.
+  - It applies per process and is inherited by children, so setting it in one shell has no effect on another.
+see_also: [chmod, chown, mkdir]

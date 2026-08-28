@@ -1,0 +1,26 @@
+id: df
+name: df
+category: inspection
+summary: Report free space per filesystem.
+purpose: >
+  The whole-disk view, where du is the per-directory view. When something
+  says no space left, df tells you which filesystem is full.
+synopsis: df [-h] [-i] [PATH]
+flags:
+  - flag: "-h"
+    gloss: Human-readable sizes.
+  - flag: "-i"
+    gloss: Report inodes rather than bytes — how a disk fills up with room to spare.
+  - flag: "-T"
+    gloss: Show each filesystem's type.
+examples:
+  - cmd: df -h
+    caption: Every mounted filesystem, with a use percentage.
+  - cmd: df -h .
+    caption: Just the filesystem holding the current directory.
+  - cmd: df -i
+    caption: When df -h shows free space but writes still fail, the inodes are gone.
+plays_well_with: [du, sort, grep]
+gotchas:
+  - A filesystem can be at 100% for you while root still has its reserved 5%, so writes fail only for ordinary users.
+see_also: [du, stat]

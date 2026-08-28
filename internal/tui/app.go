@@ -73,6 +73,39 @@ func Navigate(to Screen) tea.Cmd {
 	return func() tea.Msg { return navigateMsg{to: to} }
 }
 
+// openExerciseMsg asks Practice to switch to a particular exercise. Screens
+// address each other through the root model rather than holding references to
+// one another, so the routing stays in one place.
+type openExerciseMsg struct{ id string }
+
+// openExercise returns a command that opens an exercise in Practice.
+func openExercise(id string) tea.Cmd {
+	return func() tea.Msg { return openExerciseMsg{id: id} }
+}
+
+// showCardsMsg asks Flashcards to show only one command's cards.
+type showCardsMsg struct{ commandID string }
+
+// showCards returns a command that filters the deck to one command.
+func showCards(commandID string) tea.Cmd {
+	return func() tea.Msg { return showCardsMsg{commandID: commandID} }
+}
+
+// flashMsg carries a transient line for the footer: what a key just did, or
+// why it did nothing.
+type flashMsg struct{ text string }
+
+// flash returns a command that shows a transient footer message.
+func flash(text string) tea.Cmd {
+	return func() tea.Msg { return flashMsg{text: text} }
+}
+
+// exerciseOpener is implemented by the Practice screen.
+type exerciseOpener interface{ OpenExercise(id string) bool }
+
+// cardFilterer is implemented by the Flashcards screen.
+type cardFilterer interface{ ShowCommand(commandID string) bool }
+
 // App is the root model.
 type App struct {
 	Lib     *content.Library
@@ -85,6 +118,8 @@ type App struct {
 	help          help.Model
 	showHelp      bool
 	quitting      bool
+	// flash is a transient footer message, cleared by the next keystroke.
+	flash string
 }
 
 // New builds the root model with every screen constructed up front, so that
@@ -128,7 +163,23 @@ func (a *App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case navigateMsg:
 		a.current = msg.to
 		return a, nil
+	case openExerciseMsg:
+		if p, ok := a.screens[ScreenPractice].(exerciseOpener); ok && p.OpenExercise(msg.id) {
+			a.current = ScreenPractice
+		}
+		return a, nil
+	case showCardsMsg:
+		if f, ok := a.screens[ScreenFlashcards].(cardFilterer); ok && f.ShowCommand(msg.commandID) {
+			a.current = ScreenFlashcards
+		}
+		return a, nil
+	case flashMsg:
+		a.flash = msg.text
+		return a, nil
 	case tea.KeyPressMsg:
+		// Any keystroke clears the previous flash, so a message never lingers
+		// past the action that produced it.
+		a.flash = ""
 		if cmd, handled := a.handleGlobalKey(msg); handled {
 			return a, cmd
 		}
@@ -253,12 +304,15 @@ func (a *App) header() string {
 }
 
 func (a *App) footer() string {
+	rule := a.Theme.Faint.Render(strings.Repeat("─", a.width))
+	if a.flash != "" {
+		return rule + "\n" + truncate(a.Theme.Warn.Render(a.flash), a.width)
+	}
 	bindings := a.screens[a.current].Help()
 	if len(bindings) == 0 {
 		bindings = Keys.ShortHelp()
 	}
-	return a.Theme.Faint.Render(strings.Repeat("─", a.width)) + "\n" +
-		a.help.ShortHelpView(bindings)
+	return rule + "\n" + truncate(a.help.ShortHelpView(bindings), a.width)
 }
 
 func (a *App) tooSmall() string {

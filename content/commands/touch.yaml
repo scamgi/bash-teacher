@@ -1,0 +1,28 @@
+id: touch
+name: touch
+category: navigation
+summary: Create an empty file or update its timestamps.
+purpose: >
+  Two jobs in one command: make a file that does not exist, and update the
+  modification time of one that does. Build systems care about the second.
+synopsis: touch [-a] [-m] [-c] [-d DATE] FILE...
+flags:
+  - flag: "-a"
+    gloss: Change only the access time.
+  - flag: "-m"
+    gloss: Change only the modification time.
+  - flag: "-c"
+    gloss: Do not create the file if it is missing.
+  - flag: "-d DATE"
+    gloss: Use this time instead of now, e.g. -d '2 hours ago'.
+  - flag: "-r FILE"
+    gloss: Copy the timestamps from another file.
+examples:
+  - cmd: touch .keep
+    caption: Create an empty file, the usual trick for committing an otherwise empty directory.
+  - cmd: touch -d '2 days ago' old.log
+    caption: Backdate a file, which is how you test anything that filters on -mtime.
+plays_well_with: [find, ls, mkdir]
+gotchas:
+  - "touch on an existing file does not truncate it — it only moves the clock. Use `: > file` to empty one."
+see_also: [find, stat, mkdir]

@@ -51,6 +51,20 @@ func (p *practiceScreen) moveToExercise(dir int) {
 	}
 }
 
+// OpenExercise moves the cursor to a given exercise, so that a jump from the
+// dictionary lands on the task rather than at the top of the list. It reports
+// false when the id is unknown, in which case the root model does not switch
+// screens.
+func (p *practiceScreen) OpenExercise(id string) bool {
+	for i, r := range p.rows {
+		if r.ex != nil && r.ex.ID == id {
+			p.cursor = i
+			return true
+		}
+	}
+	return false
+}
+
 func (p *practiceScreen) Capturing() bool { return false }
 
 func (p *practiceScreen) Help() []key.Binding {
