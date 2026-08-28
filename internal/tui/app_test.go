@@ -8,6 +8,7 @@ import (
 
 	embedded "bash-teacher/content"
 	"bash-teacher/internal/content"
+	"bash-teacher/internal/runner"
 	"bash-teacher/internal/theme"
 )
 
@@ -19,7 +20,7 @@ func newTestApp(t *testing.T, w, h int) *App {
 	if err != nil {
 		t.Fatalf("load content: %v", err)
 	}
-	a := New(lib, theme.Resolve(theme.None), "test", ScreenHome)
+	a := New(lib, theme.Resolve(theme.None), runner.New(lib), "test", ScreenHome)
 	a.Update(tea.WindowSizeMsg{Width: w, Height: h})
 	return a
 }
@@ -85,6 +86,35 @@ func TestHomeRendersLibraryCounts(t *testing.T) {
 		if !strings.Contains(v, want) {
 			t.Errorf("home view is missing %q\n%s", want, v)
 		}
+	}
+}
+
+// TestHomeReportsSandboxBackend covers the notice SPEC §6.2 requires: Home
+// always says how much confinement a run will get, and says so with a glyph
+// and not only with colour when there is none.
+func TestHomeReportsSandboxBackend(t *testing.T) {
+	lib, err := content.Load(embedded.FS)
+	if err != nil {
+		t.Fatalf("load content: %v", err)
+	}
+	cases := []struct {
+		name string
+		run  *runner.Runner
+		want string
+	}{
+		{"confined", runner.New(lib), runner.DetectSandbox().Describe()},
+		{"no OS sandbox", runner.New(lib, runner.WithSandbox(runner.BareSandbox())),
+			"⚠ Running without an OS sandbox"},
+		{"execution disabled", runner.New(lib, runner.WithNoExec(true)), "⚠ --no-exec"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := New(lib, theme.Resolve(theme.None), tc.run, "test", ScreenHome)
+			a.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+			if got := view(a); !strings.Contains(got, tc.want) {
+				t.Errorf("Home does not mention %q:\n%s", tc.want, got)
+			}
+		})
 	}
 }
 

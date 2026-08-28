@@ -17,8 +17,9 @@ type practiceRow struct {
 }
 
 // practiceScreen lists the exercise library by track and shows the task for the
-// selected exercise. The pipeline editor and the sandboxed runner arrive with
-// M3 and M4; until then this screen is the exercise browser.
+// selected exercise. The sandboxed runner behind it is built (M3); the pipeline
+// editor that feeds it arrives with M4, so for now this screen is the exercise
+// browser.
 type practiceScreen struct {
 	lib    *content.Library
 	rows   []practiceRow
@@ -130,7 +131,7 @@ func (p *practiceScreen) detail(a *App, e *content.Exercise, width int) string {
 		"",
 		t.Faint.Render("fixture ") + t.Code.Render(e.Fixture) +
 			t.Faint.Render("   teaches ") + t.Body.Render(strings.Join(e.Teaches, ", ")),
-		t.Warn.Render("The pipeline editor and sandboxed runner arrive in M3–M4."),
+		t.Warn.Render("The pipeline editor arrives in M4; the sandbox that will run it is ready."),
 	}, "\n")
 	return indent(t.Panel.Width(width).Render(body), 2)
 }

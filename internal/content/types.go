@@ -2,6 +2,11 @@
 // the loader and linter that turn the embedded YAML into validated Go values.
 package content
 
+import (
+	"fmt"
+	"io/fs"
+)
+
 // Category groups commands in the dictionary. The order of the slice below is
 // the order categories are presented in the UI.
 type Category string
@@ -151,6 +156,27 @@ type Library struct {
 	byCommandID  map[string]*Command
 	byExerciseID map[string]*Exercise
 	byCardID     map[string]*Card
+
+	// src is the tree the library was loaded from. It is kept so that the
+	// runner can read fixtures and expected outputs without being handed the
+	// same filesystem a second time and risking a mismatch with the content
+	// that was actually validated.
+	src Source
+}
+
+// Files returns the content tree the library was loaded from.
+func (l *Library) Files() fs.FS { return l.src }
+
+// ExpectedOutput reads the expected stdout for an exercise.
+func (l *Library) ExpectedOutput(e *Exercise) (string, error) {
+	if e.ExpectedStdoutFile == "" {
+		return "", fmt.Errorf("exercise %s has no expected_stdout_file", e.ID)
+	}
+	data, err := fs.ReadFile(l.src, e.ExpectedStdoutFile)
+	if err != nil {
+		return "", fmt.Errorf("exercise %s: %w", e.ID, err)
+	}
+	return string(data), nil
 }
 
 // Command returns the dictionary entry with the given id, if any.

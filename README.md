@@ -8,7 +8,7 @@ See [SPEC.md](SPEC.md) for the full design.
 
 ## Status
 
-**M1 (skeleton) and M2 (dictionary) are done.**
+**M1 (skeleton), M2 (dictionary) and M3 (runner) are done.**
 
 - Bubble Tea v2 shell with screen routing, Catppuccin theming across all four
   flavours, a global key map, a help overlay, and a minimum-size fallback.
@@ -18,9 +18,15 @@ See [SPEC.md](SPEC.md) for the full design.
   worked examples, and gotchas, and actionable cross-references — jump to a
   related command, copy an example, open an exercise, or drill the cards.
 - An exercise browser, a deck walk over the flashcards, and a coverage view.
+- A sandboxed runner: a shell parser that refuses what it cannot reason about, a
+  static allowlist derived from the dictionary, throwaway fixture copies, OS-level
+  confinement (`bubblewrap` on Linux, `sandbox-exec` on macOS, and an honest
+  unconfined fallback that says so), resource limits, and output diffing in four
+  match modes. `bt doctor` reports which backend you get; `--no-exec` turns
+  execution off entirely.
 
-Still to come: the sandboxed runner (M3), the pipeline editor and grading (M4),
-FSRS-lite scheduling and the progress store (M5).
+Still to come: the pipeline editor and grading (M4), FSRS-lite scheduling and the
+progress store (M5), stats and packaging (M6).
 
 ### Dictionary keys
 

@@ -8,8 +8,9 @@ A Go TUI that teaches Unix commands and pipeline composition, through three surf
 sharing one content library: a Dictionary, sandbox-executed Pipeline Exercises, and
 Flashcards. **`SPEC.md` is the design source of truth** — read it before adding a
 feature, and update it when a decision changes. It defines six milestones (M1–M6);
-M1 (skeleton) and M2 (dictionary) are complete, and the runner, editor, scheduler, and
-store are not built yet. Screens carry visible in-app notes saying which milestone fills them in.
+M1 (skeleton), M2 (dictionary) and M3 (runner) are complete; the exercise editor,
+scheduler and store are not built yet. Screens carry visible in-app notes saying which
+milestone fills them in.
 
 ## Commands
 
@@ -23,6 +24,10 @@ make test       # go test ./...
 ```
 
 Single test: `go test ./internal/tui -run TestNumberKeysNavigate -v`
+
+The adversarial corpus is the M3 exit criterion and the thing to run after touching the
+runner: `go test ./internal/runner -run Adversarial -v`. `bt doctor` reports which sandbox
+backend this machine gets.
 
 Dump rendered frames to eyeball layout without a terminal:
 `BT_DUMP=1 go test ./internal/tui -run DumpFrames -v`
@@ -126,6 +131,40 @@ expected stdout.
 - Commands in the `network` category are documented but **never executable**; `Library.Allowlist()`
   excludes them, and a test asserts it. The M3 sandbox depends on this.
 
+### The runner (`internal/shellparse`, `internal/runner`)
+
+Learner input is executed through five independent layers, and SPEC.md §6 is the
+contract. Each layer is meant to hold on its own; do not weaken one on the grounds that
+another covers it.
+
+- **`internal/shellparse`** is a parser, not a shell. It handles words, quoting, pipes,
+  redirections and `;`/`&&`/`||`, and returns a positioned `*shellparse.Error` for
+  everything else — subshells, command groups, `&`, `$(...)`, backticks, `<(...)`. A
+  parse failure is a safety feature: the constructs it cannot represent are the ones the
+  sandbox should not run. `Error.Caret()` renders the input with a caret under the fault.
+- **`runner.Policy`** is the static allowlist, **derived from the dictionary** —
+  `CanExecute()` plus the four builtins in `runner.Builtins`. `TestAllowlistIsDerivedFromTheDictionary`
+  fails if anything is added by hand, and `TestDangerousListDoesNotContradictTheDictionary`
+  fails if the hard-refusal list and the dictionary disagree. Path rules are subtle on
+  purpose: escape is decided by `path.Clean`, so `sed 's/../X/'` passes and
+  `cat ../../etc/passwd` does not; `/dev/null` and friends are exempt from the
+  absolute-path rule, and a bare `/` is a separator only after a delimiter flag or for
+  `tr`. `Check` returns **every** violation, like the content linter.
+- **Fixtures** are copied into `os.MkdirTemp` per run and removed by a deferred `Close`,
+  so exercises may mutate them freely. The path is resolved through symlinks because the
+  macOS profile matches real paths.
+- **`runner.Sandbox`** has three implementations picked once by `DetectSandbox`. Two
+  hard-won details: the seatbelt profile must allow reading `(literal "/")` or dyld
+  aborts every process before `main` with no diagnostic, and `ulimit -u` is applied only
+  under `bwrap`, since `RLIMIT_NPROC` counts per user id and would otherwise stop the
+  sandbox forking at all.
+- **Limits** are a `ulimit` prelude prepended to the script, which is why `ulimit` is
+  itself refused. The learner's text is handed to `sh -c` verbatim rather than
+  reassembled from the parse tree, so that what runs is exactly what was checked.
+
+`runner.Compare` implements the four match modes; `Diff.String()` renders the two-column
+block with the column caret.
+
 ### Testing style
 
 The TUI is verified almost entirely through headless `View()` assertions. `internal/tui/app_test.go`
@@ -135,8 +174,12 @@ never exceeds its width — keep new screens passing it.
 
 ## Security note
 
-M3 introduces `internal/runner`, which executes learner-typed shell text. SPEC.md §6 specifies the
-required layers: AST parse, a static allowlist derived from the dictionary, fixture materialization
-into a temp dir, OS-level confinement (`bubblewrap` on Linux, `sandbox-exec` on macOS), rlimits and a
-3 s timeout, then unconditional teardown. `gosec` is enabled in the linter for this reason. Do not
-weaken any layer, and do not add a command to the allowlist by hand — it derives from the dictionary.
+`internal/runner` executes learner-typed shell text. `gosec` is enabled in the linter for this
+reason. Do not weaken any layer, and do not add a command to the allowlist by hand — it derives
+from the dictionary.
+
+`internal/runner/adversarial_test.go` holds the fixed corpus from SPEC.md §10. Every case is
+tagged with how it is expected to be stopped: `refusedStatically` cases are asserted against the
+**bare** backend, so they prove the static layers hold with no OS confinement at all;
+`boundedByLimits` cases must start but never finish; `blockedByOS` cases are skipped where no
+backend confines. Adding a case is cheap. Removing one needs a reason written down.

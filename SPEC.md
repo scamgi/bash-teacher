@@ -301,16 +301,36 @@ never be able to touch the real filesystem, the network, or long-running resourc
 2. **Static check** — reject before execution if the AST contains:
    - any command not on the **allowlist** (the set of commands in the dictionary, plus
      shell builtins `echo`, `printf`, `test`, `[`),
-   - absolute paths outside the fixture root, or `..` escaping it,
-   - `sudo`, `su`, `chmod +s`, `mount`, background jobs (`&`), `exec`,
+   - absolute paths outside the fixture root, or `..` escaping it. "Escaping" is decided
+     by cleaning the path, not by looking for `..` in the text, so `cat ../../etc/passwd`
+     is refused while `sed 's/../X/'` — where `..` is a regex — is not. A short list of
+     device paths (`/dev/null`, `/dev/stdout`, `/dev/stderr`, `/dev/zero`, `/dev/tty`,
+     `/dev/random`, `/dev/urandom`, `/dev/stdin`) is exempt, because `2>/dev/null` is a
+     core idiom the dictionary teaches; `/dev/full` is deliberately not on it.
+   - a bare `/`, unless it follows a delimiter option (`-d`, `-t`, `-F`, …) or is an
+     operand of `tr`, where it is a separator rather than the root directory,
+   - `~` anywhere in an argument, since it expands outside the fixture,
+   - variable assignment prefixes (`PATH=. cmd`): the sandbox environment is fixed,
+   - `sudo`, `su`, `chmod +s`, `mount`, background jobs (`&`), `exec`, `eval`, `source`,
+     `trap`, `ulimit`, `chroot`,
    - network-capable commands (`curl`, `wget`, `nc`, `ssh`) — these are teachable in the
      dictionary but never executable,
    - command substitution or `eval` in v1 (revisit once the parser is proven).
+
+   Constructs the parser cannot represent — subshells, command groups, function
+   definitions, process substitution, background jobs — are refused one step earlier, at
+   parse time, with the offending character named. Every check reports **all** the
+   problems it finds, the way the content linter does, rather than the first.
 3. **Materialize** the fixture into a fresh temp dir (`os.MkdirTemp`).
 4. **Execute** under OS-level confinement (§6.2) with `sh -c`, `cwd` at the fixture root,
    a scrubbed environment (`PATH`, `HOME`, `LANG=C`, `TZ=UTC` only), stdin `/dev/null`.
-5. **Limit**: 3 s wall clock (SIGKILL on expiry), 256 MB address space, 64 processes,
-   1 MB captured stdout and stderr each (truncate with a notice), no core dumps.
+5. **Limit**: 3 s wall clock (SIGKILL to the whole process group on expiry), 5 s CPU,
+   256 MB address space, 4 MB per written file, 1 MB captured stdout and stderr each
+   (truncate with a notice), no core dumps. The limits are applied as a `ulimit` prelude
+   prepended to the script, which is why `ulimit` itself is on the refusal list. The
+   64-process cap is applied **only under `bwrap`**: `RLIMIT_NPROC` is accounted per real
+   user id rather than per process tree, so outside a fresh user namespace it would count
+   every process the learner already has running and stop the sandbox forking at all.
 6. **Compare** stdout to the expected output per the exercise's `match` mode.
 7. **Tear down** the temp dir unconditionally, including on panic.
 
@@ -321,11 +341,18 @@ never be able to touch the real filesystem, the network, or long-running resourc
   Fall back to `unshare -Urnm` when `bwrap` is missing.
 - **macOS:** `sandbox-exec` with a generated profile denying all by default, allowing
   `process-exec` and read on system paths, read/write only under the temp fixture root,
-  and denying `network*`.
-- **Neither available:** the static allowlist plus rlimits still apply, and the app shows
-  a one-time banner: *"Running without OS sandbox — exercises execute with your normal
-  user permissions."* A `--no-exec` mode disables execution entirely and falls back to
-  answer matching for users who want zero execution.
+  and denying `network*`. The profile must also allow reading the root directory
+  (`(literal "/")`) and must be given the fixture path with symlinks resolved: without
+  the former dyld aborts every process before `main` with no diagnostic, and without the
+  latter nothing under `/var` — where macOS puts temp directories — matches.
+- **Neither available:** the static allowlist plus rlimits still apply, and Home carries a
+  standing line: *"⚠ Running without an OS sandbox — exercises execute with your normal
+  user permissions."* This replaces the one-time banner originally specified: there is
+  nowhere to record "already seen" until the store lands in M6, and a line that is always
+  present is harder to miss than a banner that shows once. When confinement *is* active
+  the same line names the backend instead, so the question is always answered. A
+  `--no-exec` mode disables execution entirely and falls back to answer matching for
+  users who want zero execution.
 
 The confinement layer is an interface (`runner.Sandbox`) with `bwrap`, `sandboxExec`, and
 `bare` implementations selected once at startup and reported in `bt doctor`.
@@ -417,7 +444,7 @@ rebuilt.
 | --- | --- | --- |
 | **M1 — Skeleton** ✅ | Bubble Tea v2 shell, Home, screen routing, theme, content loader + linter | `bt` runs, navigates, loads content |
 | **M2 — Dictionary** ✅ | Full dictionary UI, fuzzy search, 80 command entries | Every command entry passes lint and renders |
-| **M3 — Runner** | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
+| **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
 | **M6 — Polish** | Stats, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |

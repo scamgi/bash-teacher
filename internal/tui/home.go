@@ -76,7 +76,28 @@ func (h *homeScreen) Body(a *App, width, height int) string {
 
 	b.WriteString("\n")
 	b.WriteString(h.summary(a, width))
+	b.WriteString("\n\n  " + truncate(sandboxNotice(a), width-2))
 	return b.String()
+}
+
+// sandboxNotice states how much confinement exercises will get. SPEC §6.2
+// asks for a one-time banner when there is none; this line is shown on Home
+// every time instead, because there is nowhere to record "already seen" until
+// the store lands, and a standing line is harder to miss than a banner that
+// shows once. Colour is never the only signal: the unconfined cases carry a
+// ⚠ as well.
+func sandboxNotice(a *App) string {
+	t := a.Theme
+	if a.Runner == nil {
+		return t.Faint.Render("sandbox   not configured")
+	}
+	switch {
+	case a.Runner.NoExec():
+		return t.Warn.Render("⚠ --no-exec: pipelines are checked but never executed.")
+	case !a.Runner.Sandbox().Confines():
+		return t.Warn.Render("⚠ Running without an OS sandbox — exercises execute with your normal user permissions.")
+	}
+	return t.Faint.Render("sandbox   ") + t.Dim.Render(a.Runner.Sandbox().Describe())
 }
 
 // summary shows today's load beside what the loaded library contains. The

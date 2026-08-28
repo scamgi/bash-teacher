@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"bash-teacher/internal/content"
+	"bash-teacher/internal/runner"
 	"bash-teacher/internal/theme"
 
 	"charm.land/bubbles/v2/help"
@@ -108,8 +109,11 @@ type cardFilterer interface{ ShowCommand(commandID string) bool }
 
 // App is the root model.
 type App struct {
-	Lib     *content.Library
-	Theme   *theme.Theme
+	Lib   *content.Library
+	Theme *theme.Theme
+	// Runner executes learner input. It may be nil in tests that never run
+	// anything; screens must check before using it.
+	Runner  *runner.Runner
 	Version string
 
 	width, height int
@@ -124,7 +128,7 @@ type App struct {
 
 // New builds the root model with every screen constructed up front, so that
 // switching screens is free and each keeps its own cursor position.
-func New(lib *content.Library, th *theme.Theme, version string, start Screen) *App {
+func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version string, start Screen) *App {
 	h := help.New()
 	h.Styles = help.DefaultStyles(th.IsDark())
 	h.Styles.ShortKey = th.Key
@@ -137,6 +141,7 @@ func New(lib *content.Library, th *theme.Theme, version string, start Screen) *A
 	a := &App{
 		Lib:     lib,
 		Theme:   th,
+		Runner:  run,
 		Version: version,
 		current: start,
 		help:    h,

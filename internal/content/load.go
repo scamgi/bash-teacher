@@ -19,6 +19,7 @@ type Source fs.FS
 // carrying every problem found, so authors see all of them at once.
 func Load(src Source) (*Library, error) {
 	lib := &Library{
+		src:          src,
 		byCommandID:  map[string]*Command{},
 		byExerciseID: map[string]*Exercise{},
 		byCardID:     map[string]*Card{},
