@@ -43,9 +43,13 @@ See [SPEC.md](SPEC.md) for the full design.
   timer. A missing file is fine; a file with a typo in it is refused with the whole
   list of what is wrong, and `bt doctor` reads it back to you.
 
+- Export and import: `bt export > backup.json` dumps your progress as JSON, and
+  `bt import backup.json` restores it on another machine. It is a restore and not a
+  merge, so a database that already holds progress is refused unless you pass
+  `--force`, and the refusal tells you what it would have replaced.
+
 Still to come (M6): the historical half of Stats and the per-command mastery grid,
-keybinding remapping, `bt export` / `bt import`, and packaging. Track unlocking is
-shown rather than enforced.
+keybinding remapping, and packaging. Track unlocking is shown rather than enforced.
 
 ### Practice keys
 
@@ -96,6 +100,9 @@ bt review           launch straight into the flashcards
 bt dict [COMMAND]   print a dictionary entry, or list every entry
 bt stats            print a library summary
 bt doctor           report environment, data paths, content health
+bt export           dump your progress to stdout as JSON
+bt import [FILE]    restore progress from a dump, or from stdin; --force is
+                    required to replace progress you already have
 bt content lint     validate the content library
 bt content expected re-run every reference solution and check the expected
                     outputs; --write regenerates them

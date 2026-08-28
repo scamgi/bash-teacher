@@ -475,8 +475,30 @@ bt doctor               report sandbox backend, data dir, content version
 bt content lint         validate the content library (used in CI)
 bt content expected     re-run every reference solution and check the expected
                         outputs; --write regenerates them
-bt export / bt import   dump/restore progress as JSON
+bt export               dump progress to stdout as JSON
+bt import [file]        restore progress from a JSON dump, or from stdin;
+                        --force is required to replace progress already stored
 ```
+
+`bt export` writes to stdout and takes no file operand: `bt export > backup.json` already
+says where the dump goes, and a command that opened the file itself would owe an answer
+about overwriting one already there. `bt import` reads a named file or stdin, and it is a
+restore rather than a merge — the database afterwards holds what the export found, which
+is the only reading under which a backup means anything. Because that discards whatever
+was there, a database that already holds progress is refused unless `--force` says
+otherwise, and the refusal names what would have been lost. The archive is read and
+checked in full before the database is touched, and the replacement is one transaction, so
+neither a file that is not an export nor a write that fails halfway can leave a learner
+with half a history.
+
+The JSON mirrors the schema of §8 column for column — Unix seconds with 0 for "never",
+durations in milliseconds — which makes the round trip lossless by construction and
+versions the archive by the schema it came from. An archive from an older schema restores
+with the columns it predates left at zero, exactly as the migration that added them would
+have; one from a newer schema is refused, like a database file from the future. Ids that
+this build's content library has no entry for are reported as a warning rather than
+refused: nothing ever shows a card that does not exist, and rejecting the file over a
+renamed id would throw away the history of everything that still does.
 
 Settings live in the TOML file described in §8.1; `bt doctor` prints its path, whether it
 was read, and anything wrong with it. There is no `bt config` command: a file the learner
@@ -574,14 +596,15 @@ a screen that is capturing text, and that validation is a change of its own.
 | **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** ✅ | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** ✅ | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
-| **M6 — Polish** | Progress store ✅, stats, config file ✅, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
+| **M6 — Polish** | Progress store ✅, stats, config file ✅, export/import ✅, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
 
 M6 is in progress. The progress store is built (`internal/store`): the scheduler and the
 practice library are restored at startup and written through as the learner works, so
 `bt` now remembers. The settings file is built (`internal/config`, §8.1), so the theme,
 the daily caps, the retention target, the session size and the answer timer are the
-learner's to set. Still open: the historical half of Stats and the mastery grid,
-keybinding remapping, `bt export`/`bt import`, and packaging. Light-theme detection is
+learner's to set. `bt export` and `bt import` are built (§7.3), so progress survives a
+machine. Still open: the historical half of Stats and the mastery grid, keybinding
+remapping, and packaging. Light-theme detection is
 in place — Latte ships and `theme.Resolve` reads `COLORFGBG` before querying the
 terminal's background — so what is left there is confirming it on real terminals.
 
@@ -614,7 +637,14 @@ terminal's background — so what is left there is confirming it on real termina
   solves an exercise in one process and finds both waiting in the next. The round trip
   goes through the key flow rather than the store's API, because what has to survive is
   what the screens actually record. One test forges a `user_version` from the future and
-  asserts the file is refused.
+  asserts the file is refused. `bt export` and `bt import` are tested through the same
+  key flow: a filled database is dumped, restored into a second one, and compared against
+  what the store's own loaders return, since what has to survive is the state the screens
+  read rather than the shape of the file in between. The rest of the table covers what
+  must be refused — an archive from a newer schema, a file that is not an export, a key
+  nothing recognises, a database that would be clobbered without `--force` — and one case
+  plants a duplicate primary key past the validator to prove that a failed import leaves
+  the existing history untouched.
 - **Answer normalization:** table-driven equivalence tests, including the cases that must
   *not* be treated as equivalent (`-rn` vs `-r -n` is fine; `-i` vs `-I` is not).
 

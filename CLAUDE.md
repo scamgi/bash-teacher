@@ -11,8 +11,9 @@ feature, and update it when a decision changes. It defines six milestones (M1–
 M1 (skeleton), M2 (dictionary), M3 (runner), M4 (practice) and M5 (flashcards) are
 complete, and M6 is under way: the progress store is built, so a session now picks up
 where the last one stopped, and the settings file is built, so the learner sets the
-theme, the caps and the timer. The rest of M6 — the historical half of Stats, keybinding
-remapping, export/import, packaging — is still open.
+theme, the caps and the timer, and `bt export`/`bt import` are built, so progress moves
+between machines. The rest of M6 — the historical half of Stats, keybinding remapping,
+packaging — is still open.
 
 ## Commands
 
@@ -44,6 +45,7 @@ card's own answer would not be accepted from a learner.
 
 The store's own guard is `go test ./internal/tui -run Restart -v`: it answers a card and
 solves an exercise in one process and asserts both are there in the next.
+Export/import is covered by `go test ./internal/store -run 'Export|Import|Archive' -v`.
 
 Dump rendered frames to eyeball layout without a terminal:
 `BT_DUMP=1 go test ./internal/tui -run DumpFrames -v`
@@ -185,6 +187,37 @@ history, never their app.
 
 `internal/tui/progress.go` holds `store.Exercise` values directly rather than a parallel
 struct, so a save cannot drop a field the screen was relying on.
+
+### Export and import (`internal/store/transfer.go`)
+
+`bt export` dumps the four progress tables to stdout as JSON and `bt import` restores
+them; SPEC §7.3 is the contract. Three decisions carry the design:
+
+- **The archive mirrors the SQL schema**, column name for column name and unit for unit —
+  Unix seconds with 0 for "never", durations in milliseconds. That is what makes the round
+  trip lossless by construction rather than by care, and it versions the file by the
+  schema: an older archive restores with the columns it predates left at zero, exactly as
+  the migration that added them would have, and a newer one is refused with
+  `ErrNewerArchive`. Adding a migration therefore extends the format for free — but a
+  column renamed in a migration renames a JSON key, so **never rename an archive field
+  without a migration behind it**. `meta` is deliberately not carried: it describes an
+  installation, not a learner.
+- **Import replaces; it never merges.** `Restore` clears all four tables and writes the
+  archive inside one transaction, so a file that fails halfway leaves the old history
+  intact. A database that already holds progress is refused with `ErrNotEmpty` unless
+  `force`, and the error names the counts that would have been lost; `cmd/bt` is what adds
+  the "`bt import --force` replaces it" advice, so the store stays a library.
+- **`ReadArchive` checks the envelope permissively, then the rows strictly.** The two
+  passes exist so a file that is not an export at all is named as such rather than
+  reported through whichever key decoded badly; the strict pass then refuses unknown
+  fields, since the only writer of this format is `bt export`. Validation collects every
+  problem at once into an `*ArchiveError`, the same contract the content linter and the
+  settings file have, and it covers what would poison the scheduler — an invalid rating, an
+  unknown source, a non-finite stability — not merely what SQLite would reject.
+
+Ids the current content library has no entry for are a warning printed by `cmd/bt`, never
+a refusal: the store is content-free by design, and a renamed card is not a reason to
+throw away the history of every card that still exists.
 
 ### The settings file (`internal/config`)
 

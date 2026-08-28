@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 )
@@ -100,6 +101,23 @@ func (s *Store) Attempts(exerciseID string) ([]Attempt, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load attempts: %w", err)
 	}
+	return scanAttempts(rows)
+}
+
+// LoadAttempts reads the whole attempt log, oldest first. It is what `bt
+// export` dumps; the screens ask for one exercise at a time.
+func (s *Store) LoadAttempts() ([]Attempt, error) {
+	rows, err := s.db.Query(
+		`SELECT exercise_id, ts, input, passed, hints_used, ms
+		 FROM attempts ORDER BY ts, id`)
+	if err != nil {
+		return nil, fmt.Errorf("load attempts: %w", err)
+	}
+	return scanAttempts(rows)
+}
+
+// scanAttempts drains an attempt query and closes it.
+func scanAttempts(rows *sql.Rows) ([]Attempt, error) {
 	defer func() { _ = rows.Close() }()
 
 	var out []Attempt

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,6 +38,10 @@ usage:
   bt dict [COMMAND]     print a dictionary entry (or list every entry)
   bt stats              print a library summary
   bt doctor             report environment, data paths, and content health
+  bt export             write the progress database to stdout as JSON
+  bt import [FILE]      replace the progress database with a JSON export,
+                        reading stdin if no file is named; --force is required
+                        when there is already progress to replace
   bt content lint       validate the content library
   bt content expected   re-run every reference solution and check the expected
                         outputs; --write regenerates them
@@ -129,7 +134,7 @@ func run(args []string) error {
 	// progress, so `bt dict` stays a print-and-exit with no file to create.
 	var db *store.Store
 	switch cmd {
-	case "", "practice", "review", "stats", "doctor":
+	case "", "practice", "review", "stats", "doctor", "export", "import":
 		if !*noStore {
 			db, err = store.Open(progressPath())
 			if err != nil {
@@ -156,6 +161,10 @@ func run(args []string) error {
 		return statsCmd(library, db)
 	case "doctor":
 		return doctorCmd(library, th, run, db, configReport(cfgFound, cfgErr))
+	case "export":
+		return exportCmd(db, rest)
+	case "import":
+		return importCmd(library, db, rest)
 	default:
 		return fmt.Errorf("unknown command %q; run `bt help`", cmd)
 	}
@@ -444,6 +453,115 @@ func reviewStats(library *lib.Library, db *store.Store) error {
 	fmt.Printf("streak     %d days\n", sched.Streak(now))
 	fmt.Printf("progress   %s\n", db.Path())
 	return nil
+}
+
+// exportCmd dumps the progress database to stdout as JSON.
+//
+// There is no file operand on purpose: `bt export > backup.json` already says
+// where the dump goes, and a command that opened the file itself would owe the
+// learner an answer about overwriting one that was already there.
+func exportCmd(db *store.Store, args []string) error {
+	if len(args) > 0 {
+		return fmt.Errorf("bt export takes no arguments; redirect it: bt export > %s", args[0])
+	}
+	if db == nil {
+		return errors.New("nothing to export: --no-store was given")
+	}
+	archive, err := db.Snapshot("bash-teacher " + version)
+	if err != nil {
+		return err
+	}
+	return archive.Write(os.Stdout)
+}
+
+// importCmd replaces the progress database with a JSON export.
+//
+// The archive is read and checked in full before the database is touched, and
+// the replacement itself is one transaction, so the two ways this can go wrong
+// — a file that is not an export, and a write that fails halfway — both leave
+// the learner's history where it was.
+func importCmd(library *lib.Library, db *store.Store, args []string) error {
+	fl := flag.NewFlagSet("bt import", flag.ContinueOnError)
+	fl.SetOutput(os.Stderr)
+	force := fl.Bool("force", false, "replace progress that is already stored")
+	if err := fl.Parse(args); err != nil {
+		return err
+	}
+	rest := fl.Args()
+	if len(rest) > 1 {
+		return errors.New("bt import reads one file, or stdin")
+	}
+	if db == nil {
+		return errors.New("cannot import: --no-store was given")
+	}
+
+	src := io.Reader(os.Stdin)
+	if len(rest) == 1 && rest[0] != "-" {
+		f, err := os.Open(rest[0])
+		if err != nil {
+			return err
+		}
+		defer func() { _ = f.Close() }()
+		src = f
+	}
+	archive, err := store.ReadArchive(src)
+	if err != nil {
+		return err
+	}
+
+	written, err := db.Restore(archive, *force)
+	if err != nil {
+		if errors.Is(err, store.ErrNotEmpty) {
+			return fmt.Errorf("%w; `bt import --force` replaces it", err)
+		}
+		return err
+	}
+	fmt.Printf("imported %s into %s\n", written, db.Path())
+	if generator := archive.Generator; generator != "" {
+		fmt.Printf("exported by %s on %s\n", generator, archive.Exported.Format(time.RFC3339))
+	}
+	for _, line := range strayReport(library, archive) {
+		fmt.Println("warn  " + line)
+	}
+	return nil
+}
+
+// strayReport names the imported ids this build's content library has no entry
+// for, which is what an archive from a different content version looks like.
+// It is a warning and not a refusal: the ids are harmless — nothing ever shows
+// a card that does not exist — and refusing the whole file over them would
+// throw away the history of everything that does still exist.
+func strayReport(library *lib.Library, a *store.Archive) []string {
+	var out []string
+	stray := 0
+	var names []string
+	for _, c := range a.Cards {
+		if _, ok := library.Card(c.ID); !ok {
+			stray++
+			if len(names) < 3 {
+				names = append(names, c.ID)
+			}
+		}
+	}
+	if stray > 0 {
+		out = append(out, fmt.Sprintf("%d imported card(s) are not in this content library: %s",
+			stray, strings.Join(names, ", ")))
+	}
+
+	stray, names = 0, nil
+	for _, e := range a.Exercises {
+		if _, ok := library.Exercise(e.ID); !ok {
+			stray++
+			if len(names) < 3 {
+				names = append(names, e.ID)
+			}
+		}
+	}
+	if stray > 0 {
+		out = append(out, fmt.Sprintf("%d imported exercise(s) are not in this content library: %s",
+			stray, strings.Join(names, ", ")))
+	}
+	return out
 }
 
 func doctorCmd(library *lib.Library, th *theme.Theme, run *runner.Runner, db *store.Store, cfgReport string) error {
