@@ -1,0 +1,111 @@
+# golangci-lint configuration for bash-teacher.
+#
+# Schema v2 (golangci-lint 2.x). Run with `make lint-go`, or `golangci-lint run`.
+version: "2"
+
+run:
+  timeout: 5m
+  # Tests are part of the deliverable here — the TUI is verified almost entirely
+  # through headless View() assertions — so they are linted too.
+  tests: true
+
+linters:
+  # The standard set is errcheck, govet, ineffassign, staticcheck and unused.
+  default: standard
+  enable:
+    - errorlint      # %w and errors.As/Is used correctly, which the CLI relies on
+    - gocritic       # broad correctness and style diagnostics
+    - goconst        # repeated string literals that want to be constants
+    - gosec          # security rules; M3 executes learner input, so these matter
+    - misspell
+    - nilerr         # returning nil after a non-nil error
+    - predeclared    # shadowing len, cap, min, new...
+    - revive         # golint's successor: naming, exported docs, early returns
+    - unconvert      # redundant type conversions
+    - unparam        # unused function parameters and always-identical results
+    - wastedassign
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        # The screens deliberately use if/else chains that read as prose.
+        - ifElseChain
+      settings:
+        hugeParam:
+          # The default 80-byte threshold flags ordinary value types such as
+          # content.Command. Raised to catch only genuinely expensive copies —
+          # the Theme, which holds sixteen Lip Gloss styles, is passed by
+          # pointer for exactly this reason.
+          sizeThreshold: 1500
+    goconst:
+      min-len: 4
+      min-occurrences: 4
+      ignore-tests: true
+    gosec:
+      excludes:
+        # G304 (file inclusion via variable) fires on the content loader, which
+        # reads only from an embedded, lint-validated fs.FS. Revisit when the
+        # sandbox runner lands and starts touching real paths.
+        - G304
+    govet:
+      enable-all: true
+      disable:
+        # Struct field alignment is not worth the readability cost here.
+        - fieldalignment
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+        - name: package-comments
+        - name: indent-error-flow
+        - name: var-naming
+        - name: error-strings
+        - name: errorf
+        - name: unreachable-code
+        - name: redefines-builtin-id
+    staticcheck:
+      checks:
+        - all
+    unparam:
+      check-exported: false
+
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+    rules:
+      # Test helpers legitimately ignore errors and repeat literals.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+      # Screen constructors share a signature so the router can build them
+      # uniformly; some do not need the library they are handed yet.
+      - path: internal/tui/
+        linters:
+          - unparam
+        text: "always receives"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - bash-teacher
+
+issues:
+  # Report everything; the codebase is small enough to keep clean.
+  max-issues-per-linter: 0
+  max-same-issues: 0
