@@ -179,11 +179,20 @@ type App struct {
 	quitting      bool
 	// flash is a transient footer message, cleared by the next keystroke.
 	flash string
+	// timer reports whether the review screen shows how long an answer took.
+	// It defaults to on and is turned off by the settings file.
+	timer bool
 }
 
-// Option adjusts the root model as it is built. There is no configuration
-// object: the two or three things the CLI can preselect are better expressed
-// as named functions than as fields nobody else sets.
+// Timer reports whether the answer timer is shown. It never affects grading:
+// SPEC §2.3 makes the soft target a nudge, so the timer is a display setting
+// and nothing more.
+func (a *App) Timer() bool { return a.timer }
+
+// Option adjusts the root model as it is built. The settings file arrives
+// this way too, as values rather than as a *config.Config, so that the TUI
+// stays ignorant of the file format and a test can ask for one scheduler
+// parameter without writing TOML to say so.
 type Option func(*App)
 
 // WithTrack opens Practice on a given track, which is what `bt practice
@@ -200,6 +209,26 @@ func WithTrack(name string) Option {
 
 // trackOpener is implemented by the Practice screen.
 type trackOpener interface{ OpenTrack(name string) bool }
+
+// WithParams sets the scheduler's parameters, which is how the [review] table
+// of the settings file reaches the deck. It is order-independent among the
+// options: parameters are a preference, so nothing already restored is
+// re-derived from them.
+func WithParams(p srs.Params) Option {
+	return func(a *App) {
+		if a.SRS != nil {
+			a.SRS.SetParams(p)
+		}
+	}
+}
+
+// WithTimer turns the answer timer on or off. When it is off the review screen
+// says nothing about how long an answer took: the timer is a nudge toward
+// automaticity, and a learner who does not want to be timed should not be told
+// their time and then told it did not count.
+func WithTimer(on bool) Option {
+	return func(a *App) { a.timer = on }
+}
 
 // WithStore attaches the progress database and loads what it holds into the
 // scheduler and the practice screen.
@@ -274,6 +303,7 @@ func New(lib *content.Library, th *theme.Theme, run *runner.Runner, version stri
 		Grader:  answer.New(lib),
 		Version: version,
 		clock:   time.Now,
+		timer:   true,
 		current: start,
 		help:    h,
 		screens: map[Screen]screen{

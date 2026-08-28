@@ -10,8 +10,9 @@ Flashcards. **`SPEC.md` is the design source of truth** — read it before addin
 feature, and update it when a decision changes. It defines six milestones (M1–M6);
 M1 (skeleton), M2 (dictionary), M3 (runner), M4 (practice) and M5 (flashcards) are
 complete, and M6 is under way: the progress store is built, so a session now picks up
-where the last one stopped. The rest of M6 — the historical half of Stats, the config
-file, export/import, light-theme detection, packaging — is still open.
+where the last one stopped, and the settings file is built, so the learner sets the
+theme, the caps and the timer. The rest of M6 — the historical half of Stats, keybinding
+remapping, export/import, packaging — is still open.
 
 ## Commands
 
@@ -149,9 +150,11 @@ result that lands while the learner is reading a dictionary entry is not lost. T
 workspace divides its height from the bottom up — the editor and `minOutputLines` of
 output are reserved before the fixture preview gets what is left.
 
-Track locking is computed (`internal/tui/progress.go`, 80% per SPEC §2.2) and displayed,
-but not enforced: progress lives in memory until M6, so a hard gate would re-lock the
-library on every launch.
+Track locking is computed (`internal/tui/progress.go`, 80% per SPEC §2.2), displayed, and
+flashed on entry, but **not enforced** — `open` runs before the check, so a locked
+exercise opens anyway. The reason it was advisory (progress lived in memory, so a hard
+gate would have re-locked the library on every launch) expired with the store; whether it
+becomes a real gate is an open decision, not an oversight to quietly fix.
 
 ### The progress store (`internal/store`)
 
@@ -182,6 +185,30 @@ history, never their app.
 
 `internal/tui/progress.go` holds `store.Exercise` values directly rather than a parallel
 struct, so a save cannot drop a field the screen was relying on.
+
+### The settings file (`internal/config`)
+
+Optional TOML at `$XDG_CONFIG_HOME/bash-teacher/config.toml`, described in SPEC §8.1. The
+package is a leaf: `main.go` reads it and translates it into `srs.Params` and TUI options,
+so `internal/tui` never learns what a TOML file is and a test can ask for one scheduler
+parameter without writing a file to say so.
+
+- **A missing file is not an error; a broken one is.** `Load` decodes over `Defaults()`, so
+  an absent key keeps its default without every field being a pointer. Unknown keys
+  (`MetaData.Undecoded`) and out-of-range values are collected and returned together as
+  `*config.Error`, the same all-at-once contract the content linter has.
+- **`Defaults()` reads its review half out of `srs.Defaults()`**, and `Config.Params()`
+  starts from `srs.Defaults()` and overwrites only the exposed knobs — so a parameter the
+  model grows before the file does keeps its default instead of arriving as a zero.
+  `TestDefaultsAreTheSchedulerDefaults` pins that.
+- **`bt doctor` is exempt from the refusal.** Every other command exits with the problem
+  list; doctor starts on the defaults and prints it, because the command you reach for
+  when something is wrong has to run when something is wrong.
+- `--theme` wins over the file only when it was actually passed (`flagGiven`): its own
+  default of `auto` is not an override.
+- `srs.Scheduler.SetParams` exists so `tui.WithParams` is order-independent against
+  `tui.WithStore`. Parameters are a preference, not state: nothing already restored is
+  re-derived from them, and a card keeps the due date its own review earned it.
 
 ### The scheduler (`internal/srs`)
 

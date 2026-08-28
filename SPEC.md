@@ -192,6 +192,7 @@ internal/runner/          sandboxed execution, fixture materialization, diffing
 internal/srs/             scheduler (FSRS-lite), review log
 internal/answer/          answer normalization and grading for typed flashcards
 internal/store/           SQLite persistence (progress, review log, settings)
+internal/config/          the optional TOML settings file
 internal/shellparse/      pipeline tokenizer/AST used for safety checks and hints
 internal/theme/           Catppuccin palettes and the shared Lip Gloss styles
 content/                  the library itself (YAML + fixtures), embedded
@@ -477,6 +478,11 @@ bt content expected     re-run every reference solution and check the expected
 bt export / bt import   dump/restore progress as JSON
 ```
 
+Settings live in the TOML file described in §8.1; `bt doctor` prints its path, whether it
+was read, and anything wrong with it. There is no `bt config` command: a file the learner
+edits by hand is documented by `bt doctor` reading it back, not by a second way to write
+it.
+
 `--no-store` runs against no database at all: nothing is read at startup and nothing is
 written, and the screens that would otherwise report a streak or a history say plainly
 that this session is not being saved. It is what the TUI tests run under, and the escape
@@ -519,10 +525,43 @@ and `reviews` and `attempts` are append-only. That is what makes `cards` and `ex
 caches in principle: both could be rebuilt from the two logs, which is also why a schema
 change to either summary is cheap.
 
-Config is TOML at `$XDG_CONFIG_HOME/bash-teacher/config.toml` (theme, daily caps,
-desired retention, session size, timer on/off, editor keybindings). Schema migrations are
-numbered and forward-only; `attempts` is the raw record from which everything else can be
-rebuilt.
+### 8.1 The settings file
+
+Config is TOML at `$XDG_CONFIG_HOME/bash-teacher/config.toml`, and it is optional: a
+learner who never writes one runs on the defaults, and a missing file is not an error.
+
+```toml
+[ui]
+theme = "auto"              # a catppuccin flavour, or auto / none / dark / light
+
+[review]
+new_cards_per_day   = 15
+max_reviews_per_day = 120
+session_size        = 20
+desired_retention   = 0.90
+timer               = true  # show how long an answer took, and nudge past the target
+soft_target         = "8s"
+```
+
+A file that *does* exist is taken at its word. An unknown key or an out-of-range value is
+refused with a message rather than quietly dropped — a setting that does nothing and says
+nothing is worse than no setting at all — and, as with the content linter, every problem
+is reported at once so that fixing a file is one round trip. An unknown key is matched
+against the real ones by leaf name, so `new_per_day` is answered with
+`did you mean review.new_cards_per_day?` rather than with a list.
+
+Being refused stops every command that reads it. `bt doctor` is the exception: it starts
+on the defaults and prints the problems, because the command you reach for when something
+is wrong has to run when something is wrong. `bt help` is answered before the file is
+read at all, so a broken file cannot take away the page that documents it. `--theme` overrides the file, but only when it is actually passed;
+its own default of `auto` is not an override.
+
+Two knobs are deliberately not in the file. `relearn_step` is part of the model's shape
+rather than of a learner's taste — SPEC §5 states it as ten minutes, and a file that put a
+failed card back a fortnight away would not be expressing a preference but breaking the
+scheduler. Editor keybindings are listed here as future work rather than as shipped: the
+remapping needs to refuse a binding that collides with the global screen switches or with
+a screen that is capturing text, and that validation is a change of its own.
 
 ---
 
@@ -535,12 +574,16 @@ rebuilt.
 | **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** ✅ | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** ✅ | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
-| **M6 — Polish** | Progress store ✅, stats, config file, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
+| **M6 — Polish** | Progress store ✅, stats, config file ✅, export/import, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
 
 M6 is in progress. The progress store is built (`internal/store`): the scheduler and the
 practice library are restored at startup and written through as the learner works, so
-`bt` now remembers. Still open: the historical half of Stats and the mastery grid, the
-TOML config file, `bt export`/`bt import`, light-theme auto-detection, and packaging.
+`bt` now remembers. The settings file is built (`internal/config`, §8.1), so the theme,
+the daily caps, the retention target, the session size and the answer timer are the
+learner's to set. Still open: the historical half of Stats and the mastery grid,
+keybinding remapping, `bt export`/`bt import`, and packaging. Light-theme detection is
+in place — Latte ships and `theme.Resolve` reads `COLORFGBG` before querying the
+terminal's background — so what is left there is confirming it on real terminals.
 
 ---
 

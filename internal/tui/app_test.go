@@ -15,14 +15,15 @@ import (
 )
 
 // newTestApp builds the root model against the real library at a known size,
-// with colour off so assertions compare plain text.
-func newTestApp(t *testing.T, w, h int) *App {
+// with colour off so assertions compare plain text. The options are the ones a
+// launched `bt` passes: a test that cares about a setting asks for it here.
+func newTestApp(t *testing.T, w, h int, opts ...Option) *App {
 	t.Helper()
 	lib, err := content.Load(embedded.FS)
 	if err != nil {
 		t.Fatalf("load content: %v", err)
 	}
-	a := New(lib, theme.Resolve(theme.None), runner.New(lib), "test", ScreenHome)
+	a := New(lib, theme.Resolve(theme.None), runner.New(lib), "test", ScreenHome, opts...)
 	a.Update(tea.WindowSizeMsg{Width: w, Height: h})
 	return a
 }

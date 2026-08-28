@@ -49,8 +49,8 @@ const (
 	SourcePractice Source = "practice"
 )
 
-// Params are the knobs SPEC §5 exposes. They become config in M6; until then
-// Defaults is what the app runs on.
+// Params are the knobs SPEC §5 exposes. Defaults is what the app runs on
+// unless the settings file (internal/config) asks for something else.
 type Params struct {
 	// DesiredRetention is the recall probability an interval aims for.
 	DesiredRetention float64
@@ -124,6 +124,13 @@ func New(p Params) *Scheduler {
 
 // Params returns the scheduler's parameters.
 func (s *Scheduler) Params() Params { return s.params }
+
+// SetParams replaces the parameters. Parameters are a preference rather than
+// state: nothing already scheduled is re-derived from them, and a card keeps
+// the due date the settings of its own review earned it, so this may be called
+// at any point while the app is being assembled — before or after Restore —
+// without the order mattering.
+func (s *Scheduler) SetParams(p Params) { s.params = p }
 
 // Restore loads persisted state into a fresh scheduler, replacing whatever it
 // held. It takes the card states and the log rather than replaying the log

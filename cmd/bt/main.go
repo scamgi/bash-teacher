@@ -16,6 +16,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	embedded "bash-teacher/content"
+	"bash-teacher/internal/config"
 	lib "bash-teacher/internal/content"
 	"bash-teacher/internal/runner"
 	"bash-teacher/internal/srs"
@@ -42,12 +43,16 @@ usage:
 
 flags:
   --theme MODE          catppuccin flavour: latte, frappe, macchiato, mocha
-                        (also: dark, light, none, auto — default auto)
+                        (also: dark, light, none, auto — default auto); it
+                        overrides the theme in the settings file
   --no-exec             never run a subprocess; exercises fall back to
                         matching the reference solution
   --no-store            do not read or write the progress database; the
                         session is remembered only while it runs
   --version             print the version and exit
+
+settings are optional TOML at $XDG_CONFIG_HOME/bash-teacher/config.toml;
+bt doctor prints its path and whether it was read.
 `
 
 func main() {
@@ -86,9 +91,32 @@ func run(args []string) error {
 		return contentCmd(rest)
 	}
 
-	mode, err := theme.ParseMode(*themeFlag)
-	if err != nil {
-		return err
+	// Help is answered before anything is read, so that a broken settings
+	// file cannot take away the page that explains the settings file.
+	switch cmd {
+	case "help", "-h", "--help":
+		fmt.Print(usage)
+		return nil
+	}
+
+	// The settings file is optional; a file that exists but is wrong stops
+	// every command except doctor, which is the command you reach for when
+	// something is wrong and so has to start when something is wrong.
+	cfg, cfgFound, cfgErr := config.Load(config.Path())
+	if cfgErr != nil && cmd != "doctor" {
+		return cfgErr
+	}
+
+	// The flag wins over the file, but only when it was actually given: its
+	// default is "auto", which is indistinguishable from a learner asking
+	// for auto unless the flag set is asked which flags were visited.
+	mode := cfg.Mode()
+	if flagGiven(fl, "theme") {
+		m, err := theme.ParseMode(*themeFlag)
+		if err != nil {
+			return err
+		}
+		mode = m
 	}
 	library, err := lib.Load(embedded.FS)
 	if err != nil {
@@ -113,36 +141,54 @@ func run(args []string) error {
 
 	switch cmd {
 	case "":
-		return launch(library, th, run, tui.ScreenHome, storeOption(db)...)
+		return launch(library, th, run, tui.ScreenHome, sessionOptions(cfg, db)...)
 	case "practice":
 		opts, err := practiceOptions(library, rest)
 		if err != nil {
 			return err
 		}
-		return launch(library, th, run, tui.ScreenPractice, append(opts, storeOption(db)...)...)
+		return launch(library, th, run, tui.ScreenPractice, append(opts, sessionOptions(cfg, db)...)...)
 	case "review":
-		return launch(library, th, run, tui.ScreenFlashcards, storeOption(db)...)
+		return launch(library, th, run, tui.ScreenFlashcards, sessionOptions(cfg, db)...)
 	case "dict":
 		return dictCmd(library, th, rest)
 	case "stats":
 		return statsCmd(library, db)
 	case "doctor":
-		return doctorCmd(library, th, run, db)
-	case "help", "-h", "--help":
-		fmt.Print(usage)
-		return nil
+		return doctorCmd(library, th, run, db, configReport(cfgFound, cfgErr))
 	default:
 		return fmt.Errorf("unknown command %q; run `bt help`", cmd)
 	}
 }
 
-// storeOption wraps the database as a model option, or as nothing at all when
-// there is none, so every caller can splat it without a conditional.
-func storeOption(db *store.Store) []tui.Option {
-	if db == nil {
-		return nil
+// sessionOptions is everything the TUI is told before it starts: the settings
+// file's preferences and the progress database, if there is one.
+//
+// The configuration is passed as values rather than as a *config.Config so the
+// TUI never learns what a TOML file is; translating between the file and the
+// model is this command's job.
+func sessionOptions(cfg config.Config, db *store.Store) []tui.Option {
+	opts := []tui.Option{
+		tui.WithParams(cfg.Params()),
+		tui.WithTimer(cfg.Review.Timer),
 	}
-	return []tui.Option{tui.WithStore(db)}
+	if db != nil {
+		opts = append(opts, tui.WithStore(db))
+	}
+	return opts
+}
+
+// flagGiven reports whether a flag was actually passed, as opposed to sitting
+// at its default. It is what lets a flag override the settings file without
+// its own default overriding it too.
+func flagGiven(fl *flag.FlagSet, name string) bool {
+	given := false
+	fl.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			given = true
+		}
+	})
+	return given
 }
 
 func launch(library *lib.Library, th *theme.Theme, run *runner.Runner, start tui.Screen, opts ...tui.Option) error {
@@ -400,12 +446,13 @@ func reviewStats(library *lib.Library, db *store.Store) error {
 	return nil
 }
 
-func doctorCmd(library *lib.Library, th *theme.Theme, run *runner.Runner, db *store.Store) error {
+func doctorCmd(library *lib.Library, th *theme.Theme, run *runner.Runner, db *store.Store, cfgReport string) error {
 	fmt.Printf("version        %s\n", version)
 	fmt.Printf("theme          %s\n", th.Mode)
 	fmt.Printf("palette        catppuccin\n")
 	fmt.Printf("content        %d commands, %d exercises, %d cards (embedded)\n",
 		len(library.Commands), len(library.Exercises), len(library.Cards))
+	fmt.Printf("config         %s\n", cfgReport)
 	fmt.Printf("data dir       %s\n", dataDir())
 	fmt.Printf("progress       %s\n", progressReport(db))
 
@@ -441,6 +488,32 @@ func shellReport() string {
 		return "GNU coreutils (" + strings.TrimSpace(first) + ")"
 	}
 	return "BSD coreutils"
+}
+
+// configReport describes the settings file for `bt doctor`: where it is,
+// whether it was read, and what was wrong with it if it was not. A rejected
+// file is reported in full, since doctor is running only because the same
+// error stopped every other command.
+func configReport(found bool, err error) string {
+	path := config.Path()
+	var cfgErr *config.Error
+	switch {
+	case errors.As(err, &cfgErr):
+		out := path + " — rejected, running on defaults"
+		for _, p := range cfgErr.Problems {
+			line := p.Msg
+			if p.Key != "" {
+				line = p.Key + ": " + p.Msg
+			}
+			out += "\n               " + line
+		}
+		return out
+	case err != nil:
+		return path + " — unreadable: " + err.Error()
+	case !found:
+		return path + " — not present, running on defaults"
+	}
+	return path + " — loaded"
 }
 
 // progressPath is the progress database, which lives in the data directory.

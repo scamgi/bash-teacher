@@ -466,12 +466,16 @@ func (f *flashcardsScreen) verdictLine(a *App) string {
 	default:
 		left = t.Fail.Render("✗ not what the card wanted")
 	}
+	if !a.Timer() {
+		return left
+	}
 	return left + "  " + t.Faint.Render(f.timing(a))
 }
 
 // timing reports how long the answer took, and nudges when it ran past the
 // soft target. It never fails a card: automaticity is the goal, but a slow
-// right answer is still right.
+// right answer is still right. A learner who has turned the timer off in the
+// settings file never sees this line at all.
 func (f *flashcardsScreen) timing(a *App) string {
 	target := a.SRS.Params().SoftTarget
 	took := f.elapsed.Truncate(100 * time.Millisecond)

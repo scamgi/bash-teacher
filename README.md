@@ -38,9 +38,14 @@ See [SPEC.md](SPEC.md) for the full design.
   history and every exercise you have solved are waiting the next time you open it.
   `--no-store` runs without one; `bt doctor` says where it is and what it holds.
 
+- A settings file: optional TOML at `$XDG_CONFIG_HOME/bash-teacher/config.toml` for
+  the theme, the daily caps, the retention target, the session size and the answer
+  timer. A missing file is fine; a file with a typo in it is refused with the whole
+  list of what is wrong, and `bt doctor` reads it back to you.
+
 Still to come (M6): the historical half of Stats and the per-command mastery grid,
-a config file, `bt export` / `bt import`, light-theme detection, and packaging.
-Track unlocking is shown rather than enforced.
+keybinding remapping, `bt export` / `bt import`, and packaging. Track unlocking is
+shown rather than enforced.
 
 ### Practice keys
 
@@ -96,11 +101,40 @@ bt content expected re-run every reference solution and check the expected
                     outputs; --write regenerates them
 ```
 
+## Settings
+
+Everything below is optional, and so is the file. Write it to
+`$XDG_CONFIG_HOME/bash-teacher/config.toml` (usually
+`~/.config/bash-teacher/config.toml`); every key you leave out keeps its default,
+which is the value shown here.
+
+```toml
+[ui]
+theme = "auto"              # latte, frappe, macchiato, mocha, auto, none, dark, light
+
+[review]
+new_cards_per_day   = 15    # 0 introduces nothing new and reviews what is due
+max_reviews_per_day = 120
+session_size        = 20    # cards in one sitting
+desired_retention   = 0.90  # 0.70-0.98; higher means shorter intervals
+timer               = true  # show how long an answer took, and nudge past the target
+soft_target         = "8s"  # the time the nudge is measured against
+```
+
+The timer never fails a card — a slow right answer is still right — and turning it
+off simply stops the review screen mentioning time at all.
+
+A key that is misspelled or out of range stops `bt` with the full list of what is
+wrong rather than being ignored, since a setting that silently does nothing is worse
+than no setting. `bt doctor` is the exception: it runs on the defaults and prints the
+problems, so it still works when the file is what is broken, and `bt help` never reads
+the file at all.
+
 `--theme` picks a [Catppuccin](https://catppuccin.com) flavour: `latte`,
 `frappe`, `macchiato`, or `mocha`. `light` and `dark` are aliases for Latte and
 Mocha, `auto` (the default) detects the terminal background, and `none` disables
-colour. Colour is also dropped automatically when stdout is not a terminal or
-`NO_COLOR` is set. The theme does not paint a page background, so bash-teacher
+colour. Passing it overrides `[ui] theme` in the settings file. Colour is also
+dropped automatically when stdout is not a terminal or `NO_COLOR` is set. The theme does not paint a page background, so bash-teacher
 sits inside whatever colour scheme your terminal already runs.
 
 ## Authoring content
