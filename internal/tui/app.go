@@ -606,24 +606,6 @@ func altView(s string) tea.View {
 	return v
 }
 
-func (a *App) header() string {
-	t := a.Theme
-	left := t.Title.Render("bash-teacher")
-	crumb := t.Dim.Render(" › ") + t.Subtitle.Render(a.current.String())
-	if a.current == ScreenHome {
-		crumb = ""
-	}
-	right := t.Faint.Render(a.Version)
-
-	gap := a.width - lipgloss.Width(left+crumb) - lipgloss.Width(right)
-	if gap < 1 {
-		gap = 1
-	}
-	line := left + crumb + strings.Repeat(" ", gap) + right
-	rule := t.Faint.Render(strings.Repeat("─", a.width))
-	return line + "\n" + rule
-}
-
 func (a *App) tooSmall() string {
 	msg := fmt.Sprintf("Terminal is %d×%d.\nbash-teacher needs at least %d×%d.\nResize and the layout will return.",
 		a.width, a.height, minWidth, minHeight)

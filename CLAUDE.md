@@ -124,6 +124,11 @@ implementing the unexported `screen` interface:
   every chip has been dropped, because a key the learner cannot find is worse than a
   count Home and Stats also report. A `flashMsg` takes the legend's place, not the
   whole bar.
+- **The header is a tab bar** (`internal/tui/topbar.go`): the five screens in the order
+  their number keys select them, with the rule underneath drawn heavy under the current
+  one. The mark is a glyph rather than a colour so it survives `--theme none`, and the
+  tabs are navigation — the version gives way first on a narrow terminal, then the brand,
+  and the tabs never do.
 - **`Body(a, width, height)` renders only the interior**, excluding header and footer.
   `fitBlock` pads and truncates it to exactly that box, so the chrome never drifts. A pane
   that can overflow must `clip` itself.
