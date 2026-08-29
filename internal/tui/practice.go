@@ -26,10 +26,11 @@ const runTimeout = 30 * time.Second
 // flicker.
 const spinnerDelay = 150 * time.Millisecond
 
-// The workspace's vertical budget: how much of the prompt is shown, and how
-// many lines of output are held back from the fixture preview.
+// The workspace's vertical budget: how many lines the title block may take
+// before the prompt is elided, and how many lines of output are held back
+// from the fixture preview.
 const (
-	maxPromptLines = 6
+	maxHeadLines   = 8
 	minOutputLines = 4
 )
 
@@ -534,6 +535,11 @@ func (p *practiceScreen) trackStatus(name string) string {
 
 // workBody renders the exercise workspace.
 //
+// The screen reads top to bottom as the exercise itself does: what is being
+// asked, what data it is asked about, the line where it is answered, and what
+// came back. The editor is the only part inside a box, because it is the only
+// part the learner acts on.
+//
 // The height is divided from the bottom up: the editor and a few lines of
 // output are reserved first, and the fixture preview gets whatever is left.
 // A preview that pushed the output off the frame would hide the answer to the
@@ -542,37 +548,38 @@ func (p *practiceScreen) workBody(a *App, width, height int) string {
 	t := a.Theme
 	w := width - 4
 
-	head := []string{p.taskLine(a, w)}
-	for _, ln := range strings.Split(wrap(p.ex.Prompt, w), "\n") {
-		head = append(head, t.Body.Render(ln))
-	}
-	head = head[:min(len(head), maxPromptLines)]
+	head := p.headLines(a, w)
+	editor := p.editorBox(a, w)
 
-	// Three section rules, the editor line, and a floor for the output.
-	const reserved = 3 + 1 + minOutputLines
+	// Two section rules, the editor's box, and a floor for the output.
+	reserved := 2 + len(editor) + minOutputLines
 	fixture := p.fixtureLines(a, w)
 	if budget := height - len(head) - reserved; budget < len(fixture) {
-		if budget < 1 {
-			budget = 1
-		}
+		budget = max(budget, 1)
 		fixture = append(fixture[:budget-1:budget-1], t.Faint.Render("  …"))
 	}
 
 	lines := append([]string{}, head...)
-	lines = append(lines, rule(t, "Fixture", w))
+	lines = append(lines, rule(t, "Fixture", p.previewHint(), w))
 	lines = append(lines, fixture...)
-	lines = append(lines,
-		rule(t, "Your pipeline", w),
-		t.Accent.Render("$ ")+p.editor.View(a, w-2, true),
-		rule(t, "Output", w))
+	lines = append(lines, editor...)
 
 	out := p.outputLines(a, w)
-	room := max(1, height-len(lines))
+	// One line for the Output rule itself, which is drawn after the window is
+	// measured so that it can say whether there is more below it.
+	room := max(1, height-len(lines)-1)
 	p.outOffset = clampInt(p.outOffset, 0, max(0, len(out)-room))
 	shown := window(out, p.outOffset, room)
-	if len(out) > p.outOffset+room {
-		shown[len(shown)-1] = t.Faint.Render(fmt.Sprintf("… %d more line(s) · pgdn to scroll",
-			len(out)-p.outOffset-room+1))
+	more := len(out) > p.outOffset+room
+
+	note := ""
+	if more || p.outOffset > 0 {
+		note = "pgup/pgdn scrolls"
+	}
+	lines = append(lines, rule(t, "Output", note, w))
+	if more && len(shown) > 0 {
+		shown[len(shown)-1] = t.Faint.Render(fmt.Sprintf("… %s below",
+			plural(len(out)-p.outOffset-room+1, "line", "lines")))
 	}
 	lines = append(lines, shown...)
 
@@ -582,22 +589,59 @@ func (p *practiceScreen) workBody(a *App, width, height int) string {
 	return strings.Join(lines, "\n")
 }
 
-// taskLine is the header: where this exercise sits, what it is worth, and
-// whether it has been solved.
-func (p *practiceScreen) taskLine(a *App, width int) string {
+// headLines is the workspace's title block: what the exercise is, where it
+// sits, and then the task itself, set off by a rule down its left edge so the
+// prose reads as the question rather than as more chrome.
+func (p *practiceScreen) headLines(a *App, width int) []string {
+	t := a.Theme
+	out := []string{p.titleLine(a, width), p.metaLine(a, width), ""}
+
+	room := max(1, maxHeadLines-len(out)-1)
+	prompt := strings.Split(wrap(p.ex.Prompt, width-2), "\n")
+	if len(prompt) > room {
+		prompt = append(prompt[:room-1:room-1], "…")
+	}
+	for _, ln := range prompt {
+		out = append(out, t.Accent.Render("▎")+" "+t.Body.Render(ln))
+	}
+	return append(out, "")
+}
+
+// titleLine names the exercise and says where the learner stands on it.
+func (p *practiceScreen) titleLine(a *App, width int) string {
+	return spread(a.Theme.Title.Render(p.ex.Title), p.standing(a), width)
+}
+
+// standing is the right-hand note on the title line: solved, or how many
+// attempts have gone in so far. It reads the summary without creating one, so
+// merely opening an exercise does not put a row in the store.
+func (p *practiceScreen) standing(a *App) string {
+	t := a.Theme
+	st := p.prog.summary(p.ex.ID)
+	switch {
+	case st.Passed() && st.Best > 0:
+		return t.Pass.Render("✓ solved") + t.Faint.Render(" · best "+shortDuration(st.Best))
+	case st.Passed():
+		return t.Pass.Render("✓ solved")
+	case st.Attempts > 0:
+		return t.Faint.Render(plural(st.Attempts, "attempt", "attempts") + " so far")
+	}
+	return t.Faint.Render("not solved yet")
+}
+
+// metaLine is where the exercise sits in the library, how hard it is, and what
+// it drills — the same three facts the browser row carries, so opening an
+// exercise never loses the context it was chosen from.
+func (p *practiceScreen) metaLine(a *App, width int) string {
 	t := a.Theme
 	n, total := p.position()
-	left := t.PanelTitle.Render(p.ex.Title) + t.Faint.Render(fmt.Sprintf("  %d/%d · %s · ", n, total,
-		content.TrackTitle(p.ex.Track))) + t.Dim.Render(levelDots(p.ex.Level))
+	left := t.Subtitle.Render(content.TrackTitle(p.ex.Track)) +
+		t.Faint.Render(fmt.Sprintf(" · %d of %d · ", n, total)) + t.Dim.Render(levelDots(p.ex.Level))
 	right := ""
-	if p.prog.Passed(p.ex.ID) {
-		right = t.Pass.Render("✓ passed")
+	if len(p.ex.Teaches) > 0 {
+		right = t.Faint.Render("teaches ") + t.Code.Render(strings.Join(p.ex.Teaches, ", "))
 	}
-	gap := width - lipgloss.Width(left) - lipgloss.Width(right)
-	if gap < 1 {
-		return truncate(left, width)
-	}
-	return left + strings.Repeat(" ", gap) + right
+	return spread(left, right, width)
 }
 
 // position reports which exercise this is out of the whole library, counting
@@ -615,6 +659,31 @@ func (p *practiceScreen) position() (n, total int) {
 	return n, total
 }
 
+// editorBox draws the pipeline editor inside a box of its own. It is the one
+// part of the workspace with a border around it: the section rules divide
+// things that are read, and this is the thing that is typed into.
+func (p *practiceScreen) editorBox(a *App, width int) []string {
+	t := a.Theme
+	inner := max(width-4, 8)
+
+	label := t.Subtitle.Render("Your pipeline")
+	dashes := max(width-5-lipgloss.Width(label), 0)
+	line := t.Accent.Render("$ ") + p.editor.View(a, inner-2, true)
+	return []string{
+		t.Accent.Render("╭─ ") + label + " " + t.Accent.Render(strings.Repeat("─", dashes)+"╮"),
+		t.Accent.Render("│ ") + pad(line, inner) + t.Accent.Render(" │"),
+		t.Accent.Render("╰" + strings.Repeat("─", max(width-2, 0)) + "╯"),
+	}
+}
+
+// previewHint is the note on the Fixture rule: what ^B will do next.
+func (p *practiceScreen) previewHint() string {
+	if p.preview {
+		return "^B closes the preview"
+	}
+	return "^B previews the files"
+}
+
 // fixtureLines describes the files the pipeline will see, and shows the head
 // of each one while the preview is open.
 func (p *practiceScreen) fixtureLines(a *App, width int) []string {
@@ -624,25 +693,27 @@ func (p *practiceScreen) fixtureLines(a *App, width int) []string {
 	}
 	var names []string
 	for _, f := range p.fixture {
-		names = append(names, fmt.Sprintf("%s (%s, %s)", f.Name, byteSize(f.Size), plural(f.Lines, "line", "lines")))
+		names = append(names, t.Code.Render(f.Name)+
+			t.Faint.Render(fmt.Sprintf(" %s, %s", byteSize(f.Size), plural(f.Lines, "line", "lines"))))
 	}
-	head := t.Code.Render(truncate(strings.Join(names, "   "), width-14))
+	head := truncate(strings.Join(names, t.Faint.Render("  ·  ")), width)
 	if !p.preview {
-		return []string{head + t.Faint.Render("   ^B to preview")}
+		return []string{head}
 	}
 
-	out := []string{head + t.Faint.Render("   ^B to close")}
 	// The preview is a taste of each file, not a pager: two files of five
 	// lines each tells a learner what shape the data is in, which is what the
-	// question in front of them needs.
+	// question in front of them needs. The gutter marks it as file content
+	// rather than as something the screen is saying.
+	out := []string{head}
 	const previewRows = 5
 	for _, f := range p.fixture {
 		out = append(out, t.Faint.Render("  "+f.Name))
 		for _, ln := range window(f.Preview, 0, previewRows) {
-			out = append(out, "  "+t.Dim.Render(truncate(ln, width-4)))
+			out = append(out, t.Faint.Render("  │ ")+t.Dim.Render(truncate(ln, width-6)))
 		}
 		if len(f.Preview) > previewRows || f.Truncated {
-			out = append(out, "  "+t.Faint.Render("  …"))
+			out = append(out, t.Faint.Render("  │ …"))
 		}
 	}
 	return out
@@ -662,21 +733,23 @@ func (p *practiceScreen) outputLines(a *App, width int) []string {
 	case p.outcome != nil:
 		out = append(out, p.resultLines(a, width)...)
 	default:
-		out = append(out, t.Faint.Render("^R runs your pipeline against the fixture."))
+		out = append(out, t.Faint.Render("type a pipeline above, then ")+t.Key.Render("^R")+
+			t.Faint.Render(" to run it against the fixture"))
 	}
 
 	for i := 0; i < p.hints && i < len(p.ex.Hints); i++ {
-		out = append(out, "", t.Warn.Render(fmt.Sprintf("hint %d", i+1)))
-		for _, ln := range strings.Split(wrap(p.ex.Hints[i], width-2), "\n") {
-			out = append(out, "  "+t.Body.Render(ln))
+		out = append(out, "", t.Warn.Render(fmt.Sprintf("▸ hint %d", i+1))+
+			t.Faint.Render(fmt.Sprintf(" of %d", len(p.ex.Hints))))
+		for _, ln := range strings.Split(wrap(p.ex.Hints[i], width-4), "\n") {
+			out = append(out, "    "+t.Body.Render(ln))
 		}
 	}
 	if p.showSolution {
 		out = append(out, "",
-			t.Warn.Render("reference solution"),
-			"  "+t.Code.Render(truncate(p.ex.ReferenceSolution, width-2)))
-		for _, ln := range strings.Split(wrap(p.ex.SolutionNotes, width-2), "\n") {
-			out = append(out, "  "+t.Dim.Render(ln))
+			t.Warn.Render("▸ reference solution"),
+			"    "+t.Accent.Render("$ ")+t.Code.Render(truncate(p.ex.ReferenceSolution, width-6)))
+		for _, ln := range strings.Split(wrap(p.ex.SolutionNotes, width-4), "\n") {
+			out = append(out, "    "+t.Dim.Render(ln))
 		}
 	}
 	return out
@@ -698,30 +771,31 @@ func (p *practiceScreen) resultLines(a *App, width int) []string {
 		}
 		out = append(out, head)
 		for _, ln := range strings.Split(o.Refusal(), "\n") {
-			for _, wrapped := range strings.Split(wrap(ln, width-2), "\n") {
-				out = append(out, "  "+t.Dim.Render(wrapped))
+			for _, wrapped := range strings.Split(wrap(ln, width-4), "\n") {
+				out = append(out, "    "+t.Dim.Render(wrapped))
 			}
 		}
 		if o.ParseError != nil {
 			for _, ln := range strings.Split(o.ParseError.Caret(), "\n") {
-				out = append(out, "  "+t.Faint.Render(ln))
+				out = append(out, "    "+t.Faint.Render(ln))
 			}
 		}
 		return out
 	}
 
 	if o.Passed {
-		out = append(out,
-			t.Pass.Render("✓ correct — the output matches"),
-			"",
-			t.Faint.Render("yours     ")+t.Code.Render(truncate(o.Input, width-12)),
-			t.Faint.Render("reference ")+t.Code.Render(truncate(p.ex.ReferenceSolution, width-12)))
+		out = append(out, t.Pass.Render("✓ correct — the output matches"), "",
+			t.Faint.Render(pad("yours", 12))+t.Code.Render(truncate(o.Input, width-12)),
+			t.Faint.Render(pad("reference", 12))+t.Code.Render(truncate(p.ex.ReferenceSolution, width-12)))
+		if len(p.critique) > 0 {
+			out = append(out, "")
+		}
 		for _, n := range p.critique {
-			for _, ln := range strings.Split(wrap("· "+n, width-2), "\n") {
-				out = append(out, "  "+t.Dim.Render(ln))
+			for _, ln := range strings.Split(wrap("· "+n, width-4), "\n") {
+				out = append(out, "    "+t.Dim.Render(ln))
 			}
 		}
-		out = append(out, "", t.Faint.Render("^N for the next exercise"))
+		out = append(out, "", t.Key.Render("^N")+t.Faint.Render(" for the next exercise"))
 		return out
 	}
 
@@ -740,14 +814,39 @@ func (p *practiceScreen) resultLines(a *App, width int) []string {
 	return out
 }
 
-// rule renders a labelled section divider.
-func rule(t *theme.Theme, label string, width int) string {
-	head := t.Faint.Render("─ ") + t.Subtitle.Render(label) + " "
-	n := width - lipgloss.Width(head)
-	if n < 1 {
-		return head
+// rule renders a labelled section divider, optionally with a note about the
+// section closing it on the right — the key that opens the fixture preview,
+// or that there is more output below the fold.
+func rule(t *theme.Theme, label, note string, width int) string {
+	head := t.Faint.Render("── ") + t.Subtitle.Render(label) + " "
+	tail := ""
+	if note != "" {
+		tail = " " + t.Faint.Render(note+" ──")
 	}
-	return head + t.Faint.Render(strings.Repeat("─", n))
+	n := width - lipgloss.Width(head) - lipgloss.Width(tail)
+	if n < 1 {
+		return truncate(head+tail, width)
+	}
+	return head + t.Faint.Render(strings.Repeat("─", n)) + tail
+}
+
+// spread lays a left and a right fragment on one line of the given width. When
+// they will not both fit the right one is dropped: it is always the note, and
+// the left is always the thing being noted.
+func spread(left, right string, width int) string {
+	gap := width - lipgloss.Width(left) - lipgloss.Width(right)
+	if gap < 1 {
+		return truncate(left, width)
+	}
+	return left + strings.Repeat(" ", gap) + right
+}
+
+// shortDuration formats a run time the way a stopwatch would.
+func shortDuration(d time.Duration) string {
+	if d < time.Second {
+		return fmt.Sprintf("%dms", d.Milliseconds())
+	}
+	return fmt.Sprintf("%.1fs", d.Seconds())
 }
 
 // window returns at most n entries of s starting at off.

@@ -166,7 +166,18 @@ Runs are async: `^R` returns a `tea.Cmd` and the result comes back as a `runResu
 which `App.Update` routes to Practice by name rather than to the current screen, so a
 result that lands while the learner is reading a dictionary entry is not lost. The
 workspace divides its height from the bottom up — the editor and `minOutputLines` of
-output are reserved before the fixture preview gets what is left.
+output are reserved before the fixture preview gets what is left, and the title block is
+capped at `maxHeadLines` so a long prompt is elided rather than pushing the editor down.
+
+The workspace's visual grammar: a title block (title, standing, track/position/level/
+`teaches`, then the prompt behind an accent bar), then labelled section rules whose
+right-hand note says what the section's key does or that there is more below the fold,
+then the editor. **The editor is the only boxed element** — the rules divide what is
+read, the box marks the one place that is typed into — so do not put a border around
+anything else there. `spread` is the left/right line helper, and it drops the right
+fragment first, since that is always the note and the left is always the thing noted.
+Rendering reads `progress.summary`, never `progress.state`: opening an exercise is not
+progress, and `state` would leave a blank row behind in the store.
 
 Track locking is computed (`internal/tui/progress.go`, 80% per SPEC §2.2), displayed, and
 flashed on entry, but **not enforced** — `open` runs before the check, so a locked

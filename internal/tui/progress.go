@@ -44,6 +44,17 @@ func (p *progress) state(id string) *store.Exercise {
 	return st
 }
 
+// summary returns what is known about an exercise without recording an
+// interest in it. The rendering path uses this rather than state: opening an
+// exercise and reading the prompt is not progress, and would otherwise leave a
+// blank row behind in the store.
+func (p *progress) summary(id string) store.Exercise {
+	if st, ok := p.byExercise[id]; ok {
+		return *st
+	}
+	return store.Exercise{ID: id}
+}
+
 // Passed reports whether the exercise has ever been solved.
 func (p *progress) Passed(id string) bool {
 	st, ok := p.byExercise[id]
