@@ -87,6 +87,30 @@ The pipeline editor owns every printable key, so the actions are chords.
 | `f` | narrow the flashcard deck to this command |
 | `backspace` | walk back out of a jump, or restore the whole deck |
 
+### Review keys
+
+A sitting starts with `enter`. On a typed card the answer editor owns every printable
+key, so `esc` and the chords are what is left; a self-graded card simply waits to be
+turned over.
+
+| Key | Does |
+| --- | --- |
+| `enter` | start a sitting, turn a self-graded card over, or submit a typed answer |
+| `a` / `h` / `g` / `e` | rate the card again, hard, good or easy — each labelled with the interval it buys |
+| `j` / `k` | move the preselected rating harder or easier; `enter` commits it |
+| `^S` | give up and see the answer, which rates as `again` |
+| `^X` | clear what you have typed |
+| `esc` | end the sitting early, while typing an answer |
+| `backspace` | at the rating step of a deck filtered from the dictionary, back to the scheduled queue |
+
+### Stats keys
+
+| Key | Does |
+| --- | --- |
+| `tab` / `shift+tab` | the next or previous pane — Review, History, Mastery, Library |
+| `↑` / `↓` / `←` / `→` | walk the mastery grid, `h`/`j`/`k`/`l` too |
+| `enter` | open the focused command's dictionary entry |
+
 ## Build and run
 
 ```sh
