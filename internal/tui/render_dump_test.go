@@ -18,6 +18,16 @@ func TestDumpFrames(t *testing.T) {
 		t.Logf("\n=== %v ===\n%s", s, view(a))
 	}
 
+	// The Stats panes, over a scripted three weeks of study, so the history
+	// charts have a shape to eyeball rather than an empty log.
+	st := newTestApp(t, 96, 28)
+	seedHistory(st, studyDay)
+	st.current = ScreenStats
+	for pane := paneReview; pane <= paneLibrary; pane++ {
+		statsOf(st).pane = pane
+		t.Logf("\n=== Stats (%s) ===\n%s", statsPaneTitles[pane], view(st))
+	}
+
 	// A searched, detail-focused entry, scrolled to its related commands.
 	b := newTestApp(t, 96, 28)
 	press(b, "1")

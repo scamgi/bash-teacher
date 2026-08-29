@@ -10,10 +10,11 @@ Flashcards. **`SPEC.md` is the design source of truth** — read it before addin
 feature, and update it when a decision changes. It defines six milestones (M1–M6);
 M1 (skeleton), M2 (dictionary), M3 (runner), M4 (practice) and M5 (flashcards) are
 complete, and M6 is under way: the progress store is built, so a session now picks up
-where the last one stopped, and the settings file is built, so the learner sets the
-theme, the caps and the timer, and `bt export`/`bt import` are built, so progress moves
-between machines. The rest of M6 — the historical half of Stats, keybinding remapping,
-packaging — is still open.
+where the last one stopped, the settings file is built, so the learner sets the theme,
+the caps and the timer, `bt export`/`bt import` are built, so progress moves between
+machines, and Stats is finished, so the review log is drawn as a retention curve, an
+activity history and a per-command mastery grid. The rest of M6 — keybinding remapping
+and packaging — is still open.
 
 ## Commands
 
@@ -42,6 +43,10 @@ The M5 exit criteria are `go test ./internal/srs -v` — the interval ladder is 
 exact numbers, so any change to the model breaks it loudly and on purpose — and
 `go test ./internal/answer -v`, whose last case walks all 250 cards and fails if any
 card's own answer would not be accepted from a learner.
+
+Stats is covered by `go test ./internal/srs -run 'History|Streak|Totals' -v` for the
+aggregations and `go test ./internal/tui -run Stats -v` for the panes, the latter over a
+scripted three weeks seeded by `seedHistory` in `internal/tui/stats_test.go`.
 
 The store's own guard is `go test ./internal/tui -run Restart -v`: it answers a card and
 solves an exercise in one process and asserts both are there in the next.
@@ -157,6 +162,35 @@ flashed on entry, but **not enforced** — `open` runs before the check, so a lo
 exercise opens anyway. The reason it was advisory (progress lived in memory, so a hard
 gate would have re-locked the library on every launch) expired with the store; whether it
 becomes a real gate is an open decision, not an oversight to quietly fix.
+
+### The Stats screen (`internal/tui/stats.go`, `internal/tui/mastery.go`)
+
+Four panes cycled with `tab` / `shift+tab` — Review, History, Mastery, Library — because
+SPEC §2.4 asks for five reports and the smallest supported terminal is 24 rows. The
+screen computes nothing durable: it reads the scheduler and the practice summaries the
+root model already holds, which is why a pane can be added without touching persistence.
+
+- **The aggregations live in `internal/srs`, not in the screen.** `History`, `LongestStreak`,
+  `ActiveDays` and `Totals` bucket the review log by local day; the package stays
+  content-free, so they are unit-testable over synthetic ids. `History` returns a
+  fixed-width series with the empty days present, so a chart can index it by column.
+- **Practice credit counts as turning up, never as recall.** `Day.Answered` includes it and
+  `Day.Reviewed` does not, which is what keeps a solved pipeline from lifting the
+  retention curve. `Day.Retention` returns false on a day with no reviews and the chart
+  draws that column as a gap — a day not studied is not a day failed.
+- **Mastery is scored from cards, not exercises.** A command's band is the mean of its
+  cards' scores, floored, with the bands at 7 and 21 days of stability — readable only
+  because stability *is* the interval in days at the default retention. Exercises reach
+  the grid through the credit `App.CreditPractice` already gives every card they teach,
+  so there is one path in and not two differently weighted ones.
+- The grid's cursor column is a **wish, not a position**: `focusedColumn` clamps it per
+  row, so scanning down through a four-command category does not drag the cursor left.
+  The focused cell is bracketed as well as highlighted, so it survives `--theme none`,
+  and the bands are a shade ramp for the same reason.
+- Panel widths are shared (`panelWidth`, `masteryBoxWidth`) so the frame does not breathe
+  as `tab` walks the panes. `TestStatsPanesFitTheSmallestTerminal` asserts every pane
+  closes its box inside an 80×24 frame — `fitBlock` truncates silently, so a pane that
+  outgrew the terminal would otherwise just lose its last rows.
 
 ### The progress store (`internal/store`)
 

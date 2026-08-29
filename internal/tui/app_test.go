@@ -99,6 +99,12 @@ func deliver(a *App, cmd tea.Cmd) {
 	}
 }
 
+// shiftTab is the one key the name table cannot spell, since it is a modifier
+// on a named key rather than a key of its own.
+func shiftTab() tea.KeyPressMsg {
+	return tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift}
+}
+
 // pressCmd feeds a key and then runs whatever command it produced, which is how
 // the cross-screen shortcuts take effect in a headless test.
 func pressCmd(a *App, s string) {

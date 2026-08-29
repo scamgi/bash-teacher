@@ -450,7 +450,11 @@ func reviewStats(library *lib.Library, db *store.Store) error {
 	if recalled, answered := sched.Accuracy(); answered > 0 {
 		fmt.Printf("recalled   %d%% of %d answers\n", 100*recalled/answered, answered)
 	}
-	fmt.Printf("streak     %d days\n", sched.Streak(now))
+	fmt.Printf("streak     %d days (best %d)\n", sched.Streak(now), sched.LongestStreak())
+	if reviews, credits := sched.Totals(); reviews+credits > 0 {
+		fmt.Printf("answered   %d over %d days (%d from practice)\n",
+			reviews+credits, sched.ActiveDays(), credits)
+	}
 	fmt.Printf("progress   %s\n", db.Path())
 	return nil
 }

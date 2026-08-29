@@ -125,9 +125,15 @@ type cardFilterer interface{ ShowCommand(commandID string) bool }
 // opens on the day's queue rather than on a menu about it.
 type sessionStarter interface{ Start(a *App) }
 
-// exerciseCounter is implemented by the Practice screen, so that Home can
-// report the session's progress without holding a reference to it.
-type exerciseCounter interface{ PassedCount() int }
+// exerciseCounter is implemented by the Practice screen, so that Home and
+// Stats can report progress without holding a reference to it. Practice owns
+// the exercise summaries because it is what writes them; every other screen
+// asks through the root model.
+type exerciseCounter interface {
+	PassedCount() int
+	PassedInTrack(t *content.Track) int
+	ExercisePassed(id string) bool
+}
 
 // commandSelector is implemented by the Dictionary screen.
 type commandSelector interface{ SelectCommand(id string) bool }
@@ -480,6 +486,22 @@ func (a *App) PassedExercises() int {
 		return p.PassedCount()
 	}
 	return 0
+}
+
+// PassedInTrack reports how many of a track's exercises have been solved.
+func (a *App) PassedInTrack(t *content.Track) int {
+	if p, ok := a.screens[ScreenPractice].(exerciseCounter); ok {
+		return p.PassedInTrack(t)
+	}
+	return 0
+}
+
+// ExercisePassed reports whether one exercise has ever been solved.
+func (a *App) ExercisePassed(id string) bool {
+	if p, ok := a.screens[ScreenPractice].(exerciseCounter); ok {
+		return p.ExercisePassed(id)
+	}
+	return false
 }
 
 // updateScreen hands a message to one screen and stores whatever it becomes.

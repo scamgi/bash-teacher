@@ -163,6 +163,20 @@ func passedLine(a *App) string {
 	return fmt.Sprintf("%d this session", n)
 }
 
+// shortPersistenceNote is the one-phrase form of persistenceNote, for a panel
+// too narrow for the sentence. It is empty when progress is being saved, since
+// the ordinary case needs no footnote at all.
+func shortPersistenceNote(a *App) string {
+	switch {
+	case a.StoreError() != nil:
+		return "not saving progress"
+	case a.Store == nil:
+		return "this session only"
+	default:
+		return ""
+	}
+}
+
 // persistenceNote is the footnote the summary screens carry about whether any
 // of this is being remembered. It names the failure when there was one: a
 // learner whose history stopped being written should hear it from the app

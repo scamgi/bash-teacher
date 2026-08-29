@@ -153,6 +153,15 @@ func (p *practiceScreen) PassedCount() int {
 	return n
 }
 
+// PassedInTrack reports how many of a track's exercises have been solved, for
+// the per-track bars on Stats.
+func (p *practiceScreen) PassedInTrack(t *content.Track) int { return p.prog.PassedIn(t) }
+
+// ExercisePassed reports whether one exercise has ever been solved. Stats asks
+// it per command, to weigh the drills a command has been used in against the
+// cards that name it.
+func (p *practiceScreen) ExercisePassed(id string) bool { return p.prog.Passed(id) }
+
 // RestoreProgress loads what the store remembers about every exercise, so the
 // library opens on the learner's own history rather than on a blank slate.
 func (p *practiceScreen) RestoreProgress(rows []store.Exercise) { p.prog.Restore(rows) }

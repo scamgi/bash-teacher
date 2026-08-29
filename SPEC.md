@@ -172,12 +172,29 @@ Short recall drills for muscle memory. Three card types:
 Retention curve, cards due over the next 14 days, exercises passed per track,
 per-command mastery (a heat grid over the dictionary), and current/longest streak.
 
-The review half of this is live as of M5 — what is due, how much of the deck has been
-introduced, how much of it is being recalled, and the fortnight's outlook as a
-sparkline. Since the progress store landed it reads a real history rather than the
-session's own: the scheduler is restored at startup, so the streak counts days and not
-minutes. The retention curve over time and the per-command mastery grid are still to
-come; both are queries over the stored `reviews` log rather than new state.
+All of it is live. The screen is four panes cycled with `Tab` (and `Shift-Tab`) rather
+than one page, because the five reports do not fit in twenty-four rows together and a
+report a learner has to scroll to find is one they will not look at:
+
+- **Review** — what is due now, how much of the deck has been introduced, how much of it
+  is being recalled, the fortnight's outlook as a sparkline, and how far through each
+  exercise track the learner is.
+- **History** — the retention curve, day by day over the last month, against the
+  retention the scheduler is aiming at; beside it the volume that produced it, the
+  current and longest streaks, and the day the log starts. Practice credit is counted as
+  turning up but never as recall, so a solved pipeline cannot flatter the curve.
+- **Mastery** — the per-command heat grid: one cell per dictionary entry, grouped by
+  category, banded by how stable that command's cards have become. The cursor walks it
+  and `Enter` opens the focused command's dictionary entry, since a cell that is still
+  empty is a command the learner wants to go and read.
+- **Library** — content coverage and the exercise ladder. This one is the authoring
+  view: a command with no card and no exercise is a gap in the content, not in the
+  learner.
+
+Everything the first three panes draw comes from the scheduler and the practice
+summaries the root model already holds, both restored from the progress store at
+startup — so the history spans every session, and the streak counts days rather than
+minutes. A run with no store draws the session's own figures and says so.
 
 ---
 
@@ -443,7 +460,7 @@ Failures render as a two-column diff of the first 10 differing lines, with a
 | `Ctrl-C` | Quit immediately |
 | `1`–`4` | Jump to Dictionary / Practice / Flashcards / Stats |
 | `/` | Filter or search within the current list |
-| `Tab` | Cycle panes within a screen |
+| `Tab` | Cycle panes within a screen (`Shift-Tab` the other way) |
 
 Vim-style `hjkl` navigation everywhere, with arrow keys as equivalents. Every screen
 shows its own key legend in the footer; nothing is hidden behind undiscoverable chords.
@@ -596,14 +613,16 @@ a screen that is capturing text, and that validation is a change of its own.
 | **M3 — Runner** ✅ | Parser, allowlist, sandbox backends, diffing, `bt doctor` | Adversarial test suite (§10) fully blocked |
 | **M4 — Practice** ✅ | Exercise UI, hints, alternative-solution acceptance, tracks, 120 exercises | Reference solution of every exercise passes in CI |
 | **M5 — Flashcards** ✅ | Card UI, answer normalization, FSRS-lite, daily queue, 250 cards | Scheduler simulation matches expected intervals |
-| **M6 — Polish** | Progress store ✅, stats, config file ✅, export/import ✅, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
+| **M6 — Polish** | Progress store ✅, stats ✅, config file ✅, export/import ✅, light theme, packaging (Homebrew, `.deb`, GitHub releases) | Cold start under 200 ms; 80×24 clean |
 
 M6 is in progress. The progress store is built (`internal/store`): the scheduler and the
 practice library are restored at startup and written through as the learner works, so
 `bt` now remembers. The settings file is built (`internal/config`, §8.1), so the theme,
 the daily caps, the retention target, the session size and the answer timer are the
 learner's to set. `bt export` and `bt import` are built (§7.3), so progress survives a
-machine. Still open: the historical half of Stats and the mastery grid, keybinding
+machine. Stats is finished (§2.4): the retention curve, the activity history and the
+per-command mastery grid all read the stored `reviews` log, so the screen reports a
+learner's history rather than a session's. Still open: keybinding
 remapping, and packaging. Light-theme detection is
 in place — Latte ships and `theme.Resolve` reads `COLORFGBG` before querying the
 terminal's background — so what is left there is confirming it on real terminals.
@@ -625,6 +644,11 @@ terminal's background — so what is left there is confirming it on real termina
   allowlist alone still blocks the command-level cases.
 - **TUI:** golden-file tests over `View()` at 80×24 and 120×40 after scripted key
   sequences; `teatest` for the async run flow.
+- **Stats:** the history aggregations are unit-tested in `internal/srs` over a scripted
+  log — the day buckets, the streaks, and the split between reviews and practice credit —
+  and the screen itself through rendered frames: a seeded three weeks of study asserted
+  figure by figure, the empty-log first launch, and every pane drawn at 80×24 with its
+  panel closing inside the frame.
 - **SRS:** deterministic simulation of a 365-day learner, asserting review load stays
   within caps and retention converges on the target. It is two simulations, because the
   two claims are different: a *punctual* learner who answers each card the moment it
