@@ -465,6 +465,12 @@ Failures render as a two-column diff of the first 10 differing lines, with a
 Vim-style `hjkl` navigation everywhere, with arrow keys as equivalents. Every screen
 shows its own key legend in the footer; nothing is hidden behind undiscoverable chords.
 
+The footer is a status bar with two zones: the legend on the left, and on the right the
+session's live counters — exercises solved, the study streak, cards due, and a warning
+when nothing is being saved. The counters are dropped one at a time as the terminal
+narrows, and the legend is only truncated once they are all gone: a key the learner
+cannot find is worse than a count Home and Stats also report.
+
 ### 7.2 Visual design
 
 - Lip Gloss theme built on the four [Catppuccin](https://catppuccin.com) flavours —

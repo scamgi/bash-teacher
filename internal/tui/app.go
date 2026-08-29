@@ -624,18 +624,6 @@ func (a *App) header() string {
 	return line + "\n" + rule
 }
 
-func (a *App) footer() string {
-	rule := a.Theme.Faint.Render(strings.Repeat("─", a.width))
-	if a.flash != "" {
-		return rule + "\n" + truncate(a.Theme.Warn.Render(a.flash), a.width)
-	}
-	bindings := a.screens[a.current].Help()
-	if len(bindings) == 0 {
-		bindings = Keys.ShortHelp()
-	}
-	return rule + "\n" + truncate(a.help.ShortHelpView(bindings), a.width)
-}
-
 func (a *App) tooSmall() string {
 	msg := fmt.Sprintf("Terminal is %d×%d.\nbash-teacher needs at least %d×%d.\nResize and the layout will return.",
 		a.width, a.height, minWidth, minHeight)

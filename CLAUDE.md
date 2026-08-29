@@ -118,6 +118,12 @@ implementing the unexported `screen` interface:
   (the dictionary's `/` filter), the root model skips every global binding except `ctrl+c`,
   so typing `2` or `q` into a search box does not navigate or quit. New screens with input
   must implement this or they will lose keystrokes.
+- **The footer is a status bar with two zones** (`internal/tui/statusbar.go`): the
+  screen's key legend on the left, the session's counters on the right. They are sized
+  independently and the counters give way first — the legend is truncated only once
+  every chip has been dropped, because a key the learner cannot find is worse than a
+  count Home and Stats also report. A `flashMsg` takes the legend's place, not the
+  whole bar.
 - **`Body(a, width, height)` renders only the interior**, excluding header and footer.
   `fitBlock` pads and truncates it to exactly that box, so the chrome never drifts. A pane
   that can overflow must `clip` itself.
