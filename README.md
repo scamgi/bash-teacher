@@ -8,7 +8,8 @@ See [SPEC.md](SPEC.md) for the full design.
 
 ## Status
 
-**M1 (skeleton), M2 (dictionary), M3 (runner) and M4 (practice) are done.**
+**M1 (skeleton), M2 (dictionary), M3 (runner), M4 (practice) and M5 (flashcards) are
+done; M6 (polish) is under way.**
 
 - Bubble Tea v2 shell with screen routing, Catppuccin theming across all four
   flavours, a global key map, a help overlay, and a minimum-size fallback.
@@ -25,7 +26,10 @@ See [SPEC.md](SPEC.md) for the full design.
   sandboxed run on `^R`, and a two-column diff when the output does not match.
   Any pipeline producing the expected output passes; a pass then shows the
   reference solution beside yours, with a note when yours costs more processes.
-- A deck walk over the flashcards and a coverage view.
+- **250 flashcards** in three question shapes, reviewed on an FSRS-lite schedule: the
+  card asked face down, four rating keys each labelled with the interval it buys, and
+  typed answers graded after normalization, so `cut -f3 -d,` and `cut -d, -f3` are one
+  answer. A deck walk and a coverage view sit beside the daily queue.
 - A sandboxed runner: a shell parser that refuses what it cannot reason about, a
   static allowlist derived from the dictionary, throwaway fixture copies, OS-level
   confinement (`bubblewrap` on Linux, `sandbox-exec` on macOS, and an honest
@@ -48,8 +52,13 @@ See [SPEC.md](SPEC.md) for the full design.
   merge, so a database that already holds progress is refused unless you pass
   `--force`, and the refusal tells you what it would have replaced.
 
-Still to come (M6): the historical half of Stats and the per-command mastery grid,
-keybinding remapping, and packaging. Track unlocking is shown rather than enforced.
+- Stats: four panes cycled with `tab` — the day's load and forecast, a retention curve
+  and an activity history bucketed by day, and a per-command mastery grid. They read the
+  stored review log, so they report your history rather than this session's, and a day
+  you did not study is drawn as a gap rather than as a failure.
+
+Still to come (M6): keybinding remapping and packaging. Track unlocking is shown rather
+than enforced.
 
 ### Practice keys
 
